@@ -1,2 +1,2 @@
 # Arquitetura
-Protoipo da arquitetura
+Prototipo da arquitetura
