@@ -15,6 +15,11 @@
 
 #include "teste_bib.h"
 
+
+// PARA COMPILAR COM A LIB --> gcc ./bib/teste_bib.c load.c -lbpf -lxdp -o loader
+// sudo ./loader espaco_kernel.o teste
+
+
 /**********************************************************************************************************/
 
 // Essa funcao vai carregar o programa e salvar as informacoes na struct passada
@@ -23,7 +28,6 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
     const char *bpf_prog_file = caminho_prog;  // Arquivo pré-compilado com clang
     const char *prog_name = nome_prog;   // Nome do programa eBPF dentro do arquivo .o
 
-    
     struct bpf_map *map; 
     struct bpf_map_info map_info;
     struct bpf_object *bpf_obj;
@@ -37,8 +41,6 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-	printf("Abriu o arquivo\n");
-
     // Passo 2: Carregar o programa eBPF para a memória do kernel
     if (bpf_object__load(bpf_obj)) {
         fprintf(stderr, "Erro ao carregar programa BPF: %s\n", strerror(errno));
@@ -46,12 +48,8 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-	printf("carregou o prog\n");
-
     // Passo 3: Obter o descritor do programa eBPF
-    infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, "teste"/*nome_prog*/));
-
-    printf("TESTE SE PASSOU\n");
+    infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, nome_prog));
 
     if (infos->prog_fd < 0) {
         fprintf(stderr, "Erro ao obter descritor do programa BPF: %s\n", strerror(errno));
@@ -59,11 +57,11 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-    printf("<Programa eBPF carregado com sucesso! FD: %d>\n", infos->prog_fd);
+    printf("<Programa eBPF carregado com sucesso! FD do programa: %d>\n\n", infos->prog_fd);
 
-    int ret_map_info = bpf_obj_get_info_by_fd( infos->prog_fd, &map_info, &info_len);
-   
     /************************/
+    int ret_map_info = bpf_obj_get_info_by_fd( infos->prog_fd, &map_info, &info_len);
+    
     // Pegar o FD do mapa
     map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");
     infos->mapa_fd = bpf_map__fd(map);
@@ -75,11 +73,11 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
     printf("<Nome do mapa:  %s>\n", bpf_map__name(map));
     printf("<Valor do mapa: %d>\n", valor);
 
-    valor = 69;
+    valor = 777;
     int erro_map_update = bpf_map_update_elem( infos->mapa_fd, &key, &valor , BPF_EXIST);
 
     bpf_map_lookup_elem(infos->mapa_fd, &key, &valor);
-    printf("valor do mapa: %d\n", valor);
+    printf("<Novo valor do mapa: %d>\n", valor);
     /************************/
 
     // Passo 4: Fazer algo com o programa eBPF, por exemplo, anexar a um gancho (hook).
@@ -88,6 +86,12 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
     // Simulação de uma espera (substitua por alguma lógica específica, se necessário)
     printf("Pressione ENTER para remover o programa eBPF...\n");
     getchar();
+
+    ////////////// APAGAR /////////////////////
+    valor = 0;
+    erro_map_update = bpf_map_update_elem( infos->mapa_fd, &key, &valor , BPF_EXIST);
+    bpf_map_lookup_elem(infos->mapa_fd, &key, &valor);
+    ///////////// APAGAR ////////////////////
 
     // Passo 5: Remover o programa eBPF da memória (fechar o descritor)
     if (close(infos->prog_fd) < 0) {

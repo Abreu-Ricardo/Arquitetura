@@ -9,7 +9,7 @@
 int main(int argc, char **argv){
 	
 	char caminho_prog[200];
-	struct info_ebpf *bpf;
+	struct info_ebpf bpf;
 
 	if (argc < 2){
 		printf("Erro, passe o nome do arquivo.o\n");
@@ -25,7 +25,7 @@ int main(int argc, char **argv){
 	strcat(caminho_prog, "/");
 	strcat(caminho_prog, argv[1]);
 
-	carrega_ebpf(caminho_prog, argv[2], bpf);
+	carrega_ebpf(caminho_prog, argv[2], &bpf);
 	
 
 	return 0;
