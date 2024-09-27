@@ -31,11 +31,13 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
     __u32 key =0, valor;
 
     // Passo 1: Carregar o arquivo objeto do eBPF
-    bpf_obj = bpf_object__open_file(bpf_prog_file, NULL);
+    bpf_obj = bpf_object__open_file(caminho_prog, NULL);
     if (libbpf_get_error(bpf_obj)) {
         fprintf(stderr, "Erro ao abrir arquivo BPF: %s\n", strerror(errno));
         exit (1);
     }
+
+	printf("Abriu o arquivo\n");
 
     // Passo 2: Carregar o programa eBPF para a memória do kernel
     if (bpf_object__load(bpf_obj)) {
@@ -44,8 +46,13 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
+	printf("carregou o prog\n");
+
     // Passo 3: Obter o descritor do programa eBPF
-    infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, prog_name));
+    infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, "teste"/*nome_prog*/));
+
+    printf("TESTE SE PASSOU\n");
+
     if (infos->prog_fd < 0) {
         fprintf(stderr, "Erro ao obter descritor do programa BPF: %s\n", strerror(errno));
         bpf_object__close(bpf_obj);

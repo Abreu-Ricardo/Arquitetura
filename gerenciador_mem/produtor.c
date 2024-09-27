@@ -36,7 +36,7 @@ int main(int argc, char **argv){
     // CHAMA FUNCAO DA LIB PARA ACESSAR O MAPA eBPF
     //salva_fd(fd_shm);
     char caminho_prog[200];
-    getcwd(caminho_prog, 200);
+    /*getcwd(caminho_prog, 200);
 
     strcat(caminho_prog, "/espaco_kernel.o");
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv){
     carrega_ebpf( caminho_prog, "teste", bpf);
 
     printf("infos do prog--> prog_fd:%d mapa_fd:%d nome_mapa:%s", bpf->prog_fd, bpf->mapa_fd, bpf->nome_mapa);
-
+	*/
 
 
     //////////////////////////////////////////////////////////////////////////
