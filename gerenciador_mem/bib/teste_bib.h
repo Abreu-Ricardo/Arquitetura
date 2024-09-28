@@ -18,10 +18,10 @@ typedef struct info_ebpf{
 
 void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos);
 
-int remove_ebpf(struct info_ebpf *infos, struct bpf_object *bpf_obj);
+int remove_ebpf(char caminho_prog[],struct info_ebpf *infos);
 
 
 int le_mapa();
-int escreve_mapa();
+int atualiza_mapa(char caminho_prog[], char nome_mapa[], struct info_ebpf *infos);
 
 #endif // MYLIB_H

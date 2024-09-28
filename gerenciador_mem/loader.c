@@ -9,6 +9,8 @@
 int main(int argc, char **argv){
 	
 	char caminho_prog[200];
+    char *nome_mapa = "mapa_fd";
+
 	struct info_ebpf bpf;
 
 	if (argc < 2){
@@ -26,6 +28,9 @@ int main(int argc, char **argv){
 	strcat(caminho_prog, argv[1]);
 
 	carrega_ebpf(caminho_prog, argv[2], &bpf);
+
+    atualiza_mapa(caminho_prog, nome_mapa, &bpf);
+    remove_ebpf(caminho_prog, &bpf);
 	
 
 	return 0;
