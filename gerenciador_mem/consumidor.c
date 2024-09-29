@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-#include "minha_lib.h"
+#include "../bib/teste_bib.h"
 
 int main(int argc, char **argv){
 

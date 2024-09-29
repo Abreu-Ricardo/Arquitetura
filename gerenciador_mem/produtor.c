@@ -11,7 +11,7 @@
 #include <fcntl.h>
 
 
-#include "bib/teste_bib.h"
+//#include "bib/teste_bib.h"
 
 int main(int argc, char **argv){
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv){
     ///////////////////////////////////////////////////////////////////////////////
     // CHAMA FUNCAO DA LIB PARA ACESSAR O MAPA eBPF
     //salva_fd(fd_shm);
-    char caminho_prog[200];
+    //char caminho_prog[200];
     /*getcwd(caminho_prog, 200);
 
     strcat(caminho_prog, "/espaco_kernel.o");
