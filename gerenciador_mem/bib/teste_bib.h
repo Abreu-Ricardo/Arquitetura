@@ -21,7 +21,7 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos);
 int remove_ebpf(char caminho_prog[],struct info_ebpf *infos);
 
 
-int le_mapa();
-int atualiza_mapa(char caminho_prog[], char nome_mapa[], struct info_ebpf *infos);
+int le_mapa(struct info_ebpf *infos);
+int atualiza_mapa(char caminho_prog[], char nome_mapa[], __u32 *valor, struct info_ebpf *infos);
 
 #endif // MYLIB_H

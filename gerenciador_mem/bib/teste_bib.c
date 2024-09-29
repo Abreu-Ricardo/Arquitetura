@@ -20,8 +20,11 @@
 // sudo ./loader espaco_kernel.o teste
 
 struct bpf_map      *map; 
+struct bpf_prog_info prog_info;
 struct bpf_map_info map_info;
 struct bpf_object   *bpf_obj;
+
+__u32 info_len = sizeof(map_info);
 
 /**********************************************************************************************************/
 
@@ -60,7 +63,13 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-    printf("<Programa eBPF carregado com sucesso! FD do programa: %d>\n\n", infos->prog_fd);
+    __u32 prog_info_len = sizeof(prog_info);
+   
+    int ret_prog_info = bpf_obj_get_info_by_fd(infos->prog_fd, &prog_info, &prog_info_len);
+    printf("\n<ID do programa: %d>\n", prog_info.id);
+
+
+    printf("<Programa eBPF carregado com sucesso! FD do programa: %d>\n", infos->prog_fd);
 }
 
 /**********************************************************************************************************/
@@ -96,52 +105,66 @@ int remove_ebpf(char caminho_prog[], struct info_ebpf *infos){
 
 /**********************************************************************************************************/
 
-int le_mapa(){
+int le_mapa(struct info_ebpf *infos){
+    
+    int key=0, temp; 
+    int ret_map_info;
+   
+    map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");
+    infos->mapa_fd = bpf_map__fd(map);
+
+    ret_map_info = bpf_obj_get_info_by_fd( infos->mapa_fd, &map_info, &info_len);
+    bpf_map_lookup_elem(infos->mapa_fd, &key, &temp);
+    
+    printf("\n\n<FD do mapa:    %d>\n", infos->mapa_fd);
+    printf("<ID do mapa:    %d>\n", map_info.id);
+    printf("<Nome do mapa:  %s>\n", bpf_map__name(map));
+    printf("<Valor do mapa: %d>\n", temp);
+
 
     return 0;
 }
 
 /**********************************************************************************************************/
 
-int atualiza_mapa( char caminho_prog[], char nome_mapa[] , struct info_ebpf *infos){
+int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u32 *valor, struct info_ebpf *infos){
     
     //struct bpf_map *map;
     //struct bpf_map_info map_info;
     //struct bpf_object *bpf_obj;
-   
-    __u32 info_len = sizeof(map_info);
-    int key, valor;
-
+    
+    int temp, key=0;
+    
+    //__u32 info_len = sizeof(map_info);
 
     //bpf_obj= bpf_object__open_file(caminho_prog, NULL);
     
     // Pegar o FD do mapa
-    map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");
-    infos->mapa_fd = bpf_map__fd(map);
-    
-    int ret_map_info = bpf_obj_get_info_by_fd( infos->prog_fd, &map_info, &info_len);
-    
+    //map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");
+    //infos->mapa_fd = bpf_map__fd(map);
+    //
+    //int ret_map_info = bpf_obj_get_info_by_fd( infos->prog_fd, &map_info, &info_len);
+    //
+    //
+    //bpf_map_lookup_elem(infos->mapa_fd, &key, &temp);
+    //
+    //printf("<FD do mapa:    %d>\n", infos->mapa_fd);
+    //printf("<ID do mapa:    %d>\n", map_info.id);
+    //printf("<Nome do mapa:  %s>\n", bpf_map__name(map));
+    //printf("<Valor do mapa: %d>\n", temp);
 
-    
-    bpf_map_lookup_elem(infos->mapa_fd, &key, &valor);
-    
-    printf("<FD do mapa:    %d>\n", infos->mapa_fd);
-    printf("<ID do mapa:    %d>\n", map_info.id);
-    printf("<Nome do mapa:  %s>\n", bpf_map__name(map));
-    printf("<Valor do mapa: %d>\n", valor);
+    int erro_map_update = bpf_map_update_elem( infos->mapa_fd, &key, valor, BPF_EXIST );
 
-    valor = 777;
-    int erro_map_update = bpf_map_update_elem( infos->mapa_fd, &key, &valor , BPF_EXIST);
-
-    bpf_map_lookup_elem(infos->mapa_fd, &key, &valor);
-    printf("<Novo valor do mapa: %d>\n", valor);
+    bpf_map_lookup_elem(infos->mapa_fd, &key, &temp);
+    printf("<Novo valor do mapa: %d>\n", temp);
 
     return 0;
 }
 
 /***********************************************************************************************************/
 
-/***********************************************************************************************************/
+
+// Template criado para teste, usar como esqueleto
 /*
 int main(int argc, char **argv) {
     // Caminho para o arquivo objeto que contém o programa eBPF
