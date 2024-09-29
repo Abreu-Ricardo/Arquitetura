@@ -25,6 +25,7 @@ struct bpf_map_info map_info;
 struct bpf_object   *bpf_obj;
 
 __u32 info_len = sizeof(map_info);
+__u32 prog_info_len = sizeof(prog_info);
 
 /**********************************************************************************************************/
 
@@ -63,7 +64,7 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-    __u32 prog_info_len = sizeof(prog_info);
+
    
     int ret_prog_info = bpf_obj_get_info_by_fd(infos->prog_fd, &prog_info, &prog_info_len);
     printf("\n<ID do programa: %d>\n", prog_info.id);
@@ -127,7 +128,7 @@ int le_mapa(struct info_ebpf *infos){
 
 /**********************************************************************************************************/
 
-int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u32 *valor, struct info_ebpf *infos){
+int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u64 *valor, struct info_ebpf *infos){
     
     //struct bpf_map *map;
     //struct bpf_map_info map_info;

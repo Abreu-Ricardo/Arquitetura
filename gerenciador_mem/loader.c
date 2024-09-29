@@ -3,14 +3,14 @@
 #include <unistd.h>
 
 
-#include "bib/teste_bib.h"
+#include "../bib/teste_bib.h"
 
 
 int main(int argc, char **argv){
 	
 	char caminho_prog[200];
     char *nome_mapa = "mapa_fd";
-    __u32 valor = 2424;
+    __u64 valor = 777;
 
 	struct info_ebpf bpf;
 
