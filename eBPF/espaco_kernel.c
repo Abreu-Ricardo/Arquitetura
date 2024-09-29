@@ -37,7 +37,8 @@ int teste(struct xdp_md *ctx ){
     ptr = bpf_map_lookup_elem(&mapa_fd, &key);
 
     if (ptr != NULL){
-        *(ptr) = *(ptr) + 1;
+        //*(ptr) = *(ptr) + 1;
+        bpf_printk("Valor do fd no mapa: %d\n", *ptr);
     }
 
 	return XDP_PASS;
