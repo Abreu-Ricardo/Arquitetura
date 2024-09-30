@@ -11,18 +11,43 @@
 #include <fcntl.h>
 
 
-//#include "bib/teste_bib.h"
+#include "../bib/teste_bib.h"
 
 int main(int argc, char **argv){
 
     char *ptr1, *ptr2;
-    char *nome_regiao = "/memcompart";
+    char *nome_regiao = "/memtest";
     int fd_shm;
+
+    struct info_ebpf bpf;
+
+    char *caminho_prog = "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/espaco_kernel.o";
+
+/*  struct bpf_object *prog_obj;
+    prog_obj = bpf_object__open_file( caminho_prog, NULL);
+    if (prog_obj == NULL){
+        printf("DEU ERRADO PEGAR O PROGRAMA\n");
+        return -1;
+    }
+*/
+
+    carrega_ebpf(caminho_prog, "teste", &bpf);
+    atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
+    le_mapa(&bpf);
+
+/*
+    int mapa_fd = bpf_object__find_map_fd_by_name(prog_obj, "mapa_fd");
+    if (mapa_fd < 0){
+        printf("DEU ERRADO O FD DO MAPA\n");
+        return 1;    
+    }
+*/
 
     // Dados a serem escritos da mem compart
     const char *msg = "Oii, sou a msg";
     const char *msg1 = "\nOlaa, sou a msg2";
 
+    //atualiza_mapa();
     // Cria a regiao de mem. compart.
     fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0666);
     if (fd_shm == -1){
@@ -30,25 +55,7 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    printf("valor do fd_shm em produtor: %d\n", fd_shm);
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // CHAMA FUNCAO DA LIB PARA ACESSAR O MAPA eBPF
-    //salva_fd(fd_shm);
-    //char caminho_prog[200];
-    /*getcwd(caminho_prog, 200);
-
-    strcat(caminho_prog, "/espaco_kernel.o");
-
-    struct info_ebpf *bpf;
-
-    carrega_ebpf( caminho_prog, "teste", bpf);
-
-    printf("infos do prog--> prog_fd:%d mapa_fd:%d nome_mapa:%s", bpf->prog_fd, bpf->mapa_fd, bpf->nome_mapa);
-	*/
-
-
-    //////////////////////////////////////////////////////////////////////////
     // Tamanho da regiao de mem.
     int tam_regiao = 4096;
 
@@ -80,9 +87,9 @@ int main(int argc, char **argv){
         ;
 
     *ptr2 = 0;
-    
+   
 
-    //salva_fd(0);
+    remove_ebpf(caminho_prog, &bpf);
 
     return 0;
 }

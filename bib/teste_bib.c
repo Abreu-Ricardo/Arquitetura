@@ -117,9 +117,13 @@ int remove_ebpf(char caminho_prog[], struct info_ebpf *infos){
 /**********************************************************************************************************/
 int le_mapa(struct info_ebpf *infos){
     
-    int key=0, temp; 
+    //int key=0, temp; 
+    int key=0;
+    char temp[20];
+
     int ret_map_info, ret_update_map;
-   
+
+
     ret_map_info = bpf_obj_get_info_by_fd( infos->mapa_fd, &map_info, &info_len);
     if (ret_map_info < 0){
         fprintf(stderr, "Erro em obter informações do mapa: %s\n", strerror(errno));
@@ -137,7 +141,7 @@ int le_mapa(struct info_ebpf *infos){
     printf("\n\n<FD do mapa:    %d>\n", infos->mapa_fd);
     printf("<ID do mapa:    %d>\n", map_info.id);
     printf("<Nome do mapa:  %s>\n", bpf_map__name(map));
-    printf("<Valor do mapa: %d>\n", temp);
+    printf("<Valor do mapa: %s>\n", temp);
 
 
     return 0;
@@ -145,9 +149,13 @@ int le_mapa(struct info_ebpf *infos){
 
 /**********************************************************************************************************/
 
-int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u64 *valor, struct info_ebpf *infos){
+//int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u64 *valor, struct info_ebpf *infos){
+int atualiza_mapa( char caminho_prog[], char nome_mapa[], char *valor, struct info_ebpf *infos){
     
-    int temp, key=0;
+    //int temp, key=0;
+    char temp[20]; 
+    int key=0;
+
     int erro_map_update = bpf_map_update_elem( infos->mapa_fd, &key, valor, BPF_EXIST );
     int ret_update_mapa;
 
@@ -158,7 +166,8 @@ int atualiza_mapa( char caminho_prog[], char nome_mapa[], __u64 *valor, struct i
         return -1;   
     }
 
-    printf("<Novo valor do mapa: %d>\n", temp);
+    //printf("<Novo valor do mapa: %d>\n", temp);
+    printf("<Novo valor do mapa: %s>\n", temp);
 
     return 0;
 }

@@ -10,7 +10,8 @@ int main(int argc, char **argv){
 	
 	char caminho_prog[200];
     char *nome_mapa = "mapa_fd";
-    __u64 valor = 777;
+    //__u64 valor = 777;
+    char *valor= "testeMAPA";
 
 	struct info_ebpf bpf;
 
@@ -35,9 +36,9 @@ int main(int argc, char **argv){
 	carrega_ebpf(caminho_prog, argv[2], &bpf);
     le_mapa(&bpf);
     
-    atualiza_mapa(caminho_prog, nome_mapa, &valor, &bpf);
+    atualiza_mapa(caminho_prog, nome_mapa, valor, &bpf);
     //le_mapa(&bpf);
-    remove_ebpf(caminho_prog, &bpf);
+    //remove_ebpf(caminho_prog, &bpf);
 	
 
 	return 0;

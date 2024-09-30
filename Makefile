@@ -4,14 +4,17 @@ $(CC) = gcc
 CL = clang
 DIR = $(shell pwd)
 
-kern: loader
+kern: loader_ebpf loader_xdp
 	$(CL) -g -O2 -target bpf -c ./eBPF/espaco_kernel.c
 
-loader: teste_bib.o loader.o gerenciador
-	$(CC) ./bib/teste_bib.o loader.o -lbpf -lxdp -o loader
+loader_xdp: teste_bib.o
+	$(CC) loader_xdp.c  -lbpf -lxdp -o loader_xdp
+
+loader_ebpf: teste_bib.o loader.o gerenciador
+	$(CC) ./bib/teste_bib.o loader_ebpf.o -lbpf -lxdp -o loader_ebpf
 
 loader.o: teste_bib.o
-	$(CC) -c loader.c
+	$(CC) -c loader_ebpf.c
 
 teste_bib.o: 
 	make -C ./bib/
@@ -20,7 +23,7 @@ gerenciador:
 	make -C ./gerenciador_mem/
 
 clean:
-	rm loader
+	rm loader_ebpf loader_xdp
 	rm *.o 
 	rm ./bib/*.o 
 	make clean -C ./gerenciador_mem/
