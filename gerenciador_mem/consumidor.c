@@ -21,10 +21,13 @@ int main(int argc, char **argv){
     int fd_shm;
     char *ptr1, *ptr2;
 
+    struct info_ebpf bpf;
     char *caminho_prog = "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/espaco_kernel.o";
+
+
     struct bpf_object *bpf_obj;
     struct bpf_map *map;
-
+/*
     bpf_obj = bpf_object__open_file(caminho_prog, NULL);
     if (bpf_obj == NULL){
         printf("ERRO AO ABRIR ARQUIVO\n");
@@ -32,7 +35,6 @@ int main(int argc, char **argv){
         return -1;
     }
 
-    printf("1111111111111\n");
     
     map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");
     if (map == NULL){
@@ -41,24 +43,35 @@ int main(int argc, char **argv){
         return -1;
     }
 
+    printf("Nome do mapa: %s\n", bpf_map__name(map));
+    printf("FD do mapa:   %d\n", bpf_map__fd(map));
 
-    printf("222222222222\n");
 
     //int mapa_fd = bpf_map__fd(map);
+    //int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
+*/
+
     int mapa_fd = bpf_obj_get("/sys/fs/bpf/mapa_fd");
     if (mapa_fd < 0){
         printf("Erro ao obter o FD do mapa\n");
-        bpf_object__close(bpf_obj);
+        //bpf_object__close(bpf_obj);
         return -1;
     }
 
-    printf("3333333333\n");
+
+    //struct bpf_program *programa_bpf;
+    //programa_bpf = bpf_object__find_program_by_name(bpf_obj, "teste");
+
+
+    //carrega_ebpf(caminho_prog, "teste", &bpf);
 
     int key=0;
     char temp[50];
 
     int ret_lookup = bpf_map_lookup_elem(mapa_fd, &key, (void *)nome_regiao);
-    
+   
+    printf("\n<consumidor>nome da regiao: %s\n\n", nome_regiao);
+
     // Passo 1, pegar o fd local da regiao de mem compart
     // bit mask, segundo a definicao de sys/stat.h 
     // 0666 --> S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH
@@ -67,7 +80,6 @@ int main(int argc, char **argv){
 
     // Passo 2, mapear o codigo para o espaco de mem do processo
     ptr1 = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    printf("$$$ passou mmap %s\n", ptr1);
 
     ptr2 = ptr1 + 100;
     printf("%s\n", (char *) ptr1);

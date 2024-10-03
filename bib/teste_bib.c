@@ -101,15 +101,15 @@ int remove_ebpf(char caminho_prog[], struct info_ebpf *infos){
         return -1;
     }
 
-    //free(map);     
-    
     // Passo 6: Remover o mapa eBPF da memória (fechar o descritor)
     close(infos->mapa_fd);
+
+    // Remove o mapa pinnado em /sys/fs/bpf/mapa_fd
+    bpf_map__unpin(map, "/sys/fs/bpf/mapa_fd");
 
     // Fechar a estrutura do objeto BPF
     bpf_object__close(bpf_obj);
     printf("\nPrograma eBPF removido com sucesso.\n");
-
 
     return 0;
 }

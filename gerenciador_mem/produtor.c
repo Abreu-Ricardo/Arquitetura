@@ -9,9 +9,21 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <signal.h> // Para a func signal()
 
 
 #include "../bib/teste_bib.h"
+
+struct info_ebpf bpf;
+char *caminho_prog = "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/espaco_kernel.o";
+
+
+// Para caso o programa consumidor der erro e o mapa nao ficar alocado
+static void captura_sinal(){
+    remove_ebpf( caminho_prog, &bpf);
+    exit(0);
+
+}
 
 int main(int argc, char **argv){
 
@@ -19,9 +31,7 @@ int main(int argc, char **argv){
     char *nome_regiao = "/memtest";
     int fd_shm;
 
-    struct info_ebpf bpf;
 
-    char *caminho_prog = "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/espaco_kernel.o";
 
 /*  struct bpf_object *prog_obj;
     prog_obj = bpf_object__open_file( caminho_prog, NULL);
@@ -30,6 +40,8 @@ int main(int argc, char **argv){
         return -1;
     }
 */
+
+    signal(SIGINT, captura_sinal);
 
     carrega_ebpf(caminho_prog, "teste", &bpf);
     atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
