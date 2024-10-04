@@ -51,9 +51,11 @@ int main(int argc, char **argv){
     //int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
 */
 
-    int mapa_fd = bpf_obj_get("/sys/fs/bpf/mapa_fd");
+    // ### Primeiro caminho eh para rodar no espaco de usuario normal, o segundo eh para rodar entre containers ###
+    //int mapa_fd = bpf_obj_get("/sys/fs/bpf/mapa_fd");
+    int mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
     if (mapa_fd < 0){
-        printf("Erro ao obter o FD do mapa\n");
+        printf("<consumidor>Erro ao obter o FD do mapa\n");
         //bpf_object__close(bpf_obj);
         return -1;
     }

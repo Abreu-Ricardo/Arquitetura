@@ -55,9 +55,13 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
+    // Pinnar o mapa no dir compartilhado
+    // ### Primeiro caminho eh para rodar no espaco de usuario normal, o segundo eh para rodar entre containers ###
+    bpf_object__pin_maps(bpf_obj, "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+
+
     // Passo 3: Obter o descritor do programa eBPF
     infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, nome_prog));
-
     if (infos->prog_fd < 0) {
         fprintf(stderr, "Erro ao obter descritor do programa BPF: %s\n", strerror(errno));
         bpf_object__close(bpf_obj);
@@ -105,7 +109,8 @@ int remove_ebpf(char caminho_prog[], struct info_ebpf *infos){
     close(infos->mapa_fd);
 
     // Remove o mapa pinnado em /sys/fs/bpf/mapa_fd
-    bpf_map__unpin(map, "/sys/fs/bpf/mapa_fd");
+    //bpf_map__unpin(map, "/sys/fs/bpf/mapa_fd");
+    bpf_map__unpin(map, "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
 
     // Fechar a estrutura do objeto BPF
     bpf_object__close(bpf_obj);
