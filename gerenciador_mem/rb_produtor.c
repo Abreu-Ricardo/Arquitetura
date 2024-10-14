@@ -24,12 +24,95 @@ static void captura_sinal(){
     exit(0);
 
 }
+/***************************************************************************/
 
+struct item{
+    int dado;
+    struct item *prox;
+};
+
+struct ptr{
+    struct item *last;
+};
+
+/****************************************************************************/
+
+void insere_lista(struct item *p, int valor, struct item *pont1){
+    
+
+    struct item *aux = (struct item *) malloc( sizeof(struct item) );
+
+    if (aux != NULL){
+        aux->dado = valor;
+
+        // Primeiro caso: Primeiro elemento a ser inserido
+        if ( p->dado == -1 ){
+            p->dado = valor;
+            p->prox = p;
+
+            memcpy(pont1, p, sizeof(struct item ));
+            printf("pont1 dado:%d endereco: %p\n", pont1->dado, pont1 );
+            //pont1 += sizeof(struct item ); 
+        }
+        // Segundo caso: Demais elementos a serem inseridos
+        else{
+            
+            struct item *aux_temp;
+            aux_temp = p->prox; 
+
+            while( aux_temp->prox != p ){ 
+                //printf("LOOP %d\n", aux_temp->dado);
+                aux_temp = aux_temp->prox;
+            }
+
+    
+            aux_temp->prox = aux;
+            aux->prox = p;
+            
+            memcpy(pont1, aux, sizeof(struct item ));
+            printf("pont1 dado:%d endereco: %p\n", pont1->dado, pont1 );
+            //pont1 += sizeof(struct item ); 
+
+        }
+    }
+
+
+    return;
+}
+
+/********************************************************************************/
+void imprime(struct item *p){
+
+    struct item *aux;
+        
+    aux = p;
+    while( aux->prox != p){
+        printf("valor lista: %d\n", aux->dado);
+        aux = aux->prox; 
+    }
+
+    // Ultimo valor antes de chegar no ponteiro de novo
+    printf("valor lista: %d\n", aux->dado);
+
+    return;
+}
+
+
+
+
+/***************************************************************************/
 int main(int argc, char **argv){
 
     char *ptr1, *ptr2, *ptr3;
     char *nome_regiao = "/memtest";
     int fd_shm;
+
+    //struct ptr *p = (struct ptr *) malloc(sizeof(struct ptr));
+    //p->last = NULL;
+    
+    struct ptr  *p2, *p3;
+    struct item *p1 = (struct item *) malloc(sizeof(struct item));
+    p1->dado = -1;
 
 
 
@@ -41,12 +124,6 @@ int main(int argc, char **argv){
     }
 */
 
-    signal(SIGINT, captura_sinal);
-
-    carrega_ebpf(caminho_prog, "teste", &bpf);
-    atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
-    le_mapa(&bpf);
-
 /*
     int mapa_fd = bpf_object__find_map_fd_by_name(prog_obj, "mapa_fd");
     if (mapa_fd < 0){
@@ -54,20 +131,28 @@ int main(int argc, char **argv){
         return 1;    
     }
 */
+/******************************************/
+    signal(SIGINT, captura_sinal);
+
+    carrega_ebpf(caminho_prog, "teste", &bpf);
+    atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
+    le_mapa(&bpf);
+/******************************************/
+
 
     // Dados a serem escritos da mem compart
-    const char *msg = "Oii, sou a msg";
-    const char *msg1 = "\nOlaa, sou a msg2";
+    //const char *msg = "Oii, sou a msg";
+    //const char *msg1 = "\nOlaa, sou a msg2";
 
     //atualiza_mapa();
+    
+
     // Cria a regiao de mem. compart.
     fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0666);
     if (fd_shm == -1){
         perror("Erro em shm_open\n");
         exit(1);
     }
-
-
     // Tamanho da regiao de mem.
     int tam_regiao = 4096;
 
@@ -85,8 +170,17 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    ptr3 = ptr3 + tam_regiao - 1;
-    *ptr3 = 7;
+    // AQUI Q TA ERRADO ##############################################
+    struct item *pont1 = (struct item *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    if ( pont1 == MAP_FAILED ){
+        perror("Erro em mmap\n");
+        exit(1);
+    }
+    //pont1 +=  1;
+
+    //ptr3 = ptr3 + tam_regiao - 1;
+    //*ptr3 = 7;
+    //printf("<produtor>valor da ultima regiao %d\n", *ptr3);
  
 
     // Pq ptr2 recebe endereco de ptr1 + 100?
@@ -97,52 +191,37 @@ int main(int argc, char **argv){
     
     // Definindo a primeira posicao da regiao de mem compart como a var compartilhada
     // entre os processos
-    ptr1 = ptr1 + 1;
+    //ptr1 = ptr1 + 1;
+    ptr2 = ptr2 + tam_regiao - 1;
     *ptr2 = 0;
+    int vet_int[3] = {0, 1, 2};
 
-    // Escrita na regiao de mem compart
-    //sprintf(ptr1, "%s", msg);
-    //
-    //// Anda o tamanho da msg
-    //ptr1 += strlen(msg);
-    //
-    //// Escrever a msg1 e dps anda o tamanho da msg1
-    //sprintf(ptr1, "%s", msg1);
-    //ptr1 += strlen(msg1);
+    //sprintf(ptr1, "%p", p);
+
+    printf("endereco inicial: %x\n", *ptr2);
+    //for (int i=0; i<8; i++){
+    //    sprintf(ptr1, "%d ", vet_int[i]);
+    //    ptr1 += sizeof(vet_int[i]);
+    //}
+
+
+    for (int i=0; i<2; i++){
+        insere_lista(p1, i+6, pont1);
+        // Ter essa linha em baixo da escrita na funcao insere n aqui
+        // Aqui esta apenas mandando o msm endereco de mem sempre
+        //memcpy(ptr1, pont1, sizeof(struct item));
+        pont1 += sizeof(struct item *); 
+    } 
+
+    imprime(p1);
     
-    int vet_int[8] = {0, 1, 2, 3, 4, 5, 6, 77};
-    sprintf(ptr1, "%d ", vet_int[0]);
-    ptr1 += sizeof(vet_int[0]);
-
-    sprintf(ptr1, "%d ", vet_int[1]);
-    ptr1 += sizeof(vet_int[1]);
-
-    sprintf(ptr1, "%d ", vet_int[2]);
-    ptr1 += sizeof(vet_int[2]);
-
-    sprintf(ptr1, "%d ", vet_int[3]);
-    ptr1 += sizeof(vet_int[3]);
-
-    sprintf(ptr1, "%d ", vet_int[4]);
-    ptr1 += sizeof(vet_int[4]);
-
-    sprintf(ptr1, "%d ", vet_int[5]);
-    ptr1 += sizeof(vet_int[5]);
-
-    sprintf(ptr1, "%d ", vet_int[6]);
-    ptr1 += sizeof(vet_int[6]);
-    
-
-    sprintf(ptr1, "%d ", vet_int[7]);
-    ptr1 += sizeof(vet_int[7]);
-
     while( *ptr2 == 0 )
         ;
 
+    
     *ptr2 = 0;
    
 
     remove_ebpf(caminho_prog, &bpf);
-
     return 0;
 }

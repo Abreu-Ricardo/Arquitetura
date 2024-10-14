@@ -11,6 +11,36 @@
 
 #include "../bib/teste_bib.h"
 
+struct item{
+    int dado;
+    struct item *prox;
+};
+
+struct ptr{
+    struct item *last;
+};
+
+
+/*******************************************************************/
+void imprime(struct item *p){
+
+    struct item *aux;
+        
+    aux = p;
+    while( p->prox != aux){
+        printf("valor: %d\n", p->dado);
+        //aux = aux->prox; 
+        p += sizeof(struct item *);
+    }
+
+    // Ultimo valor antes de chegar no ponteiro de novo
+    printf("valor: %d\n", aux->dado);
+
+    return;
+}
+
+/*******************************************************************************/
+
 int main(int argc, char **argv){
 
     // Tamanho e nome da regiao de mem
@@ -20,9 +50,11 @@ int main(int argc, char **argv){
     // descritor e ponterios para a mem
     int fd_shm;
     char *ptr1, *ptr2;
-    int *ptr3;
+    char *ptr3;
     int key=0;
     char temp[50];
+    
+    struct ptr *p1, *p2, *p3;
 
 
     struct info_ebpf bpf;
@@ -51,36 +83,61 @@ int main(int argc, char **argv){
     fd_shm = shm_open(nome_regiao, O_RDWR, 0666);
     printf("<consumidor>valor do fd_shm: %d\n", fd_shm);
 
+    /**********************************************************************************/
     // Passo 2, mapear o codigo para o espaco de mem do processo
-    ptr2 = ptr1 = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    ptr3 = (int *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    if ( *ptr1 == -1 ){
+    ptr3 = ptr2 = ptr1 = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    struct item *pont1 = (struct item *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    if ( pont1 == MAP_FAILED ){
         perror("Erro ao obter o ponteiro de mmap");
     }
 
-    ptr3 = ptr3 + tam_regiao - 1;
-    printf("<consumidor> valor da ultima posicao %d\n",  *ptr3);
+    
+    ptr2 = ptr2 + tam_regiao - 1;
+    printf("ptr2: %d\n", *ptr2);
+ 
+    //pont1 += 1;
+
+    // O ptr3 vai ate a posicao final e imprime o conteudo 
+    //ptr3 = ptr3 + tam_regiao - 1;
+    //printf("<consumidor>valor da ultima posicao %d\n", *ptr3);
 
 
     // Pulando a primeira posicao de mem para que ela seja a trava compartilhada
     // entre os processos
-    ptr1 = ptr1 + 1;
-    printf("%s\n", (char *) ptr1);
+    // ptr1 = ptr1 + 1;
+    //printf("%s\n", (char *) ptr1);
         
-    for (int i=0; i<8; i++){
-        ptr1 += sizeof(int);
-        printf("%s\n", (char *) ptr1);    
-    }
+    //for (int i=0; i<8; i++){
+    //    ptr1 += sizeof(int);
+    //    printf("%s", (char *) ptr1);    
+    //}
 
+    //printf("<consumidor> -->%x\n", *ptr1); 
 
+    for (int i=0; i<1; i++){
+        //imprime(pont1);
+        // Ter essa linha em baixo da escrita na funcao insere n aqui
+        // Aqui esta apenas mandando o msm endereco de mem sempre
+        //memcpy(ptr1, pont1, sizeof(struct item));
+        //ptr1 += sizeof(struct item *); 
+    } 
 
-    ptr1 += sizeof(int);
-    printf("%s\n", (char *) ptr1);
-  
+    struct item *aux = pont1;
 
+    printf("valor: %d\n", pont1->dado);
+    pont1 += sizeof(struct item *);
+    
+    printf("valor: %d\n", pont1->dado);
+    //pont1 = pont1 + ( sizeof(struct item ) );
+    //while( pont1->prox != aux){
+    //for (int i=0; i<5; i++){
+    //    printf("valor: %d\n", pont1->dado);
+    //    //aux = aux->prox; 
+    //    pont1 += sizeof(struct item);
+    //}
+
+   
     *ptr2 = 1;
-
-
     while(*ptr2 == 1)
         ;
 
