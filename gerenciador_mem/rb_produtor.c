@@ -98,8 +98,6 @@ void imprime(struct item *p){
 }
 
 
-
-
 /***************************************************************************/
 int main(int argc, char **argv){
 
@@ -107,13 +105,8 @@ int main(int argc, char **argv){
     char *nome_regiao = "/memtest";
     int fd_shm;
 
-    //struct ptr *p = (struct ptr *) malloc(sizeof(struct ptr));
-    //p->last = NULL;
-    
-    struct ptr  *p2, *p3;
     struct item *p1 = (struct item *) malloc(sizeof(struct item));
     p1->dado = -1;
-
 
 
 /*  struct bpf_object *prog_obj;
@@ -131,13 +124,14 @@ int main(int argc, char **argv){
         return 1;    
     }
 */
-/******************************************/
+    
+    /******************************************/
     signal(SIGINT, captura_sinal);
 
     carrega_ebpf(caminho_prog, "teste", &bpf);
     atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
     le_mapa(&bpf);
-/******************************************/
+    /******************************************/
 
 
     // Dados a serem escritos da mem compart
@@ -170,17 +164,15 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    // AQUI Q TA ERRADO ##############################################
+    /*****************************************************************************************/
+
+    // Pegando o endereco da regiao como: struct item *
     struct item *pont1 = (struct item *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
     if ( pont1 == MAP_FAILED ){
         perror("Erro em mmap\n");
         exit(1);
     }
-    //pont1 +=  1;
 
-    //ptr3 = ptr3 + tam_regiao - 1;
-    //*ptr3 = 7;
-    //printf("<produtor>valor da ultima regiao %d\n", *ptr3);
  
 
     // Pq ptr2 recebe endereco de ptr1 + 100?
@@ -189,27 +181,21 @@ int main(int argc, char **argv){
     // JA QUE NAO TEM COMO USAR UMA VARIAVEL GLOBAL ENTRE OS PROCESSOS
     // EH FEITO COM UMA PORCAO DA REGIAO DE MEMORIA
     
-    // Definindo a primeira posicao da regiao de mem compart como a var compartilhada
-    // entre os processos
-    //ptr1 = ptr1 + 1;
+    // Definindo a ultima posicao da regiao de mem compart como a var compartilhada entre os processos
     ptr2 = ptr2 + tam_regiao - 1;
     *ptr2 = 0;
-    int vet_int[3] = {0, 1, 2};
-
-    //sprintf(ptr1, "%p", p);
 
     printf("endereco inicial: %x\n", *ptr2);
+    // Teste do vetor de posicao sequencial
+    //int vet_int[3] = {0, 1, 2};
     //for (int i=0; i<8; i++){
     //    sprintf(ptr1, "%d ", vet_int[i]);
     //    ptr1 += sizeof(vet_int[i]);
     //}
 
 
-    for (int i=0; i<2; i++){
-        insere_lista(p1, i+6, pont1);
-        // Ter essa linha em baixo da escrita na funcao insere n aqui
-        // Aqui esta apenas mandando o msm endereco de mem sempre
-        //memcpy(ptr1, pont1, sizeof(struct item));
+    for (int i=0; i<10; i++){
+        insere_lista(p1, i, pont1);
         pont1 += sizeof(struct item *); 
     } 
 

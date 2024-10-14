@@ -95,52 +95,23 @@ int main(int argc, char **argv){
     ptr2 = ptr2 + tam_regiao - 1;
     printf("ptr2: %d\n", *ptr2);
  
-    //pont1 += 1;
 
-    // O ptr3 vai ate a posicao final e imprime o conteudo 
-    //ptr3 = ptr3 + tam_regiao - 1;
-    //printf("<consumidor>valor da ultima posicao %d\n", *ptr3);
-
-
-    // Pulando a primeira posicao de mem para que ela seja a trava compartilhada
-    // entre os processos
-    // ptr1 = ptr1 + 1;
-    //printf("%s\n", (char *) ptr1);
-        
+    // Teste com o consumo de memoria sequencial em um vetor        
     //for (int i=0; i<8; i++){
     //    ptr1 += sizeof(int);
     //    printf("%s", (char *) ptr1);    
     //}
 
-    //printf("<consumidor> -->%x\n", *ptr1); 
-
-    for (int i=0; i<1; i++){
-        //imprime(pont1);
-        // Ter essa linha em baixo da escrita na funcao insere n aqui
-        // Aqui esta apenas mandando o msm endereco de mem sempre
-        //memcpy(ptr1, pont1, sizeof(struct item));
-        //ptr1 += sizeof(struct item *); 
-    } 
-
-    struct item *aux = pont1;
-
-    printf("valor: %d\n", pont1->dado);
-    pont1 += sizeof(struct item *);
     
-    printf("valor: %d\n", pont1->dado);
-    //pont1 = pont1 + ( sizeof(struct item ) );
-    //while( pont1->prox != aux){
-    //for (int i=0; i<5; i++){
-    //    printf("valor: %d\n", pont1->dado);
-    //    //aux = aux->prox; 
-    //    pont1 += sizeof(struct item);
-    //}
+    for (int i=0; i<10; i++){
+        printf("valor: %d prox: %p\n", pont1->dado, pont1->prox);
+        pont1 += sizeof(struct item *);
+    }
 
    
     *ptr2 = 1;
     while(*ptr2 == 1)
         ;
-
 
     shm_unlink(nome_regiao);
 
