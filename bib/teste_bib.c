@@ -6,6 +6,10 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include <linux/if_link.h>
+#include <net/if.h>
+
+
 #include <linux/bpf.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
@@ -23,6 +27,9 @@ struct bpf_map       *map;
 struct bpf_prog_info prog_info;
 struct bpf_map_info  map_info;  
 struct bpf_object    *bpf_obj;  
+struct bpf_program   *prog;
+
+
 
 __u32 info_len = sizeof(map_info);
 __u32 prog_info_len = sizeof(prog_info);
@@ -48,26 +55,39 @@ void carrega_ebpf(char *caminho_prog, char *nome_prog, struct info_ebpf *infos){
         exit (1);
     }
 
-    // Passo 2: Carregar o programa eBPF para a memória do kernel
+    //prog = bpf_object__next_program(bpf_obj, prog);
+    prog = bpf_object__find_program_by_name(bpf_obj, "teste");
+    //int ret = bpf_program__set_type(prog, BPF_PROG_TYPE_XDP);
+    //int ret = bpf_program__set_type(prog, BPF_PROG_TYPE_SK_SKB);  
+    //if ( ret < 0){
+	//	fprintf(stderr,"Erro ao atribuir tipo do programa: %s\n", strerror(errno));
+	//	exit (1);
+	//}
+
+    // Passo 3: Carregar o programa eBPF para a memória do kernel
     if (bpf_object__load(bpf_obj)) {
         fprintf(stderr, "Erro ao carregar programa BPF: %s\n", strerror(errno));
         bpf_object__close(bpf_obj);
         exit (1);
     }
 
-    // Pinnar o mapa no dir compartilhado
+
+
+    // Pinnar o mapa no dir compartilhado para compartilhar os dados de um mapa para outros processos
     // ### Primeiro caminho eh para rodar no espaco de usuario normal, o segundo eh para rodar entre containers ###
     bpf_object__pin_maps(bpf_obj, "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
 
 
-    // Passo 3: Obter o descritor do programa eBPF
+    // Passo 4: Obter o descritor do programa eBPF
     infos->prog_fd = bpf_program__fd(bpf_object__find_program_by_name(bpf_obj, nome_prog));
     if (infos->prog_fd < 0) {
         fprintf(stderr, "Erro ao obter descritor do programa BPF: %s\n", strerror(errno));
         bpf_object__close(bpf_obj);
         exit (1);
     }
-   
+  
+
+
     int ret_prog_info = bpf_obj_get_info_by_fd(infos->prog_fd, &prog_info, &prog_info_len);
     
     map = bpf_object__find_map_by_name(bpf_obj, "mapa_fd");

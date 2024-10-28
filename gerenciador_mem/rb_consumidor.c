@@ -104,7 +104,7 @@ int main(int argc, char **argv){
 
     
     for (int i=0; i<10; i++){
-        printf("valor: %d prox: %p\n", pont1->dado, pont1->prox);
+        printf("valor: %d endereco: %p prox: %p\n", pont1->dado, pont1, pont1->prox);
         pont1 += sizeof(struct item *);
     }
 

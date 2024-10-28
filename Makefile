@@ -25,7 +25,6 @@ gerenciador:
 clean:
 	rm loader_ebpf loader_xdp
 	rm *.o 
-	rm ./bib/*.o 
 	make clean -C ./gerenciador_mem/
-
+	make clean -C ./bib/	
 

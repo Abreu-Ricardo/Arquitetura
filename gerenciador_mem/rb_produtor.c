@@ -51,7 +51,7 @@ void insere_lista(struct item *p, int valor, struct item *pont1){
             p->prox = p;
 
             memcpy(pont1, p, sizeof(struct item ));
-            printf("pont1 dado:%d endereco: %p\n", pont1->dado, pont1 );
+            printf("pont1 dado:%d endereco: %p prox: %p\n", pont1->dado, pont1 , pont1->prox);
             //pont1 += sizeof(struct item ); 
         }
         // Segundo caso: Demais elementos a serem inseridos
@@ -65,12 +65,15 @@ void insere_lista(struct item *p, int valor, struct item *pont1){
                 aux_temp = aux_temp->prox;
             }
 
-    
             aux_temp->prox = aux;
             aux->prox = p;
             
             memcpy(pont1, aux, sizeof(struct item ));
-            printf("pont1 dado:%d endereco: %p\n", pont1->dado, pont1 );
+            printf("pont1 dado:%d endereco: %p prox: %p\n", pont1->dado, pont1 , pont1->prox);
+    
+            
+            //memcpy(pont1, aux, sizeof(struct item ));
+            //printf("pont1 dado:%d endereco: %p prox: %p\n", pont1->dado, pont1 , aux->prox);
             //pont1 += sizeof(struct item ); 
 
         }
