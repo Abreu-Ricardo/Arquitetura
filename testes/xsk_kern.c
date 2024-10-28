@@ -8,7 +8,7 @@
 #include <linux/ip.h>	    // struct iphr
 #include <linux/udp.h>
 #include <bpf/bpf_endian.h> // bpf_ntohs()
-
+#include <linux/icmp.h>
 
 //struct mapa_mem{ 
 //	__uint(type, BPF_MAP_TYPE_ARRAY);
@@ -38,7 +38,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 
 	struct ethhdr *eth = data;
 	if (data + sizeof(struct ethhdr) > data_end){
-		return 0; 
+        return -1; 
 	}
 
 	if (bpf_ntohs(eth->h_proto) == ETH_P_IP){	
@@ -52,30 +52,41 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
             // 17 = UDP
 
             struct iphdr *iph = data + sizeof(struct ethhdr);
-            if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end)
+            if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
                 protocol = iph->protocol;
-        }
-	}
+
+                //struct icmphdr *icmp = data + sizeof(struct iphdr); 
+                //if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct icmphdr) <= data_end ){
+                //    protocol = 1;
+                //}
+
+            }
+	    }
+    }
 	return protocol; 
 }
 /*****************************************************************************/
 
 
 SEC("xdp")
-int xdp_prog(struct xdp_md *ctx) {
+int xdp_prog(struct xdp_md *ctx){
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
-    int index = ctx->rx_queue_index; //0; // index do socket
+    int index = 0; //ctx->rx_queue_index; //0; // index do socket
     int ret;
+    
     //__u32 *ptr = bpf_map_lookup_elem(&mapa_fd, 0);
     ret = verifica_ip(ctx);
+
     if(ret == 1){
         bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
-        //return XDP_PASS;
+        //return XDP_DROP;
         return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
     }
-
-    bpf_printk("Outros pkts passando... code:%d\n", ret);
-    return XDP_PASS;
+    else{
+        bpf_printk("Outros pkts passando... code:%d\n", ret);
+        return bpf_redirect_map(&xsk_map, index, 0);
+        //return XDP_PASS;
+    }
 }
 
 char _license[] SEC("license") = "GPL";

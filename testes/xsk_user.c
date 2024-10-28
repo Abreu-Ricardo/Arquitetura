@@ -11,6 +11,7 @@
 #include <xdp/xsk.h>
 #include <xdp/libxdp.h>
 
+#include <linux/if_xdp.h>
 #include <linux/if_link.h>
 #include <linux/bpf.h>
 #include <sys/resource.h>
@@ -72,7 +73,7 @@ int main(int argc, char **argv) {
     };
     void *umem_area;
 
-    char *caminho_prog = "gepeto_kern.o";
+    char *caminho_prog = "xsk_kern.o";
 
     signal(SIGINT, remove_xdp);
 
@@ -132,10 +133,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+
+
+
+
     /********************************************************************************/
-
-
-
     // Configuração de limites para aumentar o limite de memória bloqueada
     struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
     if (setrlimit(RLIMIT_MEMLOCK, &r)) {
@@ -169,9 +171,11 @@ int main(int argc, char **argv) {
     int sock_fd = xsk_socket__fd(xsk);
     int index = 0;
     if (bpf_map_update_elem(map_fd, &index, &sock_fd, BPF_ANY) < 0) {
+        
         fprintf(stderr, "Erro ao associar socket ao mapa XSKMAP: %s\n", strerror(errno));
         xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+        
         xdp_program__close(xdp_prog);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem);
@@ -179,24 +183,66 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("Socket XDP configurado com sucesso na interface %s.\n", iface);
+	int ret = xsk_socket__update_xskmap(xsk, map_fd);
+    if (ret < 0){
+        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
+        xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+        xdp_program__close(xdp_prog);
+        xsk_socket__delete(xsk);
+        xsk_umem__delete(umem);
+        free(umem_area);
+        return 1;
+    }
+
+
+
+    printf("\n\nSocket XDP configurado com sucesso na interface %s.\n", iface);
+    
+    int ret_ring;
 
     // Loop para processar pacotes
     while (lock == 1) {
-        //printf("testes\n");
-       
-        struct xdp_desc *rx_desc;
+        
         uint32_t idx_rx = 0;
 
-        if (xsk_ring_cons__peek(&rx_ring, 1, &idx_rx) != 0) {
-            rx_desc = xsk_ring_cons__rx_desc(&rx_ring, idx_rx);
+        // Verifica se há pacotes no ring buffer de recepção
+        ret_ring = xsk_ring_cons__peek(&rx_ring, 1, &idx_rx);
+        if (ret_ring < 0) {
+            const struct xdp_desc *rx_desc;
+            
+            rx_desc =  xsk_ring_cons__rx_desc(&rx_ring, idx_rx);
             void *pkt_addr = xsk_umem__get_data(umem_area, rx_desc->addr);
 
-            // Processamento de pacote
-            printf("Pacote recebido de tamanho: %u bytes\n", rx_desc->len);
+            // Processamento do pacote
+            printf("Pacote recebido, tamanho: %u bytes\n", rx_desc->len);
 
+            // Libera o frame para reutilização
             xsk_ring_cons__release(&rx_ring, 1);
+
+            // Envia o frame de volta ao ring buffer de preenchimento
+            if (xsk_ring_prod__reserve(&fill_ring, 1, &idx_rx) == 1) {
+                *xsk_ring_prod__fill_addr(&fill_ring, idx_rx) = rx_desc->addr;
+                xsk_ring_prod__submit(&fill_ring, 1);
+            }
         }
+        else{
+            //printf("CAIU NO ELSE\n");
+        }
+
+
+       // struct xdp_desc *rx_desc;
+       // uint32_t idx_rx = 0;
+
+       // if (xsk_ring_cons__peek(&rx_ring, 1, &idx_rx) != 0) {
+       //     rx_desc = xsk_ring_cons__rx_desc(&rx_ring, idx_rx);
+       //     void *pkt_addr = xsk_umem__get_data(umem_area, rx_desc->addr);
+
+       //     // Processamento de pacote
+       //     printf("Pacote recebido de tamanho: %u bytes\n", rx_desc->len);
+
+       //     xsk_ring_cons__release(&rx_ring, 1);
+       // }
     }
 
     // Limpeza
