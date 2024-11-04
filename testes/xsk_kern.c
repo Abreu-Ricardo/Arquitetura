@@ -76,17 +76,19 @@ int xdp_prog(struct xdp_md *ctx){
     
     //__u32 *ptr = bpf_map_lookup_elem(&mapa_fd, 0);
     ret = verifica_ip(ctx);
+    
+    return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
 
-    if(ret == 1){
-        bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
-        //return XDP_DROP;
-        return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
-    }
-    else{
-        bpf_printk("Outros pkts passando... code:%d\n", ret);
-        return bpf_redirect_map(&xsk_map, index, 0);
-        //return XDP_PASS;
-    }
+    //if(ret == 1){
+    //    bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
+    //    //return XDP_DROP;
+    //    return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
+    //}
+    //else{
+    //    bpf_printk("Outros pkts passando... code:%d\n", ret);
+    //    return bpf_redirect_map(&xsk_map, index, 0);
+    //    //return XDP_PASS;
+    //}
 }
 
 char _license[] SEC("license") = "GPL";
