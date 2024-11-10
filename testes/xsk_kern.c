@@ -23,7 +23,7 @@
 // Define um mapa XSKMAP para o socket AF_XDP
 struct {
     __uint(type, BPF_MAP_TYPE_XSKMAP);
-    __uint(max_entries, 4); // Suporta uma única entrada de socket para simplificação
+    __uint(max_entries, 1); // Suporta uma única entrada de socket para simplificação
     __type(key, __u32);
     __type(value, __u32);
 } xsk_map SEC(".maps");
@@ -71,13 +71,20 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
-    int index = 0; //ctx->rx_queue_index; //0; // index do socket
+    int index = ctx->rx_queue_index; //0; // index do socket
     int ret;
+    int key = 0;
     
-    //__u32 *ptr = bpf_map_lookup_elem(&mapa_fd, 0);
+    __u64 *ptr;
+    ptr = bpf_map_lookup_elem(&xsk_map, &key);
     ret = verifica_ip(ctx);
     
-    return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
+    bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
+    //if (ptr != NULL){
+    //    bpf_printk("Valor do mapa: %d\n", *ptr);
+    //}
+
+    return bpf_redirect_map(&xsk_map, index, /*BPF_F_INGRESS*/ 2);
 
     //if(ret == 1){
     //    bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
