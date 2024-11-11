@@ -83,9 +83,14 @@ int xdp_prog(struct xdp_md *ctx){
     //if (ptr != NULL){
     //    bpf_printk("Valor do mapa: %d\n", *ptr);
     //}
+    //
+    if (bpf_map_lookup_elem(&xsk_map, &key)){
+        return bpf_redirect_map(&xsk_map, index, /*BPF_F_INGRESS*/ XDP_PASS);
+    }
 
-    return bpf_redirect_map(&xsk_map, index, /*BPF_F_INGRESS*/ 2);
+    bpf_printk("Pkt n foi redirecionado!\n");
 
+    return XDP_PASS;
     //if(ret == 1){
     //    bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
     //    //return XDP_DROP;

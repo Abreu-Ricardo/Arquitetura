@@ -94,6 +94,7 @@ static void remove_xdp(){
 	exit(1);
 }
 /************************************************************************/
+
 static uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
     
     uint64_t frame;
@@ -107,11 +108,21 @@ static uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
 }
 /****************************************************************************/
 
-static void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free ,uint64_t frame){
+static void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
 	assert(*frame_free < NUM_FRAMES);
 
 	vetor_frame[*frame_free++] = frame;
 }
+/*************************************************************************/
+
+static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint32_t len){
+                   
+                   // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
+                   // nao retorna nada
+    uint8_t *pkt = xsk_umem__get_data(umem_info->buffer, addr);
+    return 1;
+}
+
 /*************************************************************************/
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -120,12 +131,7 @@ int main(int argc, char **argv) {
     }
 
     const char *iface = argv[1];
-    struct xsk_umem_config umem_cfg = {
-        .fill_size = NUM_FRAMES,
-        .comp_size = NUM_FRAMES,
-        .frame_size = FRAME_SIZE,
-        .frame_headroom = 0,
-    };
+
 
 
 
@@ -151,7 +157,7 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, remove_xdp);
 
-    /********************************************************************************/
+    /*##############################################################################*/
     // Carrega e anexa o programa XDP usando libxdp
     ifindex = if_nametoindex(argv[1]);
 	if (!ifindex) {
@@ -209,7 +215,7 @@ int main(int argc, char **argv) {
 
     printf("\nValor do fd do mapa: %d\n", mapa_fd);
 
-    /********************************************************************************/
+    /*##############################################################################*/
     // Configuração de limites para aumentar o limite de memória bloqueada
     struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
     if (setrlimit(RLIMIT_MEMLOCK, &r)) {
@@ -282,9 +288,9 @@ int main(int argc, char **argv) {
 
     bpf_map = bpf_object__find_map_by_name(bpf_obj, "xsk_map");
     int chave =0, valor; 
-    int ret = bpf_map_update_elem(mapa_fd, &chave, &sock_fd, BPF_ANY );
+    //int ret = bpf_map_update_elem(mapa_fd, &chave, &sock_fd, BPF_ANY );
 
-	//int ret = xsk_socket__update_xskmap(xsk, map_fd);
+	int ret = xsk_socket__update_xskmap(xsk, map_fd);
     if (ret < 0){
         fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
         xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
@@ -344,11 +350,14 @@ int main(int argc, char **argv) {
     
     // Carregando os buffers
     for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
-        printf("i:%d ************ %p\n", i,xsk_ring_prod__fill_addr(&umem_info->fq, idx));
-    	*xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
+        //printf("i:%d ************ %p\n", i, xsk_ring_prod__fill_addr(&umem_info->fq, idx));
+
+    	//xsk_ring_prod__fill_addr --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+        //retorna o endereco do pacote
+        *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
     }
 
-    // Submit the filled slots so the kernel can process them.
+    // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
    	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
 
     int ret_ring;
@@ -364,19 +373,12 @@ int main(int argc, char **argv) {
         
         /****************************/
         
-        printf("\n\nInfos para serem comparadas: \n\n");
-        printf("Valor do xsk_config.rx_size: %d\n", xsk_cfg.rx_size);
-        printf("Valor do xsk_config.tx_size: %d\n", xsk_cfg.tx_size);
-        printf("Valor do xsk_config.xdp_flags: %d\n", xsk_cfg.xdp_flags);
-        printf("Valor do xsk_config.libbpf_flags: %d\n\n", xsk_cfg.libbpf_flags);
-       // printf("Valor do xsk_config.rx_size: %d", xsk_cfg.rx_size );
-        //printf("Valor do ", xsk_cfg.rx_size );
-        //
-        printf("Valor de umem_cfg.fill_size: %d\n", umem_info->umem-> .fill_size);
-        printf("Valor de umem_cfg.comp_size: %d\n", umem_cfg.comp_size);
-        printf("Valor de umem_cfg.flags: %d\n", umem_cfg.flags);
-        printf("Valor de umem_cfg.frame_size: %d\n", umem_cfg.frame_size);
-        printf("Valor de umem_cfg.frame_headroom: %d\n\n", umem_cfg.frame_headroom);
+        //printf("\n\nInfos para serem comparadas: \n\n");
+        //printf("Valor do xsk_config.rx_size: %d\n", xsk_cfg.rx_size);
+        //printf("Valor do xsk_config.tx_size: %d\n", xsk_cfg.tx_size);
+        //printf("Valor do xsk_config.xdp_flags: %d\n", xsk_cfg.xdp_flags);
+        //printf("Valor do xsk_config.libbpf_flags: %d\n\n", xsk_cfg.libbpf_flags);
+
 
         /****************************/
 
@@ -384,59 +386,69 @@ int main(int argc, char **argv) {
 
         // Verifica se há pacotes no ring buffer de recepção
         // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
+        // Essa funcao no exemplo advanced03 tbm retorna 0
         ret_ring = xsk_ring_cons__peek(&rx_ring, 64, &idx_rx);
-        printf("VALOR DO ret_ring %d\n", ret_ring);
+ 
+        //printf("\nVALOR DO ret_ring %d\n", ret_ring);
+        //printf("valor do umem_frame_free: %d\n",umem_frame_free);
 
-        printf("valor do umem_frame_free: %d\n",umem_frame_free);
-        if (ret_ring == 0){
-            printf("ret_ring == 0, sem espaco livre, saindo...\n");
-            xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
-            //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
-            xdp_program__close(xdp_prog);
-            xsk_socket__delete(xsk);
-            //xsk_umem__delete(umem);
-            xsk_umem__delete(umem_info->umem);
-            free(buffer_do_pacote);
-            return 1;
+        if( !ret_ring ){
+            //printf("\n\n <ret_ring deu zero>\n");
+            continue;
+       }
+
+        // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+        // retorna --> __u64 address of the packet.
+        stock_frames = xsk_prod_nb_free(&umem_info->fq,	umem_frame_free);
+        //printf("******************VALOR DO stock_frames %d\n", stock_frames);
+
+        if(stock_frames > 0){
+            printf("stock_frames OK\n");
+
+            // Reserve one or more slots in a producer ring.
+            // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
+            int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
+            /* This should not happen, but just in case */
+            while (ret_res != stock_frames)
+                ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
+
+            for (int i = 0; i < stock_frames; i++)
+                *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
+
+            // Submit the filled slots so the kernel can process them
+            xsk_ring_prod__submit(&umem_info->fq, stock_frames);
         }
 
 
+        /* Process received packets */
+        for (int i = 0; i < ret_ring; i++) {
+            uint64_t addr = xsk_ring_cons__rx_desc(&rx_ring, idx_rx)->addr;
+            uint32_t len = xsk_ring_cons__rx_desc(&rx_ring, idx_rx++)->len;
 
+            printf("Tamanho do pacote recebido %d\n", len);
+            
+            //if (processa_pacote(umem_info, addr, len) == 1){
+            //    desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
+            //    //xsk->stats.rx_bytes += len;
+            //}
+
+        }
+
+        xsk_ring_cons__release(&rx_ring, ret_ring);
         
+        uint32_t idx_cq;
+        unsigned int completed = xsk_ring_cons__peek(&umem_info->cq, XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
 
-        if ( ret_ring > 0){
-
-            stock_frames = xsk_prod_nb_free(&umem_info->fq,	umem_frame_free);
-            printf("VALOR DO stock_frames %d\n", stock_frames);
-
-            if(stock_frames > 0){
-                printf("stock_frames OK\n");
-
-                int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
-                /* This should not happen, but just in case */
-                while (ret_res != stock_frames)
-                    ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
-
-                for (int i = 0; i < stock_frames; i++)
-                    *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
-
-                // Submit the filled slots so the kernel can process them
-                xsk_ring_prod__submit(&umem_info->fq, stock_frames);
+       	if (completed > 0) {
+        	for (int i = 0; i < completed; i++){
+		                                                                //This function is to read the address of a specific entry in the consumer ring.
+                desaloca_umem_frame(umem_frame_addr, &umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
-
-
-            /* Process received packets */
-           for (int i = 0; i < ret_ring; i++) {
-               uint64_t addr = xsk_ring_cons__rx_desc(&rx_ring, idx_rx)->addr;
-               uint32_t len = xsk_ring_cons__rx_desc(&rx_ring, idx_rx++)->len;
-
-               //if (!process_packet(xsk, addr, len))
-               //    desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
-
-               //xsk->stats.rx_bytes += len;
-           }
-
-           xsk_ring_cons__release(&rx_ring, ret_ring);
+		   
+            // This function releases a specified number of packets that have been processed from the consumer ring back to the kernel. 
+            // Indicates to the kernel that these packets have been consumed and the buffers can be reused for new incoming packets.
+            xsk_ring_cons__release(&umem_info->cq, completed);
+        }
            //xsk->stats.rx_packets += ret_ring;
 
 
@@ -457,10 +469,8 @@ int main(int argc, char **argv) {
             //    xsk_ring_prod__submit(&fill_ring, 1);
             //}
 
-        }
-        else{
-            //printf("CAIU NO ELSE\n");
-        }
+        
+
 
     }
     

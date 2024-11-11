@@ -11,8 +11,6 @@ kern.o:
 
 user.o:
 	$(CC) prog_user.c ../bib/teste_bib.c -lbpf -lxdp -o user.o
-	#$(CC) ptr_mem_produtor.c -o ptr_produtor
-	#$(CC) ptr_mem_consumidor.c -o ptr_consumidor
 	$(CC) xsk_user.c -o user_xdp -lbpf -lxdp
 
 clean:
