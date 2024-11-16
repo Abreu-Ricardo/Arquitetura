@@ -29,11 +29,8 @@
 //#include "../bib/teste_bib.h"
 
 
-//#define NUM_FRAMES 4096
-#define NUM_FRAMES 2048
-#define FRAME_SIZE 4096
-//#define FRAME_SIZE 2048
-
+#define NUM_FRAMES 4096
+#define FRAME_SIZE 2048
 #define INVALID_UMEM_FRAME UINT64_MAX
 
 struct xdp_program *xdp_prog;
@@ -46,7 +43,6 @@ int cont_regiao = 0;
 
 //struct info_ebpf bpf;
 
-// Estrutura de dados para configurar o socket xsk
 struct xsk_umem_config umem_cfg = {
     .fill_size = NUM_FRAMES,
     .comp_size = NUM_FRAMES,
@@ -56,12 +52,9 @@ struct xsk_umem_config umem_cfg = {
 
 /*****************************************/
 
-// Estrutura de dados para configurar e usar a UMEM
 struct xsk_umem_info {
-	struct xsk_ring_prod fq; // fill ring da UMEM
-    struct xsk_ring_prod tx; // tx ring do socket
-	struct xsk_ring_cons cq; // completition ring da UMEM
-	struct xsk_ring_cons rx; // rx ring do socket
+	struct xsk_ring_prod fq;
+	struct xsk_ring_cons cq;
 	struct xsk_umem *umem;
 	void *buffer;
 };
@@ -73,6 +66,11 @@ struct xsk_umem_info *umem_info;
 struct xsk_umem *umem = NULL;
 struct xsk_socket *xsk = NULL;
 
+// Config dos ANEIS 
+struct xsk_ring_prod fill_ring;
+struct xsk_ring_cons comp_ring;
+struct xsk_ring_cons rx_ring;
+struct xsk_ring_prod tx_ring;
 
 
 // Configuracoes do socket XSK
@@ -143,16 +141,41 @@ int main(int argc, char **argv) {
 
     const char *iface = argv[1];
    
-    /***************Config da regiao de mem compart com shm*****************/
+    /*********************************************************************/
     char *caminho_prog = "xsk_kern.o";
     char *nome_regiao = "/memtest";
 
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
     
+    //carrega_ebpf(caminho_prog, "teste", &bpf);
+    //atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
+    //le_mapa(&bpf);
+
+    //int fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0666);
+    //if (fd_shm == -1){
+    //    perror("Erro em shm_open\n");
+    //    exit(1);
+    //}
+
+    //int vetor_dados[100];
+    //// Tamanho da regiao de mem.
+    //int tam_regiao = sizeof( vetor_dados ) + 1;
+
+    //// Atribuindo tamanho para a regiao de mem. compart.
+    //int ret_ftruncate = ftruncate(fd_shm, tam_regiao);
+    //if ( ret_ftruncate == -1 ){
+    //    perror("Erro em ftruncate\n");
+    //    exit(1);
+    //}
+    /*********************************************************************/
+
+
+
+
     signal(SIGINT, remove_xdp);
 
-    /***********************************************************************/
+    /*##############################################################################*/
     // Carrega e anexa o programa XDP usando libxdp
     ifindex = if_nametoindex(argv[1]);
 	if (!ifindex) {
@@ -170,6 +193,7 @@ int main(int argc, char **argv) {
 
 	// attach XDP program to interface with xdp mode
 	// Please set ulimit if you got an -EPERM error.
+	//
 	int ret_attach = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_SKB, 0);
 	//int ret_attach = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_NATIVE, 0);
 	if (ret_attach) {
@@ -177,8 +201,7 @@ int main(int argc, char **argv) {
 		return ret_attach;
 	}
 
-	// Find the map fd from the bpf object
-    // Pega um bpf_object a partir da struct xdp_program
+	// Find the map fd from the bpf object 
 	bpf_obj = xdp_program__bpf_obj(xdp_prog);
 	
     //bpf_obj = bpf_object__open_file(caminho_prog, NULL);
@@ -187,7 +210,6 @@ int main(int argc, char **argv) {
     }
 	
     //int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    // Pega o fd do mapa
 	int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "xsk_map"); 
 	if (mapa_fd < 0) {
 		printf("Erro ao tentar obter o fd do mapa pelo bpf_obj, retorno: %d\n", mapa_fd);
@@ -195,6 +217,7 @@ int main(int argc, char **argv) {
 		return mapa_fd;
 	}
  
+    // Associa o socket AF_XDP ao mapa XSKMAP
     int map_fd = bpf_object__find_map_fd_by_name(xdp_program__bpf_obj(xdp_prog), "xsk_map");
     if (map_fd < 0) {
         fprintf(stderr, "Erro ao encontrar o mapa xsk_map\n");
@@ -202,7 +225,7 @@ int main(int argc, char **argv) {
         xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         xdp_program__close(xdp_prog);
         xsk_socket__delete(xsk);
-        xsk_umem__delete(umem_info->umem);
+        xsk_umem__delete(umem);
         free(buffer_do_pacote);
         return 1;
     }
@@ -212,7 +235,6 @@ int main(int argc, char **argv) {
     printf("\nValor do fd do mapa: %d\n", mapa_fd);
 
     /*##############################################################################*/
-    
     // Configuração de limites para aumentar o limite de memória bloqueada
     struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
     if (setrlimit(RLIMIT_MEMLOCK, &r)) {
@@ -227,15 +249,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Criação do UMEM, da regiao de mem compart do xsk
-    // CRIAR A MINHA PROPRIA COM SHM E FAZER COM QUE ELE USE ESSA MEM PARA
-    // ESCREVER E LER OS PACOTES
+    // Criação do UMEM
     //umem_info = configura_xsk_umem(buffer_do_pacote, tam_buffer_pkt);
     int ret_umem_create;
     umem_info = calloc(1, sizeof(struct xsk_umem_info *)); 
 
-    ret_umem_create = xsk_umem__create(&umem_info->umem, buffer_do_pacote, NUM_FRAMES * FRAME_SIZE, &umem_info->fq, &umem_info->cq, &umem_cfg);
+    ret_umem_create = xsk_umem__create(&umem_info->umem, buffer_do_pacote, NUM_FRAMES * FRAME_SIZE, /*&fill_ring*/ &umem_info->fq, /*&comp_ring*/ &umem_info->cq, &umem_cfg);
 
+    //if (xsk_umem__create(&umem, buffer_do_pacote, NUM_FRAMES * FRAME_SIZE, &fill_ring, &comp_ring, &umem_cfg)) {
     if ( ret_umem_create < 0 ) {
         fprintf(stderr, "Erro ao criar UMEM: %s\n", strerror(errno));
         free(buffer_do_pacote);
@@ -244,8 +265,9 @@ int main(int argc, char **argv) {
 
     // Configuração do socket AF_XDP
     //if (xsk_socket__create(&xsk, iface, 0, umem, &rx_ring, &tx_ring, &xsk_cfg)) {
-    if (xsk_socket__create(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, &xsk_cfg) < 0) {
+    if (xsk_socket__create(&xsk, iface, 0, umem_info->umem, &rx_ring, &tx_ring, &xsk_cfg) < 0) {
         fprintf(stderr, "Erro ao criar socket XDP: %s\n", strerror(errno));
+        xsk_umem__delete(umem);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
         return 1;
@@ -263,21 +285,29 @@ int main(int argc, char **argv) {
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         xdp_program__close(xdp_prog);
         xsk_socket__delete(xsk);
+        xsk_umem__delete(umem);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
         return 1;
  
     }
-
-
-    int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    printf("-->VALOR fd do fd_mapa_fd: %d\n", fd_mapa_fd);
-
+    //if (bpf_map_update_elem(map_fd, &index, &sock_fd, BPF_ANY) < 0) {
+    //    
+    //    fprintf(stderr, "Erro ao associar socket ao mapa XSKMAP: %s\n", strerror(errno));
+    //    xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+    //    //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+    //    
+    //    xdp_program__close(xdp_prog);
+    //    xsk_socket__delete(xsk);
+    //    xsk_umem__delete(umem);
+    //    xsk_umem__delete(umem_info->umem);
+    //    free(buffer_do_pacote);
+    //    return 1;
+    //}
 
     bpf_map = bpf_object__find_map_by_name(bpf_obj, "xsk_map");
-    int chave =0, valor;
-
-    int retorno = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
+    int chave =0, valor; 
+    //int ret = bpf_map_update_elem(mapa_fd, &chave, &sock_fd, BPF_ANY );
 
 	int ret = xsk_socket__update_xskmap(xsk, map_fd);
     if (ret < 0){
@@ -286,23 +316,25 @@ int main(int argc, char **argv) {
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         xdp_program__close(xdp_prog);
         xsk_socket__delete(xsk);
+        xsk_umem__delete(umem);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
         return 1;
     }
 
     int key = 0;
-    char *ret_lookup = "-99"; // valor para ver se escreveu algo na var
+    int ret_lookup = -99;
     int ret_look;
-    ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
+    ret_look = bpf_map_lookup_elem(mapa_fd, &key, &ret_lookup);
     
     if(ret_look < 0){
         printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
     }
+    printf("\nValor do retorno do mapa: %d\n\n", ret_lookup);
 
-    printf("\nValor do retorno do mapa: %s\n\n", ret_lookup);
+
+
     printf("\n\nSocket XDP configurado com sucesso na interface %s.\n\n", iface);
-
     /**************************************************************************************************************/
 
     //char *caminho_prog = "xsk_kern.o";
@@ -372,6 +404,7 @@ int main(int argc, char **argv) {
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         xdp_program__close(xdp_prog);
         xsk_socket__delete(xsk);
+        xsk_umem__delete(umem);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
         return 1;
@@ -401,10 +434,18 @@ int main(int argc, char **argv) {
         uint32_t idx_rx = 0;
         uint32_t idx_fq = 0;
 
+        /****************************/
+        //printf("\n\nInfos para serem comparadas: \n\n");
+        //printf("Valor do xsk_config.rx_size: %d\n", xsk_cfg.rx_size);
+        //printf("Valor do xsk_config.tx_size: %d\n", xsk_cfg.tx_size);
+        //printf("Valor do xsk_config.xdp_flags: %d\n", xsk_cfg.xdp_flags);
+        //printf("Valor do xsk_config.libbpf_flags: %d\n\n", xsk_cfg.libbpf_flags);
+        /****************************/
+
         // Verifica se há pacotes no ring buffer de recepção
         // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
         // Essa funcao no exemplo advanced03 tbm retorna 0
-        ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
+        ret_ring = xsk_ring_cons__peek(&rx_ring, 64, &idx_rx);
  
         //printf("\nVALOR DO ret_ring %d\n", ret_ring);
         //printf("valor do umem_frame_free: %d\n",umem_frame_free);
@@ -437,14 +478,15 @@ int main(int argc, char **argv) {
             xsk_ring_prod__submit(&umem_info->fq, stock_frames);
         }
 
+
         /* Process received packets */
         for (int i = 0; i < ret_ring; i++) {
-            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
-            uint32_t len = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
+            uint64_t addr = xsk_ring_cons__rx_desc(&rx_ring, idx_rx)->addr;
+            uint32_t len = xsk_ring_cons__rx_desc(&rx_ring, idx_rx++)->len;
 
-            printf("Tamanho do pacote recebido %d | num pkt:%d\n", len, cont_regiao);
+            printf("Tamanho do pacote recebido %d\n", len);
             if (cont_regiao < 100){
-                memcpy(ptr_regiao, &len, sizeof( int ) );
+                memcpy(ptr_regiao, &len, sizeof( len ) );
                 ptr_regiao = ptr_regiao + sizeof(uint64_t *);
                 
                 cont_regiao++;
@@ -456,7 +498,7 @@ int main(int argc, char **argv) {
             //}
         }
 
-        xsk_ring_cons__release(&umem_info->rx, ret_ring);
+        xsk_ring_cons__release(&rx_ring, ret_ring);
         
         uint32_t idx_cq;
         unsigned int completed = xsk_ring_cons__peek(&umem_info->cq, XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
@@ -470,10 +512,29 @@ int main(int argc, char **argv) {
             // Indicates to the kernel that these packets have been consumed and the buffers can be reused for new incoming packets.
             xsk_ring_cons__release(&umem_info->cq, completed);
         }
+           //xsk->stats.rx_packets += ret_ring;
+
+
+            //const struct xdp_desc *rx_desc;
+            //
+            //rx_desc =  xsk_ring_cons__rx_desc(&rx_ring, idx_rx);
+            //void *pkt_addr = xsk_umem__get_data(buffer_do_pacote, rx_desc->addr);
+
+            //// Processamento do pacote
+            //printf("Pacote recebido, tamanho: %u bytes\n", rx_desc->len);
+
+            //// Libera o frame para reutilização
+            //xsk_ring_cons__release(&rx_ring, 1);
+
+            //// Envia o frame de volta ao ring buffer de preenchimento
+            //if (xsk_ring_prod__reserve(&fill_ring, 1, &idx_rx) == 1) {
+            //    *xsk_ring_prod__fill_addr(&fill_ring, idx_rx) = rx_desc->addr;
+            //    xsk_ring_prod__submit(&fill_ring, 1);
+            //}
     }
     
     xsk_socket__delete(xsk);
-    xsk_umem__delete(umem_info->umem);
+    xsk_umem__delete(umem);
     free(buffer_do_pacote);
     
     return 0;

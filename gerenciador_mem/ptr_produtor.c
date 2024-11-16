@@ -25,7 +25,7 @@ static void captura_sinal(){
 
 }
 
- typedef struct data{
+typedef struct data{
     char dados[1500];
 }buf_dados;
 
