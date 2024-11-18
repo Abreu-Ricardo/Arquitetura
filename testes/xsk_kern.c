@@ -15,7 +15,7 @@ struct mapa_mem{
 	__uint(max_entries, 1);
 	__type(key, __u32);
 	__type(value, sizeof(char) * 50); // Ver o tipo da var que o fd de mem eh   
-//    __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
+ //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_fd SEC(".maps");
 
 
