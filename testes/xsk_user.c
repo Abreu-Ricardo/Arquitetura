@@ -21,7 +21,16 @@
 
 #include <linux/if_xdp.h>
 #include <linux/if_link.h>
+#include <linux/if_ether.h>
+#include <linux/ipv6.h>
+#include <linux/icmp.h>
+#include <linux/icmpv6.h>
 #include <linux/bpf.h>
+#include <linux/ip.h>
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <sys/resource.h>
 #include <signal.h>
 #include <assert.h>
@@ -64,7 +73,9 @@ struct xsk_umem_info {
 	struct xsk_ring_cons cq; // completition ring da UMEM
 	struct xsk_ring_cons rx; // rx ring do socket
 	struct xsk_umem *umem;
-	void *buffer;
+
+    uint32_t tx_restante;
+	void *buffer; // Substituir o buffer_do_pacote por esse, para ficar mais organizado
 };
 
 struct xsk_umem_info *umem_info;
@@ -85,9 +96,7 @@ struct xsk_socket_config xsk_cfg = {
 };
 
 struct xsk_socket *xsk = NULL;
-void *buffer_do_pacote; // Trocar esse buffer que eh usado para criar a UMEM
-                        // e usar o ptr da mem compart do shm()
-
+void *buffer_do_pacote; // e usar o ptr da mem compart do shm()
 
 
 /************************************************************************/
@@ -129,6 +138,7 @@ void configura_umem(){
     // Alocação de memória para o UMEM
     int tam_buffer_pkt = NUM_FRAMES * FRAME_SIZE;
 
+    /**************************Alocand mem do tutorial*************************************************/
     // Allocate memory of SIZE bytes with an alignment of ALIGNMENT.  
     //if (posix_memalign(&buffer_do_pacote, getpagesize(), tam_buffer_pkt)) {
     //    perror("posix_memalign");
@@ -139,6 +149,9 @@ void configura_umem(){
     // CRIAR A MINHA PROPRIA COM SHM E FAZER COM QUE ELE USE ESSA MEM PARA
     // ESCREVER E LER OS PACOTES
     //umem_info = configura_xsk_umem(buffer_do_pacote, tam_buffer_pkt);
+    
+    /***************************************************************************/
+
     int ret_umem_create;
     umem_info = calloc(1, sizeof(struct xsk_umem_info *)); 
 
@@ -203,16 +216,132 @@ static void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uin
 
 	vetor_frame[*frame_free++] = frame;
 }
-/*************************************************************************/
 
-static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint32_t len){
-                   
-                   // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
-                   // nao retorna nada
-    uint8_t *pkt = xsk_umem__get_data(umem_info->buffer, addr);
-    return 1;
+/****************************************************************************/
+static inline __sum16 csum16_add(__sum16 csum, __be16 addend){
+	uint16_t res = (uint16_t)csum;
+
+	res += (__u16)addend;
+	return (__sum16)(res + (res < (__u16)addend));
 }
 
+/****************************************************************************/
+static inline __sum16 csum16_sub(__sum16 csum, __be16 addend){
+	return csum16_add(csum, ~addend);
+}
+
+/****************************************************************************/
+static inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
+	*sum = ~csum16_add(csum16_sub(~(*sum), old), new);
+}
+/*************************************************************************/
+static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint32_t len){
+
+
+    // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
+    uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr);
+    printf("addr do pkt: %p\n", pkt);
+
+    /* Lesson#3: Write an IPv6 ICMP ECHO parser to send responses
+     *
+     * Some assumptions to make it easier:
+     * - No VLAN handling
+     * - Only if nexthdr is ICMP
+     * - Just return all data with MAC/IP swapped, and type set to
+     *   ICMPV6_ECHO_REPLY
+     * - Recalculate the icmp checksum */
+
+    int ret;
+    uint32_t tx_idx = 0;
+    uint8_t tmp_mac[ETH_ALEN];
+    //struct in6_addr tmp_ip;
+    struct in_addr tmp_ip;
+    struct ethhdr  *eth = (struct ethhdr *) pkt;
+    struct iphdr   *ip  = (struct iphdr  *) (eth + 1);
+    //struct ipv6hdr *ipv6 = (struct ipv6hdr *) (eth + 1);
+    struct icmphdr *icmph = (struct icmphdr *) (ip + 1);
+    //struct icmp6hdr *icmp = (struct icmp6hdr *) (ipv6 + 1);
+
+   // if (ntohs(eth->h_proto) != ETH_P_IPV6 || len < (sizeof(*eth) + sizeof(*ipv6) + sizeof(*icmp)) ||
+   //         ipv6->nexthdr != IPPROTO_ICMPV6 || icmp->icmp6_type != ICMPV6_ECHO_REQUEST)
+   //     return false;
+    
+    printf("******* icmp->code: %d\n", ntohs(icmph->code));
+    if (ntohs(eth->h_proto) != ETH_P_IP || len < (sizeof(*eth) + sizeof(*ip) + sizeof(*icmph)) 
+        /*||     icmph->code != ICMP_ECHO*/){
+        printf("NAO EH ICMP\n");
+        return false;
+    }
+
+    printf("\n\n EH ICMP! \n\n");
+    
+    memcpy(tmp_mac, eth->h_dest, ETH_ALEN);
+    memcpy(eth->h_dest, eth->h_source, ETH_ALEN);
+    memcpy(eth->h_source, tmp_mac, ETH_ALEN);
+
+    memcpy(&tmp_ip, &ip->saddr, sizeof(tmp_ip));
+    memcpy(&ip->saddr, &ip->daddr, sizeof(tmp_ip));
+    memcpy(&ip->daddr, &tmp_ip, sizeof(tmp_ip));
+
+    icmph->code = ICMP_ECHOREPLY;
+    csum_replace2(&icmph->checksum, htons(ICMP_ECHO << 8), htons(ICMP_ECHOREPLY << 8));
+
+    //memcpy(&tmp_ip, &ipv6->saddr, sizeof(tmp_ip));
+    //memcpy(&ipv6->saddr, &ipv6->daddr, sizeof(tmp_ip));
+    //memcpy(&ipv6->daddr, &tmp_ip, sizeof(tmp_ip));
+    //icmp->icmp6_type = ICMPV6_ECHO_REPLY;
+    //csum_replace2(&icmp->icmp6_cksum, htons(ICMPV6_ECHO_REQUEST << 8), htons(ICMPV6_ECHO_REPLY << 8));
+
+    /* Here we sent the packet out of the receive port. Note that
+     * we allocate one entry and schedule it. Your design would be
+     * faster if you do batch processing/transmission */
+
+    // Reserve one or more slots in a producer ring.
+    // __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
+    ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
+    if (ret != 1) {
+        /* No more transmit slots, drop the packet */
+        return false;
+    }
+
+    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
+    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
+    xsk_ring_prod__submit( &umem_info->tx, 1);
+    umem_info->tx_restante++;
+
+    //xsk->stats.tx_bytes += len;
+    //xsk->stats.tx_packets++;
+    return true;
+
+    
+}
+/*************************************************************************/
+static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
+	
+    unsigned int completed;
+	uint32_t idx_cq;
+
+	if (!umem_info->tx_restante)
+		return;
+
+	sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
+
+	/* Collect/free completed TX buffers */
+	completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
+
+	if (completed > 0) {
+        //printf("-->Entrou no completed<--\n");
+		
+        for (int i = 0; i < completed; i++){
+            //printf("Desalocando %d\n", i);
+			desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+        }
+
+		xsk_ring_cons__release(&umem_info->cq, completed);
+		umem_info->tx_restante -= completed < umem_info->tx_restante ?	completed : umem_info->tx_restante;
+	}
+    return;
+}
 /*************************************************************************/
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -307,6 +436,7 @@ int main(int argc, char **argv) {
     //le_mapa(&bpf);
 
     //int fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0666);
+    
     int fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0777);
     if (fd_shm == -1){
         perror("Erro em shm_open\n");
@@ -325,10 +455,10 @@ int main(int argc, char **argv) {
         exit(1);
     }
     
-    int chave_mapa_fd = 0;
     buffer_do_pacote   = ( void *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    ptr_regiao      = (uint64_t  *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    ptr_fim_regiao  = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
+
+    ptr_regiao         = (uint64_t  *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    ptr_fim_regiao     = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
     //ptr_fim_regiao += tam_regiao - 1;
 
     /**************************************************************************************************************/
@@ -403,7 +533,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
         //printf("i:%d ************ %p\n", i, xsk_ring_prod__fill_addr(&umem_info->fq, idx));
 
-    	//xsk_ring_prod__fill_addr --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+    	//xsk_ring_prod__fill_addr() --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
         //retorna o endereco do pacote
         *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
     }
@@ -437,7 +567,7 @@ int main(int argc, char **argv) {
        }
 
         // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-        // retorna --> __u64 address of the packet.
+        // retorna o endereco do pacote --> __u64 address of the packet.
         stock_frames = xsk_prod_nb_free(&umem_info->fq,	umem_frame_free);
         //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
@@ -452,8 +582,10 @@ int main(int argc, char **argv) {
             while (ret_res != stock_frames)
                 ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
 
-            for (int i = 0; i < stock_frames; i++)
+            for (int i = 0; i < stock_frames; i++){
+             //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
                 *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
+            }
 
             // Submit the filled slots so the kernel can process them
             xsk_ring_prod__submit(&umem_info->fq, stock_frames);
@@ -461,42 +593,48 @@ int main(int argc, char **argv) {
 
         /* Process received packets */
         for (int i = 0; i < ret_ring; i++) {
-            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
-            uint32_t len = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
 
+            // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
+            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
+            uint32_t len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->len;
+
+            // Escreve na regiao compart
             if (cont_regiao < 100){
-                memcpy(ptr_regiao, &len, sizeof( int ) );
-                ptr_regiao = ptr_regiao + sizeof(uint64_t *);
+                //memcpy(ptr_regiao, &len, sizeof( uint32_t ) );
+                //ptr_regiao = ptr_regiao + sizeof(uint64_t *);
                 
                 cont_regiao++;
                 printf("Tamanho do pacote recebido %d | num pkt:%d\n", len, cont_regiao);
             }
 
-            //if (processa_pacote(umem_info, addr, len) == 1){
-            //    desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
-            //    //xsk->stats.rx_bytes += len;
-            //}
+            if (processa_pacote(umem_info, addr, len)){
+                desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
+                //xsk->stats.rx_bytes += len;
+            }
         }
 
         xsk_ring_cons__release(&umem_info->rx, ret_ring);
         
-        uint32_t idx_cq;
+        uint32_t idx_cq;    
+
+        // Check for new packets in the ring and returns __u32 he number of packets that are available in the consumer ring (idx)
         unsigned int completed = xsk_ring_cons__peek(&umem_info->cq, XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
-       	if (completed > 0) {
+       
+        if (completed > 0) {
         	for (int i = 0; i < completed; i++){
-		                                                                //This function is to read the address of a specific entry in the consumer ring.
+                //xsk_ring_cons__comp_addr() --> This function is to read the address of a specific entry in the consumer ring.
                 desaloca_umem_frame(umem_frame_addr, &umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
-            }
-		   
+            }  
             // This function releases a specified number of packets that have been processed from the consumer ring back to the kernel. 
             // Indicates to the kernel that these packets have been consumed and the buffers can be reused for new incoming packets.
             xsk_ring_cons__release(&umem_info->cq, completed);
         }
+        complete_tx(umem_frame_addr, &umem_frame_free);
     }
     
     xsk_socket__delete(xsk);
     xsk_umem__delete(umem_info->umem);
-    free(buffer_do_pacote);
+    //free(buffer_do_pacote);
     
     return 0;
 }

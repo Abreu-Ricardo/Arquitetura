@@ -72,36 +72,22 @@ SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
     int index = ctx->rx_queue_index; //0; // index do socket
-    int ret;
-    int key = 0;
+    int ret, key = 0;
     
     __u64 *ptr;
     ptr = bpf_map_lookup_elem(&mapa_fd, &key);
     ret = verifica_ip(ctx);
     
-    bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
-    //if (ptr != NULL){
-    //    bpf_printk("Valor do mapa: %d\n", *ptr);
-    //}
+    //bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
     
-
-    if (bpf_map_lookup_elem(&xsk_map, &key)){
+    //if (bpf_map_lookup_elem(&xsk_map, &key)){
+    if (ret == 1){
+        bpf_printk("Redirecionando...\n");
         return bpf_redirect_map(&xsk_map, index, /*BPF_F_INGRESS*/ XDP_PASS);
     }
 
-    bpf_printk("Pkt n foi redirecionado!\n");
-
+    bpf_printk("Pkt n foi redirecionado! %d\n", ret);
     return XDP_PASS;
-    //if(ret == 1){
-    //    bpf_printk("Pacote ICMP redirecionado! code:%d\n", ret);
-    //    //return XDP_DROP;
-    //    return bpf_redirect_map(&xsk_map, index, BPF_F_INGRESS);
-    //}
-    //else{
-    //    bpf_printk("Outros pkts passando... code:%d\n", ret);
-    //    return bpf_redirect_map(&xsk_map, index, 0);
-    //    //return XDP_PASS;
-    //}
 }
 
 char _license[] SEC("license") = "GPL";
