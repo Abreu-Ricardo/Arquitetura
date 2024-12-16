@@ -57,6 +57,7 @@ int lock = 1;
 int cont_regiao = 0;
 char *nome_regiao = "/memtest";
 char *nome_trava  = "/trava";
+char *ptr_trava;
 
 //struct info_ebpf bpf;
 
@@ -416,7 +417,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
         return;
     }
 
-    printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
+    //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
 
 
 	int retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
@@ -527,9 +528,9 @@ void polling_RX(struct xsk_info_global *info_global){
             //xsk->stats.rx_bytes += len;
         }
 
-        xsk_ring_cons__release(&umem_info2->rx, ret_ring);
-        complete_tx(info_global->umem_frame_addr, info_global->umem_frame_free);
-        //*ptr_trava = 0;
+        *ptr_trava = 1;
+        //xsk_ring_cons__release(&umem_info2->rx, ret_ring); 
+        //complete_tx(info_global->umem_frame_addr, info_global->umem_frame_free);
         }
 
     //xsk_socket__delete(xsk);
@@ -663,7 +664,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
     
-    char *ptr_trava;
     ptr_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
     *ptr_trava = 0;
     
@@ -838,7 +838,14 @@ int main(int argc, char **argv) {
     
     // Usar a lock aqui para a outra thread colocar 0 para 
     // essa enviar
+    int temp=1;
     while(1){
+        if(*ptr_trava == 1){
+            printf("Enviando pacote(%d)...\n", temp++);
+            xsk_ring_cons__release(&umem_info2->rx, ret_ring);
+            complete_tx(info_global->umem_frame_addr, info_global->umem_frame_free);
+            *ptr_trava = 0;
+        }
     }
     
    //xsk_umem__delete(umem_info->umem);
