@@ -85,7 +85,6 @@ struct xsk_umem_info {
 };
 
 struct xsk_umem_info *umem_info;
-
 struct xsk_umem_info *umem_info2;
 
 
@@ -239,39 +238,45 @@ void configura_socket(const char *iface ){
 /************************************************************************/
 
 void cria_segundo_socket(const char *iface){
+    __u32  ret_lookup, ret_lookup2, key=0; 
 
-    
-//    printf("Entrou segundo socket!!!\n");
-//
-//    int ret = xsk_socket__create_shared(&xsk2, iface, 0, umem_info->umem, &umem_info2->rx, &umem_info2->tx, &umem_info->fq, &umem_info->cq, &xsk_cfg2);
-//    
-//    //int ret = xsk_socket__create_shared(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, NULL, NULL, &xsk_cfg);
-//    //if (xsk_socket__create_shared(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, &umem_info->fq, &umem_info->cq, &xsk_cfg) < 0) {
-//    if (ret < 0) {
-//        printf("Valor do ret de socket_shared: %d\n", ret);
-//        fprintf(stderr, "Erro ao criar socket XDP: %s\n", strerror(errno));
-//        xsk_umem__delete(umem_info->umem);
-//        free(buffer_do_pacote);
-//        exit(1);
-//    }
-//
-//    printf("Criou segundo socket!!!\n");
-//
-//    int map_fd_xsk = bpf_object__find_map_fd_by_name(xdp_program__bpf_obj(xdp_prog), "xsk_map");
-//    int sock_fd2 = xsk_socket__fd(xsk);
-//	int ret_update = xsk_socket__update_xskmap(xsk2, map_fd_xsk);
-//    
-//    if (ret_update < 0){
-//        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
-//        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
-//        xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
-//        xdp_program__close(xdp_prog);
-//        xsk_socket__delete(xsk);
-//        xsk_umem__delete(umem_info->umem);
-//        free(buffer_do_pacote);
-//        //return 1;
-//    }
+    // Aloca umem_info2 para ser usado no socket2
+    umem_info2 = calloc(1, sizeof(*umem_info2));
+	if (!umem_info2){
+        printf("erro ao alocar umem_info2 na func cria_segundo_socket()\n");
+		return;
+    }
+    /*******************/
 
+    // Cria socket compartilhado
+    int ret = xsk_socket__create_shared(&xsk2, iface, 0, umem_info->umem, &umem_info2->rx, &umem_info2->tx, &umem_info->fq, &umem_info->cq, &xsk_cfg2);
+    if (ret < 0) {
+        printf("Valor do ret de socket_shared: %d\n", ret);
+        fprintf(stderr, "Erro ao criar socket XDP: %s\n", strerror(errno));
+        xsk_umem__delete(umem_info->umem);
+        free(buffer_do_pacote);
+        exit(1);
+    }
+    printf("Segundo socket criado!\n");
+    /********************/
+
+    int map_fd_xsk = bpf_object__find_map_fd_by_name(xdp_program__bpf_obj(xdp_prog), "xsk_map");
+
+    // Na implementacao eh usado um bpf_map_update_elem mas na chave eh 
+    // usado o id da fila(queue_id), por isso que qnd eu tento fazer na mao da erro
+    int ret_update = xsk_socket__update_xskmap(xsk2, map_fd_xsk);
+    if (ret_update < 0){
+        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
+        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+        xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+        xdp_program__close(xdp_prog);
+        xsk_socket__delete(xsk);
+        xsk_umem__delete(umem_info->umem);
+        free(buffer_do_pacote);
+    }
+
+    int sock_fd2 = xsk_socket__fd(xsk2);
+    printf("Valor do fd do segundo socket: %d\n", sock_fd2);
 }
 
 /************************************************************************/
@@ -466,10 +471,10 @@ void polling_RX(struct xsk_info_global *info_global){
         // Verifica se há pacotes no ring buffer de recepção
         // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
         // Essa funcao no exemplo advanced03 tbm retorna 0
-        ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
+        ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
         //printf("\nVALOR DO ret_ring %d\n", ret_ring);
-        //printf("valor do umem_frame_free: %d\n",umem_frame_free);
+        //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
         if( !ret_ring ){
             //printf("\n\n <ret_ring deu zero>\n");
@@ -480,7 +485,7 @@ void polling_RX(struct xsk_info_global *info_global){
         // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
         // retorna o endereco do pacote --> __u64 address of the packet.
         stock_frames = xsk_prod_nb_free(&umem_info->fq,	*info_global->umem_frame_free);
-        //printf("******************VALOR DO stock_frames %d\n", stock_frames);
+       // printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
         if(stock_frames > 0){
             printf("stock_frames OK\n");
@@ -505,8 +510,8 @@ void polling_RX(struct xsk_info_global *info_global){
         /* Process received packets */
         for (int i = 0; i < ret_ring; i++) {
             // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
-            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
-            uint32_t len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
+            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx)->addr;
+            uint32_t len  = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx++)->len;
 
             cont_pkt++;
             printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
@@ -522,7 +527,7 @@ void polling_RX(struct xsk_info_global *info_global){
             //xsk->stats.rx_bytes += len;
         }
 
-        xsk_ring_cons__release(&umem_info->rx, ret_ring);
+        xsk_ring_cons__release(&umem_info2->rx, ret_ring);
         complete_tx(info_global->umem_frame_addr, info_global->umem_frame_free);
         //*ptr_trava = 0;
         }
@@ -623,13 +628,6 @@ int main(int argc, char **argv) {
 
     /**************************************************************************************************************/
 
-    //char *caminho_prog = "xsk_kern.o";
-    //char *nome_regiao = "/memtest";
-    
-    //carrega_ebpf(caminho_prog, "teste", &bpf);
-    //atualiza_mapa(caminho_prog, "mapa_fd", nome_regiao, &bpf);
-    //le_mapa(&bpf);
-
     //int fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0666);
     int fd_shm = shm_open(nome_regiao, O_CREAT | O_RDWR, 0777);
     if (fd_shm == -1){
@@ -646,12 +644,8 @@ int main(int argc, char **argv) {
         perror("Erro em ftruncate\n");
         exit(1);
     }
-    
-    buffer_do_pacote   = ( void *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
 
-    //ptr_regiao         = (uint64_t  *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    //ptr_fim_regiao     = (char *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
-    //ptr_fim_regiao += tam_regiao - 1;
+    buffer_do_pacote   = ( void *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
 
     /************************************************** Cria mem da trava ************************************************************/
     int tam_trava = 100;
@@ -682,29 +676,32 @@ int main(int argc, char **argv) {
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
     // Atualiza o mapa xsk com valor do fd do socket criado
-	int ret = xsk_socket__update_xskmap(xsk, map_fd_xsk);
-    if (ret < 0){
-        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
-        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
-        xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
-        xdp_program__close(xdp_prog);
-        xsk_socket__delete(xsk);
-        xsk_umem__delete(umem_info->umem);
-        free(buffer_do_pacote);
-        return 1;
-    }
+	//int ret = xsk_socket__update_xskmap(xsk, map_fd_xsk);
+    //if (ret < 0){
+    //    fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
+    //    //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+    //    xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+    //    xdp_program__close(xdp_prog);
+    //    xsk_socket__delete(xsk);
+    //    xsk_umem__delete(umem_info->umem);
+    //    free(buffer_do_pacote);
+    //    return 1;
+    //}
 
-    int key = 0;
+    int key = 0, ret_xsk=-1;
     char *ret_lookup = "valor inicial"; // valor para ver se escreveu algo na var
-    int ret_look;
-    ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
+   
+    int ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
+    int ret_xskmap = bpf_map_lookup_elem(map_fd_xsk, &key, &ret_xsk);
     
-    if(ret_look < 0){
+    if(ret_look < 0 && ret_xskmap < 0){
         printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
+        return -1;
     }
 
-    printf("\nValor do retorno do mapa: %s\n\n", ret_lookup);
-    printf("\n\nSocket XDP configurado com sucesso na interface %s.\n\n", iface);
+    printf("\nValor do retorno do mapa: %s\n", ret_lookup);
+    printf("Valor do retorno do xskmap: %d\n", ret_xskmap);
+    printf("Socket XDP configurado com sucesso na interface %s.\n\n", iface);
 
     /**************************************************************************************************************/
 
@@ -758,12 +755,13 @@ int main(int argc, char **argv) {
 
     struct xsk_info_global *info_global;
     info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
+
     info_global->umem_frame_addr = umem_frame_addr;
     info_global->umem_frame_free = &umem_frame_free;
     info_global->umem_info = umem_info;
 
-    pthread_t thread_imprime; 
-    pthread_create(&thread_imprime, NULL, (void *)polling_RX, (void *)info_global);
+    pthread_t thread_pollingRX; 
+    pthread_create(&thread_pollingRX, NULL, (void *)polling_RX, (void *)info_global);
     
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Loop para processar pacotesve 2048 valor do 
@@ -837,6 +835,9 @@ int main(int argc, char **argv) {
     //}
     
     //xsk_socket__delete(xsk);
+    
+    // Usar a lock aqui para a outra thread colocar 0 para 
+    // essa enviar
     while(1){
     }
     

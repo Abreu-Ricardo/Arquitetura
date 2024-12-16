@@ -23,7 +23,7 @@ struct mapa_mem{
 // Define um mapa XSKMAP para o socket AF_XDP
 struct {
     __uint(type, BPF_MAP_TYPE_XSKMAP);
-    __uint(max_entries, 1); // Suporta uma única entrada de socket para simplificação
+    __uint(max_entries, 4); 
     __type(key, __u32);
     __type(value, __u32);
 } xsk_map SEC(".maps");
@@ -74,16 +74,19 @@ int xdp_prog(struct xdp_md *ctx){
     int index = ctx->rx_queue_index; //0; // index do socket
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
-    __u64 *ptr;
+    __u64 *ptr, *ptr2;
     ptr = bpf_map_lookup_elem(&mapa_fd, &key);
     ret = verifica_ip(ctx);
     
+    key = 0;
+    ptr2 = bpf_map_lookup_elem(&mapa_fd, &key);
     //bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
+    //bpf_printk("valor mapa_xsk: posicao(0)%d posicao(1)%d\n", *ptr, *ptr2);
     
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
         bpf_printk("Redirecionando...\n");
-        return bpf_redirect_map(&xsk_map, key, /*BPF_F_INGRESS*/ XDP_PASS);
+        return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
     }
 
     bpf_printk("Pkt n foi redirecionado! %d\n", ret);
