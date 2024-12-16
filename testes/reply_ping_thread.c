@@ -35,11 +35,13 @@
 #include <signal.h>
 #include <assert.h>
 
+#include <pthread.h>
 
 //#include "../bib/teste_bib.h"
 
 
 #define NUM_FRAMES 4096
+//#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
 //#define FRAME_SIZE 4096
 #define FRAME_SIZE 2048
@@ -54,7 +56,7 @@ int ifindex;
 int lock = 1;
 int cont_regiao = 0;
 char *nome_regiao = "/memtest";
-char *nome_trava = "/trava";
+char *nome_trava  = "/trava";
 
 //struct info_ebpf bpf;
 
@@ -84,6 +86,17 @@ struct xsk_umem_info {
 
 struct xsk_umem_info *umem_info;
 
+struct xsk_umem_info *umem_info2;
+
+
+/*****************************************/
+struct xsk_info_global {
+
+    struct xsk_umem_info *umem_info;
+    uint64_t *umem_frame_addr;
+    uint32_t *umem_frame_free;
+
+};
 
 /*****************************************/
 
@@ -101,7 +114,19 @@ struct xsk_socket_config xsk_cfg = {
     .bind_flags =  XDP_COPY,
 };
 
+struct xsk_socket_config xsk_cfg2 = {
+    .rx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
+    .tx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
+    .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
+    //.xdp_flags = XDP_FLAGS_SKB_MODE,
+    .xdp_flags = XDP_FLAGS_DRV_MODE,
+    .bind_flags =  XDP_SHARED_UMEM,
+};
+
+
 struct xsk_socket *xsk;
+struct xsk_socket *xsk2;
+
 void *buffer_do_pacote; // e usar o ptr da mem compart do shm()
 
 
@@ -211,6 +236,43 @@ void configura_socket(const char *iface ){
     
     return;
 }
+/************************************************************************/
+
+void cria_segundo_socket(const char *iface){
+
+    
+//    printf("Entrou segundo socket!!!\n");
+//
+//    int ret = xsk_socket__create_shared(&xsk2, iface, 0, umem_info->umem, &umem_info2->rx, &umem_info2->tx, &umem_info->fq, &umem_info->cq, &xsk_cfg2);
+//    
+//    //int ret = xsk_socket__create_shared(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, NULL, NULL, &xsk_cfg);
+//    //if (xsk_socket__create_shared(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, &umem_info->fq, &umem_info->cq, &xsk_cfg) < 0) {
+//    if (ret < 0) {
+//        printf("Valor do ret de socket_shared: %d\n", ret);
+//        fprintf(stderr, "Erro ao criar socket XDP: %s\n", strerror(errno));
+//        xsk_umem__delete(umem_info->umem);
+//        free(buffer_do_pacote);
+//        exit(1);
+//    }
+//
+//    printf("Criou segundo socket!!!\n");
+//
+//    int map_fd_xsk = bpf_object__find_map_fd_by_name(xdp_program__bpf_obj(xdp_prog), "xsk_map");
+//    int sock_fd2 = xsk_socket__fd(xsk);
+//	int ret_update = xsk_socket__update_xskmap(xsk2, map_fd_xsk);
+//    
+//    if (ret_update < 0){
+//        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
+//        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+//        xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+//        xdp_program__close(xdp_prog);
+//        xsk_socket__delete(xsk);
+//        xsk_umem__delete(umem_info->umem);
+//        free(buffer_do_pacote);
+//        //return 1;
+//    }
+
+}
 
 /************************************************************************/
 
@@ -255,8 +317,8 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
 
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr);
-    printf("addr do pkt: %p | endereco passado: %ld\n", pkt, addr);
-    printf("umem_info->tx_restante: %d\n", umem_info->tx_restante);
+    //printf("addr do pkt: %p | endereco passado: %ld\n", pkt, addr);
+    //printf("umem_info->tx_restante: %d\n", umem_info->tx_restante);
     
     /* Lesson#3: Write an IPv6 ICMP ECHO parser to send responses
      *
@@ -327,7 +389,7 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
     xsk_ring_prod__submit( &umem_info->tx, 1);
     umem_info->tx_restante++;
 
-    printf("### umem_info->tx_restante: %d\n", umem_info->tx_restante);
+    //printf("### umem_info->tx_restante: %d\n", umem_info->tx_restante);
 
     //xsk->stats.tx_bytes += len;
     //xsk->stats.tx_packets++;
@@ -338,7 +400,7 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
 /*************************************************************************/
 static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
 	
-    printf("chamando complete_tx\n");
+    //printf("chamando complete_tx\n");
     
     unsigned int completed;
 	uint32_t idx_cq;
@@ -349,7 +411,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
         return;
     }
 
-    printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n\n", umem_info->tx_restante); 
+    printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
 
 
 	int retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
@@ -358,14 +420,14 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
     // Se retorno de sendto for < 0, houve erro 
     if (retsend >= 0){
 
-        printf("ret sendto: %d\n", retsend);
+        //printf("ret sendto: %d\n", retsend);
 
         /* Collect/free completed TX buffers */
         completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
-        printf("(complete_tx) valor de completed: %d\n", completed);
+        //printf("(complete_tx) valor de completed: %d\n", completed);
 
         if (completed > 0) {
-            printf("-->Entrou no completed<--\n");
+            //printf("-->Entrou no completed<--\n");
             
             for (int i = 0; i < completed; i++){
                 //printf("Desalocando %d\n", i);
@@ -383,6 +445,94 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free){
     return;
 }
 /*************************************************************************/
+
+void polling_RX(struct xsk_info_global *info_global){
+    printf("<Entrou polling_RX>\n");
+    //printf("entrou comeco--> %d %ld\n", *info_global->umem_frame_free, info_global->umem_frame_addr[1]);
+
+
+    /**************************************************************/
+    __u32 ret_ring=0, stock_frames=0;
+    __uint64_t cont_pkt=0;
+    
+    while (lock == 1) {
+        //while ( *ptr_trava == 0 ) {
+
+        // esse laco pode ser o equivalente a funcao handle_receive_packets
+        // do advanced03-AF-XDP
+        uint32_t idx_rx = 0;
+        uint32_t idx_fq = 0;
+
+        // Verifica se há pacotes no ring buffer de recepção
+        // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
+        // Essa funcao no exemplo advanced03 tbm retorna 0
+        ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
+
+        //printf("\nVALOR DO ret_ring %d\n", ret_ring);
+        //printf("valor do umem_frame_free: %d\n",umem_frame_free);
+
+        if( !ret_ring ){
+            //printf("\n\n <ret_ring deu zero>\n");
+            continue;
+        }
+
+        
+        // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+        // retorna o endereco do pacote --> __u64 address of the packet.
+        stock_frames = xsk_prod_nb_free(&umem_info->fq,	*info_global->umem_frame_free);
+        //printf("******************VALOR DO stock_frames %d\n", stock_frames);
+
+        if(stock_frames > 0){
+            printf("stock_frames OK\n");
+
+            // Reserve one or more slots in a producer ring.
+            // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
+            int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
+
+            /* This should not happen, but just in case */
+            while (ret_res != stock_frames)
+                ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
+
+            for (int i = 0; i < stock_frames; i++){
+                //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+                *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free);
+            }
+
+            // Submit the filled slots so the kernel can process them
+            xsk_ring_prod__submit(&umem_info->fq, stock_frames);
+        }
+
+        /* Process received packets */
+        for (int i = 0; i < ret_ring; i++) {
+            // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
+            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
+            uint32_t len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
+
+            cont_pkt++;
+            printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
+            if (!processa_pacote(umem_info, addr, len)){
+                //if ( *ptr_trava == 0)
+                //printf("Outro programa pegou o controle da mem");
+                desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
+                //xsk->stats.rx_bytes += len;
+            }
+            // while ( *ptr_trava != 1){
+            //printf("Controle da mem aqui\n");
+            //desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
+            //xsk->stats.rx_bytes += len;
+        }
+
+        xsk_ring_cons__release(&umem_info->rx, ret_ring);
+        complete_tx(info_global->umem_frame_addr, info_global->umem_frame_free);
+        //*ptr_trava = 0;
+        }
+
+    //xsk_socket__delete(xsk);
+    //xsk_umem__delete(umem_info->umem);
+
+}
+
+/*************************************************************************/
 int main(int argc, char **argv) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
@@ -391,10 +541,11 @@ int main(int argc, char **argv) {
 
     const char *iface = argv[1];
 
-    //xsk_cfg.bind_flags =  XDP_COPY;   
-    //xsk_cfg.bind_flags &= ~XDP_ZEROCOPY;   
-    //xsk_cfg.bind_flags = XDP_SHARED_UMEM;   
-    
+    //xsk_cfg.bind_flags =  XDP_COPY;
+    //xsk_cfg.bind_flags &= ~XDP_ZEROCOPY;  
+    //xsk_cfg.bind_flags = XDP_SHARED_UMEM; 
+   
+    //pthread_create(&thread_imprime, NULL, (void *)polling_RX, NULL);
     /***************Config da regiao de mem compart com shm*****************/
     char *caminho_prog = "xsk_kern.o";
 
@@ -526,6 +677,7 @@ int main(int argc, char **argv) {
     
     configura_umem();
     configura_socket( iface );
+    cria_segundo_socket( iface );
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
@@ -604,93 +756,93 @@ int main(int argc, char **argv) {
     int ret_ring;
     unsigned int stock_frames;
 
+    struct xsk_info_global *info_global;
+    info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
+    info_global->umem_frame_addr = umem_frame_addr;
+    info_global->umem_frame_free = &umem_frame_free;
+    info_global->umem_info = umem_info;
+
+    pthread_t thread_imprime; 
+    pthread_create(&thread_imprime, NULL, (void *)polling_RX, (void *)info_global);
+    
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Loop para processar pacotesve 2048 valor do 
-    while (lock == 1) {
-    //while ( *ptr_trava == 0 ) {
+    //while (lock == 1) {
+    ////while ( *ptr_trava == 0 ) {
 
-        // esse laco pode ser o equivalente a funcao handle_receive_packets
-        // do advanced03-AF-XDP
-        uint32_t idx_rx = 0;
-        uint32_t idx_fq = 0;
+    //    // esse laco pode ser o equivalente a funcao handle_receive_packets
+    //    // do advanced03-AF-XDP
+    //    uint32_t idx_rx = 0;
+    //    uint32_t idx_fq = 0;
 
-        // Verifica se há pacotes no ring buffer de recepção
-        // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
-        // Essa funcao no exemplo advanced03 tbm retorna 0
-        ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
+    //    // Verifica se há pacotes no ring buffer de recepção
+    //    // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
+    //    // Essa funcao no exemplo advanced03 tbm retorna 0
+    //    ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
 
-        //printf("\nVALOR DO ret_ring %d\n", ret_ring);
-        //printf("valor do umem_frame_free: %d\n",umem_frame_free);
+    //    //printf("\nVALOR DO ret_ring %d\n", ret_ring);
+    //    //printf("valor do umem_frame_free: %d\n",umem_frame_free);
 
-        if( !ret_ring ){
-            //printf("\n\n <ret_ring deu zero>\n");
-            continue;
-        }
+    //    if( !ret_ring ){
+    //        //printf("\n\n <ret_ring deu zero>\n");
+    //        continue;
+    //    }
 
-        // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-        // retorna o endereco do pacote --> __u64 address of the packet.
-        stock_frames = xsk_prod_nb_free(&umem_info->fq,	umem_frame_free);
-        //printf("******************VALOR DO stock_frames %d\n", stock_frames);
+    //    // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+    //    // retorna o endereco do pacote --> __u64 address of the packet.
+    //    stock_frames = xsk_prod_nb_free(&umem_info->fq,	umem_frame_free);
+    //    //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
-        if(stock_frames > 0){
-            printf("stock_frames OK\n");
+    //    if(stock_frames > 0){
+    //        printf("stock_frames OK\n");
 
-            // Reserve one or more slots in a producer ring.
-            // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
-            int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
+    //        // Reserve one or more slots in a producer ring.
+    //        // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
+    //        int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
 
-            /* This should not happen, but just in case */
-            while (ret_res != stock_frames)
-                ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
+    //        /* This should not happen, but just in case */
+    //        while (ret_res != stock_frames)
+    //            ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
 
-            for (int i = 0; i < stock_frames; i++){
-                //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-                *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
-            }
+    //        for (int i = 0; i < stock_frames; i++){
+    //            //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+    //            *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
+    //        }
 
-            // Submit the filled slots so the kernel can process them
-            xsk_ring_prod__submit(&umem_info->fq, stock_frames);
-        }
+    //        // Submit the filled slots so the kernel can process them
+    //        xsk_ring_prod__submit(&umem_info->fq, stock_frames);
+    //    }
 
-        /* Process received packets */
-        for (int i = 0; i < ret_ring; i++) {
-            // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
-            uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
-            uint32_t len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
+    //    /* Process received packets */
+    //    for (int i = 0; i < ret_ring; i++) {
+    //        // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
+    //        uint64_t addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
+    //        uint32_t len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
 
-            // Escreve na regiao compart
-            if (cont_regiao < 100){
-                //memcpy(ptr_regiao, &len, sizeof( uint32_t ) );
-                //ptr_regiao = ptr_regiao + sizeof(uint64_t *);
-                cont_regiao++;
-                printf("\n\n###############################################\n");
-                printf("Tamanho do pacote recebido %d | num pkt:%d\n", len, cont_regiao);
-            }
+    //        if (!processa_pacote(umem_info, addr, len)){
+    //          //if ( *ptr_trava == 0)
+    //            //printf("Outro programa pegou o controle da mem");
+    //            desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
+    //            //xsk->stats.rx_bytes += len;
+    //        }
+    //   // while ( *ptr_trava != 1){
+    //            //printf("Controle da mem aqui\n");
+    //            //desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
+    //            //xsk->stats.rx_bytes += len;
+    //    }
 
-            if (!processa_pacote(umem_info, addr, len)){
-              //if ( *ptr_trava == 0)
-                //printf("Outro programa pegou o controle da mem");
-                desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
-                //xsk->stats.rx_bytes += len;
-            }
-        
-       // while ( *ptr_trava != 1){
-                //printf("Controle da mem aqui\n");
-                //desaloca_umem_frame(umem_frame_addr, &umem_frame_free, addr);
-                //xsk->stats.rx_bytes += len;
-        }
-
-        xsk_ring_cons__release(&umem_info->rx, ret_ring);
-        complete_tx(umem_frame_addr, &umem_frame_free);
-        
-        *ptr_trava = 0;
-        }
+    //    xsk_ring_cons__release(&umem_info->rx, ret_ring);
+    //    complete_tx(umem_frame_addr, &umem_frame_free);
+    //    *ptr_trava = 0;
+    //}
     
+    //xsk_socket__delete(xsk);
+    while(1){
+    }
     
-    xsk_socket__delete(xsk);
-    xsk_umem__delete(umem_info->umem);
-    //free(buffer_do_pacote);
-    
+   //xsk_umem__delete(umem_info->umem);
+   //free(buffer_do_pacote);
+
     return 0;
 
 }

@@ -12,7 +12,7 @@
 
 struct mapa_mem{ 
 	__uint(type, BPF_MAP_TYPE_ARRAY);
-	__uint(max_entries, 1);
+	__uint(max_entries, 4);
 	__type(key, __u32);
 	__type(value, sizeof(char) * 50); // Ver o tipo da var que o fd de mem eh   
  //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
@@ -72,7 +72,7 @@ SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
     int index = ctx->rx_queue_index; //0; // index do socket
-    int ret, key = 0;
+    int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
     __u64 *ptr;
     ptr = bpf_map_lookup_elem(&mapa_fd, &key);
@@ -83,7 +83,7 @@ int xdp_prog(struct xdp_md *ctx){
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
         bpf_printk("Redirecionando...\n");
-        return bpf_redirect_map(&xsk_map, index, /*BPF_F_INGRESS*/ XDP_PASS);
+        return bpf_redirect_map(&xsk_map, key, /*BPF_F_INGRESS*/ XDP_PASS);
     }
 
     bpf_printk("Pkt n foi redirecionado! %d\n", ret);
