@@ -31,13 +31,16 @@
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 #include <signal.h>
 #include <assert.h>
 
+#include <linux/net_namespace.h>
+#include <linux/sched.h>
 #include <pthread.h>
 
 //#include "../bib/teste_bib.h"
+
+#define _GNU_SOURCE
 
 #define NUM_FRAMES 4096
 //#define NUM_FRAMES 8192
@@ -706,6 +709,7 @@ int main(int argc, char **argv) {
 
     // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
    	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
+    
     int ret_ring;
     unsigned int stock_frames;
     struct xsk_info_global *info_global;
@@ -715,35 +719,22 @@ int main(int argc, char **argv) {
     info_global->umem_frame_free = &umem_frame_free;
     info_global->ret_ring = ret_ring;
 
-
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
-
-    printf("########## %d\n\n", ptr_mem_info_global->ret_ring);
-    //pthread_t thread_pollingRX; 
-    //pthread_create(&thread_pollingRX, NULL, (void *)polling_RX, (void *)info_global);
-    //ptr_mem_info_global->umem_frame_addr = umem_frame_addr;
-    //ptr_mem_info_global->umem_frame_free = &umem_frame_free; 
-    //ptr_mem_info_global->umem_info = umem_info;
-
-
-    //memcpy( ptr_mem_info_global, umem_frame_addr, sizeof( *umem_frame_addr ));
-    //ptr_mem_info_global += sizeof(info_global->umem_frame_addr );
-    //ptr_mem_info_global += sizeof( struct xsk_info_global * );
-
-    //memcpy( ptr_mem_info_global, &umem_frame_free, sizeof( umem_frame_free ));
-    //ptr_mem_info_global += sizeof(umem_frame_free);
-    
-    //memcpy( ptr_mem_info_global, &ret_ring, sizeof( ret_ring ));
-    //ptr_mem_info_global += sizeof(struct xsk_info_global *);
+    //printf("########## %d\n\n", ptr_mem_info_global->ret_ring);
+ 
    
     pid_t pid;
     pid = fork();
     // ############################## PROCESSAMENTO DOS PACOTE #############################
-
+    // Processo filho
     if( pid == 0){
-        printf("PROCESSO FILHO CRIADO!!!valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
-       polling_RX( info_global );
+        int fd_namespace = 18429;
+            syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET | CLONE_NEWIPC);
+
+            printf("PROCESSO FILHO CRIADO!!!valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
+            polling_RX( info_global );
     }
+    // Processo pai
     else{
         printf("PROCESSO PAI COMECOU O WHILE!!! valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
 
