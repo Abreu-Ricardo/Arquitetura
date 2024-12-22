@@ -5,6 +5,7 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <fcntl.h>
+//#include <asm-generic/fcntl.h>
 
 #include <sys/shm.h>
 #include <sys/stat.h>
@@ -41,7 +42,7 @@
 //#include "../bib/teste_bib.h"
 
 #define _GNU_SOURCE
-
+#define O_PATH		010000000
 #define NUM_FRAMES 4096
 //#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
@@ -721,21 +722,35 @@ int main(int argc, char **argv) {
 
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
     //printf("########## %d\n\n", ptr_mem_info_global->ret_ring);
- 
-   
+
+
     pid_t pid;
     pid = fork();
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
     if( pid == 0){
-        int fd_namespace = 18429;
-            syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET | CLONE_NEWIPC);
+        if( setsid() < 0 )
+            exit(-1);
+        
+        // PID do namespace pego com lsns -type=net
+        int fd_namespace = open( "/proc/40880/ns/net",  O_RDONLY );
 
-            printf("PROCESSO FILHO CRIADO!!!valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
-            polling_RX( info_global );
+        char alvo_link[1024];
+        int ret_num_lido = readlink( "/proc/40880/ns/net", alvo_link, sizeof(alvo_link) );
+        fd_namespace < 0 ? printf("nao foi possivel abrir o fd do namespace\n") : printf("Consegui pegar o FD do namespace\n %d %d\n", fd_namespace, errno);
+       
+    
+        int ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
+        if (ret_sys < 0)
+            perror("\n\nNao foi possivel mover o processo");
+        
+        printf("RETORNO DA SYSCALL -->> %d\n\n", ret_sys);
+        printf("PROCESSO FILHO CRIADO!!!valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
+        polling_RX( info_global );
     }
     // Processo pai
     else{
+
         printf("PROCESSO PAI COMECOU O WHILE!!! valor do xsk2--> %d\n", xsk_socket__fd(xsk2));
 
         int temp=1;
