@@ -1,0 +1,10 @@
+Lista original:                             [13572, 36, 72, 72, 72, 36, 72, 36, 72, 36]
+Desvio padrao de cada item com a media:      12164.400 1371.600 1335.600 1335.600 1335.600 1371.600 1335.600 1371.600 1335.600 1371.600 
+Media dos tempos: 1407.600
+Media do desvio padrao: 2432.88
+
+sem o primeiro pkt:
+Desvio padrao de cada item com a media:      20.000 16.000 16.000 16.000 20.000 16.000 20.000 16.000 20.000 
+Media dos tempos: 56.000
+Media do desvio padrao: 17.7778
+

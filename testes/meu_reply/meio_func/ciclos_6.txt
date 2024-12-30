@@ -1,0 +1,9 @@
+Lista original:                             [29088, 2268, 1800, 2304, 2052, 2160, 2232, 2880, 2592, 2304]
+Desvio padrao de cada item com a media:      24120.000 2700.000 3168.000 2664.000 2916.000 2808.000 2736.000 2088.000 2376.000 2664.000 
+Media dos tempos: 4968.000
+Media do desvio padrao: 4824
+
+sem o primeiro pkt:
+Desvio padrao de cada item com a media:      20.000 488.000 16.000 236.000 128.000 56.000 592.000 304.000 16.000 
+Media dos tempos: 2288.000
+Media do desvio padrao: 206.2222

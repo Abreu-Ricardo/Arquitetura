@@ -1,0 +1,11 @@
+Lista original:                             [38196, 2736, 1944, 1548, 2412, 1728, 1404, 1944, 2124, 2052]
+Desvio padrao de cada item com a media:      32587.200 2872.800 3664.800 4060.800 3196.800 3880.800 4204.800 3664.800 3484.800 3556.800 
+Media dos tempos: 5608.800
+Media do desvio padrao: 6517.44
+
+
+sem o primeiro pkt:
+Desvio padrao de cada item com a media:      748.000 44.000 440.000 424.000 260.000 584.000 44.000 136.000 64.000 
+Media dos tempos: 1988.000
+Media do desvio padrao: 304.8889
+

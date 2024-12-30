@@ -1,0 +1,10 @@
+Lista original:                             [83160, 3600, 4320, 3492, 3024, 2016, 1332, 1944, 1440, 3528]
+Desvio padrao de cada item com a media:      72374.400 7185.600 6465.600 7293.600 7761.600 8769.600 9453.600 8841.600 9345.600 7257.600 
+Media dos tempos: 10785.600
+Media do desvio padrao: 14474.88
+
+sem o primeiro pkt:
+Desvio padrao de cada item com a media:      856.000 1576.000 748.000 280.000 728.000 1412.000 800.000 1304.000 784.000 
+Media dos tempos: 2744.000
+Media do desvio padrao: 943.1111
+

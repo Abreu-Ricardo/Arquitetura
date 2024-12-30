@@ -1,0 +1,11 @@
+Lista original:                             [1584, 468, 612, 504, 216, 540, 612, 216, 180, 756]
+Desvio padrao de cada item com a media:      1015.200 100.800 43.200 64.800 352.800 28.800 43.200 352.800 388.800 187.200 
+Media dos tempos: 568.800
+Media do desvio padrao: 257.76
+
+
+sem o primeiro pkt:
+Desvio padrao de cada item com a media:      12.000 156.000 48.000 240.000 84.000 156.000 240.000 276.000 300.000 
+Media dos tempos: 456.000
+Media do desvio padrao: 168
+

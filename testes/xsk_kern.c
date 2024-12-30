@@ -71,25 +71,24 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
-    int index = ctx->rx_queue_index; //0; // index do socket
+    //int index = ctx->rx_queue_index; //0; // index do socket
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
-    __u64 *ptr, *ptr2;
+    __u64 *ptr;
     ptr = bpf_map_lookup_elem(&mapa_fd, &key);
     ret = verifica_ip(ctx);
     
-    key = 0;
-    ptr2 = bpf_map_lookup_elem(&mapa_fd, &key);
+    //ptr2 = bpf_map_lookup_elem(&mapa_fd, &key);
     //bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
     //bpf_printk("valor mapa_xsk: posicao(0)%d posicao(1)%d\n", *ptr, *ptr2);
     
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
-        bpf_printk("Redirecionando...\n");
+        //bpf_printk("Redirecionando...\n");
         return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
     }
 
-    bpf_printk("Pkt n foi redirecionado! %d\n", ret);
+    //bpf_printk("Pkt n foi redirecionado! %d\n", ret);
     return XDP_PASS;
 }
 
