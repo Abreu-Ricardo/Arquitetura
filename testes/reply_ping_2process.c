@@ -328,7 +328,7 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
     /******************************************************/
-    start = RDTSC();
+    //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr);
     //end = RDTSC();
@@ -391,12 +391,12 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
     xsk_ring_prod__submit( &umem_info2->tx, 1);
     umem_info->tx_restante++;
-    end = RDTSC();
+    //end = RDTSC();
     /******************************************************/
 
 
     
-    printf("tempo total da func processa_pacote() --> %lld\n", (end - start) );
+    //printf("tempo total da func processa_pacote() --> %lld\n", (end - start) );
     // printf("### umem_info->tx_restante: %d\n", umem_info->tx_restante);
     return true;
 }
@@ -405,7 +405,7 @@ static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint3
 static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
     //printf("chamando complete_tx\n");
     
-   // start = RDTSC();
+    //start = RDTSC();
 
     int i, retsend; 
     unsigned int completed;
@@ -418,11 +418,11 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
     //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
-    retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    /*retsend =*/ sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
 
 
     // Se retorno de sendto for < 0, houve erro 
-    if (retsend >= 0){
+    //if (retsend >= 0){
 
         //printf("ret sendto: %d\n", retsend);
         /* Collect/free completed TX buffers */
@@ -440,11 +440,11 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
             xsk_ring_cons__release(&umem_info->cq, completed);
             *tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
         }
-    }
-    else{
-         printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
-         printf("*****************************\n\n");
-    }
+    //}
+    //else{
+    //     printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
+    //     printf("*****************************\n\n");
+    //}
 
     //end = RDTSC();
     
@@ -470,10 +470,10 @@ void polling_RX(struct xsk_info_global *info_global){
     uint64_t addr;
     uint32_t len; 
     
-    struct xsk_info_global *teste_info_global;
+    //struct xsk_info_global *teste_info_global;
     
-    ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
-    teste_info_global     = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
+    //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
+    //teste_info_global     = ( struct xsk_info_global *) malloc( sizeof(*info_global ) );
             
 
 
@@ -540,11 +540,11 @@ void polling_RX(struct xsk_info_global *info_global){
             //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
             //teste_info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
            
-            // NAO TER QUE REALOCA E PEGAR O PONTEIRO SEMPRE ACHO Q AJUDOU A DIMINUIR O TEMPO
-            teste_info_global->umem_frame_addr = info_global->umem_frame_addr;
-            teste_info_global->umem_frame_free = info_global->umem_frame_free;
-            teste_info_global->ret_ring = ret_ring;
-            teste_info_global->tx_restante = umem_info->tx_restante;
+            // NAO TER QUE REALOCAR E PEGAR O PONTEIRO SEMPRE ACHO Q AJUDOU A DIMINUIR O TEMPO
+            //teste_info_global->umem_frame_addr = info_global->umem_frame_addr;
+            //teste_info_global->umem_frame_free = info_global->umem_frame_free;
+            //teste_info_global->tx_restante     = umem_info->tx_restante;
+            //teste_info_global->ret_ring        = ret_ring;
 
             //memcpy(ptr_mem_info_global , teste_info_global , sizeof(*info_global));
             
@@ -804,46 +804,48 @@ int main(int argc, char **argv) {
     info_global->ret_ring = ret_ring;
 
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
-    
+    printf("------------ %ld\n", ptr_mem_info_global->umem_frame_addr[2]);
+
     pid = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
     if( pid == 0){
         pid_t fpid = getpid();
-        char settar_cpu[30];
+        char settar_cpuf[30];
         
         if( setsid() < 0 )
             exit(-1);
 
-        // PID do namespace pego com lsns -type=net
+        // PID do namespace pego com lsns --type=net dentro do container
         fd_namespace = open( "/proc/310869/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0)
             perror("\n\nNao foi possivel mover o processo");
         
         
-        sprintf(settar_cpu, "taskset -cp 5 %d", fpid);
-        system(settar_cpu);
+        sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
+        system(settar_cpuf);
         
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
-        polling_RX( info_global );
+        //polling_RX( info_global );
+        polling_RX( ptr_mem_info_global );
     }
     // Processo pai
     else{
         pid_t ppid = getpid();
-        char settar_cpu[30];
+        char settar_cpup[30];
         
-        sprintf(settar_cpu, "taskset -cp 4 %d", ppid);
-        printf("%s\n PROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpu);
-        system(settar_cpu);
+        sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+        printf("%s\n PROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
+        system(settar_cpup);
 
         //int temp=1;
         while(1){
             if(*ptr_trava == 1){
                 // ler info_global da mem compart para aatualizar a info_global do pai
-                ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
+                //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
                 //printf("----valor do umem_free PROCESSO PAI %d ----\n", *ptr_mem_info_global->ret_ring);
                 //printf("Enviando pacote(%d)...\n", temp++);
             
