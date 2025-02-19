@@ -814,14 +814,18 @@ int main(int argc, char **argv) {
         pid_t fpid = getpid();
         char settar_cpuf[30];
         
+        printf("<PID DO FILHO %d>\n", fpid);
+        
         if( setsid() < 0 )
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/310869/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/639181/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
-        if (ret_sys < 0)
+        if (ret_sys < 0){
+            printf("Verificar se o processo do container esta correto. Checar com 'lsns --type=net'\n");
             perror("\n\nNao foi possivel mover o processo");
+        }
         
         
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
@@ -838,6 +842,7 @@ int main(int argc, char **argv) {
         char settar_cpup[30];
         
         sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+        printf("<PID DO PAI %d>\n", ppid);
         printf("%s\n PROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
         system(settar_cpup);
 

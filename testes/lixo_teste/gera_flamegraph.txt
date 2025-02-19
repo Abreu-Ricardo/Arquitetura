@@ -1,0 +1,5 @@
+sudo perf record -F 99  -a -g -p 144812
+
+perf script | $FlameG/stackcollapse-perf.pl > out.perf-folded
+
+$FlameG/flamegraph.pl out.perf-folded > perf.svg

@@ -1,0 +1,29 @@
+
+#**************#
+$(CC) = gcc
+CL = clang
+DIR = $(shell pwd)
+
+kern: 
+	clang -g -O2 -target bpf -c signal_monitor.bpf.c -o signal_monitor.bpf.o
+	clang -g -O2 -target bpf -c sigsnoop.bpf.c -o sigsnoop.bpf.o
+	clang -g -O2 -target bpf -c teste_tc.c -o teste_tc.o
+	
+	bpftool gen skeleton signal_monitor.bpf.o > signal_monitor.skel.h
+	bpftool gen skeleton sigsnoop.bpf.o 	  > sigsnoop.skel.h
+	bpftool gen skeleton teste_tc.o 		  > teste_tc.skel.h
+	
+	#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
+
+user: 
+	$(CC) meu_loader.c -lbpf -o meu_loader
+	$(CC) signal_monitor.c -o -lbpf signal_monitor 
+
+clean:
+
+	sudo rm *.o
+	sudo rm *.skel.h
+	sudo rm /sys/fs/bpf/signal_monitor
+	sudo bpftool prog show
+	@echo -e 'signal_monitor removido...'
+

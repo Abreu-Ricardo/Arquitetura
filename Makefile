@@ -4,31 +4,52 @@ $(CC) = gcc
 CL = clang
 DIR = $(shell pwd)
 
-kern: loader_ebpf loader_xdp 
+#kern: loader_ebpf loader_xdp loaders testes 
+kern: loaders testes.o
 	$(CL) -g -O2 -target bpf -c ./eBPF/espaco_kernel.c
+	@echo -e 'FIM MAKE...'
 
-loader_xdp: teste_bib.o
-	$(CC) loader_xdp.c  -lbpf -lxdp -o loader_xdp
 
-loader_ebpf: teste_bib.o loader.o gerenciador 
-	$(CC) ./bib/teste_bib.o loader_ebpf.o -lbpf -lxdp -o loader_ebpf
+loaders: teste_bib.o loader.o gerenciador
+	$(CC) ./loaders/loader_xdp.c  -lbpf -lxdp -o loader_xdp
+	$(CC) ./bib/teste_bib.o ./loaders/loader_ebpf.o -lbpf -lxdp -o loader_ebpf
+	@echo -e 'Make do loader_ebpf concluído...\n'
 
-loader.o: teste_bib.o
-	$(CC) -c loader_ebpf.c
+#loader_xdp: teste_bib.o
+#	$(CC) ./loaders/loader_xdp.c  -lbpf -lxdp -o loader_xdp
+#	@echo -e 'Make do loader_xdp concluído...\n'
+#
+#loader_ebpf: teste_bib.o loader.o gerenciador 
+#	$(CC) ./bib/teste_bib.o ./loaders/loader_ebpf.o -lbpf -lxdp -o loader_ebpf
+#	@echo -e 'Make do loader_ebpf concluído...\n'
+
+loader.o: #teste_bib.o
+	make -C ./loaders/
+	@echo -e 'Make do diretório loaders concluído...\n'
 
 teste_bib.o: 
 	make -C ./bib/
+	@echo -e 'Make do diretório bib concluído...\n'
 
 gerenciador:
 	make -C ./gerenciador_mem/
+	@echo -e 'Make do diretório gerenciador concluído...\n'
 
-testes:
+testes.o:
 	make -C ./testes/
+	@echo -e 'Make do diretório testes concluído...\n'
 
 clean:
-	rm loader_ebpf loader_xdp
-	rm *.o 
+	#rm loader_ebpf loader_xdp
 	make clean -C ./gerenciador_mem/
+	@echo -e 'clean ./gerenciadaor_mem/\n'
+	
 	make clean -C ./bib/
+	@echo -e 'clean ./bib/\n'
+
 	make clean -C ./testes/
+	@echo -e 'clean ./testes/\n'
+	
+	make clean -C ./loaders/
+	@echo -e 'clean ./loaders/\n'
 
