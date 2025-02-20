@@ -1,4 +1,4 @@
-// signal_monitor.c
+/* signal_monitor.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -12,20 +12,29 @@
 
 #define EVENT_RINGBUF_SIZE 4096
 
+struct ring_buffer *rb = NULL;
+
 struct signal_event {
-    int pid;
+    pid_t pid;
     int sig;
-    int tgid;
+    int uid;
 };
 
 static void handle_event(void *ctx, int cpu, void *data, __u32 size) {
+    //printf("ENTROUUUU\n");
     struct signal_event *event = data; 
-    printf("Signal %d sent to PID %d (TGID %d)\n", event->sig, event->pid, event->tgid);
+    int ret_consume = 0; // ring_buffer__consume(rb);
+
+    if (ret_consume < 0){
+        printf("Erro ao consumir o ringbuf\n");
+    }
+    // rb->ALGUMA_COISA
+    //printf("Signal %d sent to PID %d (TGID %d)\n", event->sig, event->pid, event->uid);
 }
 
 int main() {
     struct signal_monitor_bpf *skel;
-    struct ring_buffer *rb = NULL;
+   // struct ring_buffer *rb = NULL;
     int err;
 
     // Increase memory limits for eBPF
@@ -46,8 +55,13 @@ int main() {
         goto cleanup;
     }
 
+    printf("\n<Programa carregado>\n");
+    
     // Set up ring buffer polling
-    rb = ring_buffer__new(bpf_map__fd(skel->maps.events), (void *)handle_event, NULL, NULL);
+    rb = ring_buffer__new(bpf_map__fd(skel->maps.events ), (void *)handle_event, NULL, NULL);
+    
+    //struct user_ring_buffer *urb;
+    //urb = user_ring_buffer__new(bpf_map__fd(skel->maps.events ), NULL); //(void *)handle_event, NULL, NULL);
     if (!rb) {
         fprintf(stderr, "Failed to create ring buffer\n");
         goto cleanup;
@@ -56,7 +70,8 @@ int main() {
     printf("Monitoring signals... Press Ctrl+C to stop.\n");
 
     while (1) {
-        err = ring_buffer__poll(rb, -1);
+        //printf("Entrou laco\n\n");
+        err = ring_buffer__poll(rb, 100);
         if (err < 0) {
             fprintf(stderr, "Error polling ring buffer\n");
             break;

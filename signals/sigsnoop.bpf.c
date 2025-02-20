@@ -58,6 +58,7 @@ cleanup:
  return 0;
 }
 
+/***********************************************/
 SEC("tracepoint/syscalls/sys_enter_kill")
 int kill_entry(struct trace_event_raw_sys_enter *ctx)
 {
@@ -68,6 +69,7 @@ int kill_entry(struct trace_event_raw_sys_enter *ctx)
  return probe_entry(tpid, sig);
 }
 
+/***********************************************/
 SEC("tracepoint/syscalls/sys_exit_kill")
 int kill_exit(struct trace_event_raw_sys_exit *ctx)
 {
