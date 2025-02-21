@@ -22,39 +22,46 @@ LIBS = signal_monitor.skel.h sigsnoop.skel.h teste_tc.skel.h
 
 DIR = $(shell pwd)
 
-all: kern skel $(SOURCE_C)
-#all: $(OBJETOS_BPF) $(OBJETOS_C) 
+#all: kern skel $(OBJETOS_C)
+all: $(OBJETOS_BPF) $(GERA_SKEL) signal_monitor 
 	@echo -e '\n +++ Compilação pronta! +++'
 
-kern: $(SOURCE_BPF)
-#$(OBJETOS_BPF): $(SOURCE_BPF)
+#kern: $(SOURCE_BPF)
+$(OBJETOS_BPF): $(SOURCE_BPF)
 	$(CL) $(BPF_FLAGS) $(SOURCE_BPF)
-	@echo -e '-->$(OBJETOS_LIB_BPF)'
+
+	@echo -e 'Objetos eBPF gerados...\n'
+	
 	@#$(CL) $(BPF_FLAGS) signal_monitor.bpf.c -o signal_monitor.bpf.o
 	@#$(CL) $(BPF_FLAGS) sigsnoop.bpf.c -o sigsnoop.bpf.o
 	@#$(CL) $(BPF_FLAGS) teste_tc.c -o teste_tc.o
 
-skel: $(OBJETOS_BPF)
-	@#$(GERA_SKEL) $(OBJETOS_BPF) > $(OBJETOS_LIB_BPF) #$(LIBS)
+#skel: $(OBJETOS_BPF)
+$(GERA_SKEL): $(OBJETOS_BPF)
 	
 	@$(foreach i, $(OBJETOS_BPF), $(GERA_SKEL) $i > $(i:.bpf.o=.skel.h);)
 
+	@echo -e 'Skeletons gerados...\n'
+	@#echo -e '$(OBJETOS_C) \n$(SOURCE_C) \n'
+	
 	@#$(GERA_SKEL) signal_monitor.bpf.o > signal_monitor.skel.h
 	@#$(GERA_SKEL) sigsnoop.bpf.o       > sigsnoop.skel.h
 	@#$(GERA_SKEL) teste_tc.o           > teste_tc.skel.h
-	
+
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 #user: %.c 
-$(SOURCE_C): *.c 
-	#@$(CC) $@ $(C_FLAGS) -o $<
+signal_monitor: signal_monitor.c 
 	
-	$(foreach i, $(SOURCE_C), $(CC) $(C_FLAGS) $i -o $(OBJETOS_C);)
-	#$(CC) meu_loader.c     -o meu_loader     $(C_FLAGS) 
-	#$(CC) signal_monitor.c -o signal_monitor $(C_FLAGS)
+	$(CC) $< -o $@ $(C_FLAGS)
+	
+	@#$(CC) meu_loader.c     -o meu_loader     $(C_FLAGS) 
+	@#$(CC) signal_monitor.c -o signal_monitor $(C_FLAGS)
 
-%.o: %.c
-	$(CC) $(C_FLAGS) -c $< -o $@
+.PHONY: signal_monitor.c
+#%.o: %.c
+%: %.c
+	$(CC) $(C_FLAGS) $< -o $@
 
 clean:
 	#sudo rm /sys/fs/bpf/signal_monitor
