@@ -19,55 +19,46 @@ GERA_SKEL = bpftool gen skeleton
 
 # skeleton libs
 LIBS = signal_monitor.skel.h sigsnoop.skel.h teste_tc.skel.h
-
 DIR = $(shell pwd)
 
-#all: kern skel $(OBJETOS_C)
-all: $(OBJETOS_BPF) $(GERA_SKEL) signal_monitor 
-	@echo -e '\n +++ Compilação pronta! +++'
+# Macros usadas
+# taget : prerequisite1, prerequisite2
+# 		command
+# $^ --> lista os prerequisitos passados no target
+# $< --> pega o primeiro prerequisito passado no target
+# $@ --> nome do target
+# $(SOURCE_BPF:bpf.c=bpf.o) --> Pega os nomes da var e troca a extensao bpf.c por bpf.o
 
-#kern: $(SOURCE_BPF)
-$(OBJETOS_BPF): $(SOURCE_BPF)
-	$(CL) $(BPF_FLAGS) $(SOURCE_BPF)
+all: bpf skel user
+	@echo -e '\n+++ Compilação pronta! +++'
 
-	@echo -e 'Objetos eBPF gerados...\n'
-	
-	@#$(CL) $(BPF_FLAGS) signal_monitor.bpf.c -o signal_monitor.bpf.o
-	@#$(CL) $(BPF_FLAGS) sigsnoop.bpf.c -o sigsnoop.bpf.o
-	@#$(CL) $(BPF_FLAGS) teste_tc.c -o teste_tc.o
+bpf: $(SOURCE_BPF)
+	$(CL) $(BPF_FLAGS) $^
 
-#skel: $(OBJETOS_BPF)
-$(GERA_SKEL): $(OBJETOS_BPF)
-	
-	@$(foreach i, $(OBJETOS_BPF), $(GERA_SKEL) $i > $(i:.bpf.o=.skel.h);)
-
+skel: $(OBJETOS_BPF)
+	@$(foreach i, $^, $(GERA_SKEL) $i > $(i:.bpf.o=.skel.h);)
 	@echo -e 'Skeletons gerados...\n'
-	@#echo -e '$(OBJETOS_C) \n$(SOURCE_C) \n'
-	
-	@#$(GERA_SKEL) signal_monitor.bpf.o > signal_monitor.skel.h
-	@#$(GERA_SKEL) sigsnoop.bpf.o       > sigsnoop.skel.h
-	@#$(GERA_SKEL) teste_tc.o           > teste_tc.skel.h
-
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
-#user: %.c 
+
+user: signal_monitor meu_loader envia_sinal capta_sinal
+	@echo -e 'signal_monitor criado...'
 signal_monitor: signal_monitor.c 
-	
 	$(CC) $< -o $@ $(C_FLAGS)
+meu_loader: meu_loader.c
+	$(CC) $< -o $@ $(C_FLAGS)
+envia_sinal: envia_sinal.c
+	$(CC) $< -o $@ $(C_FLAGS)
+capta_sinal: capta_sinal.c
+	$(CC) $< -o $@ $(C_FLAGS)
+
 	
-	@#$(CC) meu_loader.c     -o meu_loader     $(C_FLAGS) 
-	@#$(CC) signal_monitor.c -o signal_monitor $(C_FLAGS)
 
-.PHONY: signal_monitor.c
-#%.o: %.c
-%: %.c
-	$(CC) $(C_FLAGS) $< -o $@
-
+#.PHONY: clean
 clean:
-	#sudo rm /sys/fs/bpf/signal_monitor
-
+	@#sudo rm /sys/fs/bpf/signal_monitor
 	sudo rm *.o
-	sudo rm *.skel.h
-	sudo bpftool prog show
-	@echo -e '\nProgramas removidos...'
+	sudo rm *.skel.h meu_loader signal_monitor
+	@#sudo bpftool prog show
+	@#echo -e '\nProgramas removidos...'
 

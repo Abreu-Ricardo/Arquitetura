@@ -49,7 +49,8 @@ int main() {
     skel = signal_monitor_bpf__open_and_load();
     if (!skel) {
         fprintf(stderr, "Failed to open and load eBPF program\n");
-        return 1;
+        goto cleanup;
+        //return 1;
     }
 
     // Attach the eBPF program
@@ -72,8 +73,7 @@ int main() {
     }
 
     printf("Monitoring signals... Press Ctrl+C to stop.\n");
-
-    while (1) {
+    while (1){
         //printf("Entrou laco\n\n");
         err = ring_buffer__poll(rb, 100);
         if (err < 0) {
