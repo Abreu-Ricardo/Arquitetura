@@ -42,7 +42,7 @@
 #include <pthread.h>
 
 
-//#include "../bib/teste_bib.h"
+#include "xsk_kern.skel.h"
 
 #define _GNU_SOURCE
 #define O_PATH		010000000
@@ -73,6 +73,7 @@ int tam_info_global;
 
 int long long start;
 int long long end;
+
 
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
@@ -112,6 +113,9 @@ struct xsk_info_global {
 };
 
 struct xsk_info_global *ptr_mem_info_global;
+
+
+void polling_RX(struct xsk_info_global *info_global);
 
 /*****************************************/
 
@@ -187,9 +191,14 @@ static void capta_sinal(int signum){
         system("pkill reply_2process");
         
         lock = 0;
+	    exit(1);
+    }
+
+    else if( signum == 10){
+
+    polling_RX( ptr_mem_info_global );
     }
     //return;
-	exit(1);
 }
 
 /************************************************************************/
@@ -489,7 +498,7 @@ void polling_RX(struct xsk_info_global *info_global){
     uint32_t len; 
     
 
-    while(1){
+    //while(1){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -508,7 +517,7 @@ void polling_RX(struct xsk_info_global *info_global){
 
             if( !ret_ring ){
                 //printf("\n\n <ret_ring deu zero>\n");
-                continue;
+                //continue;
             }
 
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
@@ -555,7 +564,7 @@ void polling_RX(struct xsk_info_global *info_global){
             /*********************/
             *ptr_trava = 1;
            // } 
-        }
+        //}
 }
 
 /*************************************************************************/
@@ -832,7 +841,7 @@ int main(int argc, char **argv) {
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
         //polling_RX( info_global );
-        polling_RX( ptr_mem_info_global );
+        //polling_RX( ptr_mem_info_global );
     }
     // Processo pai
     else{
