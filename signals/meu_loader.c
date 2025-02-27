@@ -16,19 +16,41 @@
 int main(int argc, char **argv){
     struct sigsnoop_bpf *skel;
 
-    skel = sigsnoop_bpf__open_and_load();
-    if ( !skel ){
-        perror("Erro ao abrir e carregar o skeleto do programa");
-        sigsnoop_bpf__destroy(skel);
+    struct teste_tc_bpf *tc_skel;
+    
+    struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
+    setrlimit(RLIMIT_MEMLOCK, &r);
+
+
+    //skel = sigsnoop_bpf__open_and_load();
+    //if ( !skel ){
+    //    perror("Erro ao abrir e carregar o skeleton do programa");
+    //    sigsnoop_bpf__destroy(skel);
+    //    exit(1);
+    //}
+
+    //int ret_attach = sigsnoop_bpf__attach(skel);
+    //if (ret_attach){
+    //    perror("Erro ao aclopar programa");
+    //    sigsnoop_bpf__destroy(skel);
+    //    exit(1);
+    //}
+
+        tc_skel = teste_tc_bpf__open_and_load();
+    if ( !tc_skel ){
+        perror("Erro ao abrir e carregar o skeleton do programa");
+        teste_tc_bpf__destroy(tc_skel);
         exit(1);
     }
 
-    int ret_attach = sigsnoop_bpf__attach(skel);
+    int ret_attach = teste_tc_bpf__attach(tc_skel);
     if (ret_attach){
         perror("Erro ao aclopar programa");
-        sigsnoop_bpf__destroy(skel);
+        teste_tc_bpf__destroy(tc_skel);
         exit(1);
     }
+
+
 
     printf("\nCtrl+C para parar\nxxx Programa carregado e aclopado xxx \n");
 

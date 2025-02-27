@@ -3,8 +3,10 @@
 $(CC) = gcc
 CL = clang
 
+CFLAGS = -O2
+
 compilacao: kern.o user.o
-	#@echo -e '\nCompilação finalizada'
+	@echo -e '\n### Compilação finalizada ###'
 
 kern.o:
 	$(CL) -g -target bpf -O2 -c prog_kern.c
@@ -12,13 +14,13 @@ kern.o:
 
 shm: 
 	$(CC) prog_user.c ../bib/teste_bib.c -lbpf -lxdp -o user
-	@echo 'teste echo'
+	@echo  'teste echo'
 
 user.o:
-	$(CC) escreve_reply_outro_container.c  -o reply_container -lbpf -lxdp -g
-	$(CC) xsk_user.c  -o user_xdp -lbpf -lxdp -g
-	$(CC) reply_ping_thread.c    -o thread_reply -lbpf -lxdp -lpthread -g
-	$(CC) reply_ping_2process.c  -o reply_2process -lbpf -lxdp -g
+	$(CC) escreve_reply_outro_container.c  -o reply_container -lbpf -lxdp -g 
+	$(CC) xsk_user.c  -o user_xdp -lbpf -lxdp -g 
+	$(CC) reply_ping_thread.c    -o thread_reply -lbpf -lxdp -lpthread -g 
+	$(CC) reply_ping_2process.c  -o reply_2process -lbpf -lxdp -g 
 
 clean:
 	rm user_xdp

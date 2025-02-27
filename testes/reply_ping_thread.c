@@ -16,7 +16,9 @@
 //#include <bpf/xsk.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
-#include <bpf/xsk.h>
+
+//#include <bpf/xsk.h>
+
 #include <xdp/xsk.h>
 #include <xdp/libxdp.h>
 

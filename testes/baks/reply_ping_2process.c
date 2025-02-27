@@ -98,8 +98,8 @@ struct xsk_umem_info {
 	void *buffer; // Substituir o buffer_do_pacote por esse, para ficar mais organizado
 };
 
-struct xsk_umem_info *umem_info;    // xsk  -- Processo
-struct xsk_umem_info *umem_info2;   // xsk2 -- Processo
+struct xsk_umem_info *umem_info;
+struct xsk_umem_info *umem_info2;
 
 /*****************************************/
 struct xsk_info_global {
@@ -223,8 +223,6 @@ void configura_socket(const char *iface ){
     int sock_fd;
     int index;    // Configuração do socket AF_XDP
 
-    // Para o pkt ser redirecionado eh preciso atualizar o mapa xsk com o fd do socket a ser redirecionado
-    // apenas o socket xsk2 eh usado
     if (xsk_socket__create(&xsk, iface, 0, umem_info->umem, &umem_info->rx, &umem_info->tx, &xsk_cfg) < 0) {
         fprintf(stderr, "Erro ao criar socket XDP: %s\n", strerror(errno));
         xsk_umem__delete(umem_info->umem);
@@ -280,8 +278,6 @@ void cria_segundo_socket(const char *iface){
 
     // Na implementacao eh usado um bpf_map_update_elem mas na chave eh 
     // usado o id da fila(queue_id), por isso que qnd eu tento fazer na mao da erro
-    // socket que eh utilizado eh o xsk2, por isso o pkt eh redirecionado para o
-    // socket xsk2
     ret_update = xsk_socket__update_xskmap(xsk2, map_fd_xsk);
     if (ret_update < 0){
         fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
@@ -334,7 +330,7 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
 	*sum = ~csum16_add(csum16_sub(~(*sum), old), new);
 }
 /*************************************************************************/
-static int processa_pacote(uint64_t addr, uint32_t len){
+static int processa_pacote(struct xsk_umem_info *umem_info, uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
     /******************************************************/
@@ -401,8 +397,6 @@ static int processa_pacote(uint64_t addr, uint32_t len){
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
     xsk_ring_prod__submit( &umem_info2->tx, 1);
     //umem_info->tx_restante++;
-    
-    //info_global-> tx_restante++;
     ptr_mem_info_global->tx_restante++;
 
     //end = RDTSC();
@@ -411,9 +405,8 @@ static int processa_pacote(uint64_t addr, uint32_t len){
 
     
     //printf("tempo total da func processa_pacote() --> %lld\n", (end - start) );
-    //printf("###(processa_pacote) umem_info->tx_restante: %d\n", ptr_mem_info_global->tx_restante);
-    //return true;
-    return false;
+    printf("###(processa_pacote) umem_info->tx_restante: %d\n", ptr_mem_info_global->tx_restante);
+    return true;
 }
 
 /*************************************************************************/
@@ -429,7 +422,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
 	uint32_t idx_cq;
 	
     if (!*tx_restante){
-	    //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
+	    printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
         return;
     }
     //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
@@ -471,7 +464,6 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
 }
 
 /*************************************************************************/
-// info_global == ptr_mem_info_global
 void polling_RX(struct xsk_info_global *info_global){
     //pid_t tid = pthread_self();
     //printf("<Entrou polling_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
@@ -492,15 +484,16 @@ void polling_RX(struct xsk_info_global *info_global){
     
     //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
     //teste_info_global     = ( struct xsk_info_global *) malloc( sizeof(*info_global ) );
+            
 
-    while(1){
-        if(*ptr_trava == 0){ 
-            //while (lock == 1) {
+
+    if(*ptr_trava == 0){ 
+        while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
             idx_fq = 0;
-            i = 0;
+                 i = 0;
 
             // Verifica se há pacotes no ring buffer de recepção
             // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
@@ -514,7 +507,7 @@ void polling_RX(struct xsk_info_global *info_global){
                 //printf("\n\n <ret_ring deu zero>\n");
                 continue;
             }
-
+            
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
             // retorna o endereco do pacote --> __u64 address of the packet.
             stock_frames = xsk_prod_nb_free(&umem_info->fq,	*info_global->umem_frame_free);
@@ -529,7 +522,7 @@ void polling_RX(struct xsk_info_global *info_global){
                 /* This should not happen, but just in case */
                 while (ret_res != stock_frames)
                     ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
-
+               
                 for (i = 0; i < stock_frames; i++){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
                     *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free);
@@ -537,7 +530,7 @@ void polling_RX(struct xsk_info_global *info_global){
                 // Submit the filled slots so the kernel can process them
                 xsk_ring_prod__submit(&umem_info->fq, stock_frames);
             }
-
+ 
 
             /* Process received packets */
             for (i = 0; i < ret_ring; i++) {
@@ -549,17 +542,35 @@ void polling_RX(struct xsk_info_global *info_global){
                 //printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
 
                 // CHAMA PROCESSA_PACOTE
-                //if (!processa_pacote(umem_info,  addr, len)){
-                if ( !processa_pacote( addr, len) ){
+                if (!processa_pacote(umem_info,  addr, len)){
                     desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
                 }
-             }
+            }
 
+            // escrever aqui a info_global na mem compart
+            //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
+            //teste_info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
+           
+            // NAO TER QUE REALOCAR E PEGAR O PONTEIRO SEMPRE ACHO Q AJUDOU A DIMINUIR O TEMPO
+            //teste_info_global->umem_frame_addr = info_global->umem_frame_addr;
+            //teste_info_global->umem_frame_free = info_global->umem_frame_free;
+            //teste_info_global->tx_restante     = umem_info->tx_restante;
+            //teste_info_global->ret_ring        = ret_ring;
 
+            //memcpy(ptr_mem_info_global , teste_info_global , sizeof(*info_global));
+            
             /*********************/
+            
             *ptr_trava = 1;
-            } 
         }
+    }
+    else{
+        return;
+    }
+
+    //xsk_socket__delete(xsk);
+    //xsk_socket__delete(xsk2);
+    //xsk_umem__delete(umem_info->umem);
 }
 
 /*************************************************************************/
@@ -797,14 +808,12 @@ int main(int argc, char **argv) {
     // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
    	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
     
-    
     info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
    
     info_global->umem_frame_addr = umem_frame_addr;
     info_global->umem_frame_free = &umem_frame_free;
     info_global->ret_ring        = ret_ring;
 
-    // Apos o fork essa var(ptr_mem_info_global) fica compartilhada entre os dois processos
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
 
@@ -860,8 +869,6 @@ int main(int argc, char **argv) {
                 complete_tx(ptr_mem_info_global->umem_frame_addr, 
                             ptr_mem_info_global->umem_frame_free, 
                             &ptr_mem_info_global->tx_restante);
-
-
                 *ptr_trava = 0;
             }
         }

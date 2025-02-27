@@ -9,7 +9,7 @@ SOURCE_BPF = signal_monitor.bpf.c sigsnoop.bpf.c teste_tc.bpf.c
 SOURCE_C   = signal_monitor.c meu_loader.c
 
 OBJETOS_BPF     = $(SOURCE_BPF:bpf.c=bpf.o)
-OBJETOS_C       = $(SOURCE_C:.c=.o)
+OBJETOS_C       = $(SOURCE_C:.c=)
 OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 # FLAGS
@@ -42,7 +42,7 @@ skel: $(OBJETOS_BPF)
 
 
 user: signal_monitor meu_loader envia_sinal capta_sinal
-	@echo -e 'signal_monitor criado...'
+	@echo -e 'signal_monitor, meu_loader, envia_sinal e capta_sinal criado...'
 signal_monitor: signal_monitor.c 
 	$(CC) $< -o $@ $(C_FLAGS)
 meu_loader: meu_loader.c
@@ -52,13 +52,19 @@ envia_sinal: envia_sinal.c
 capta_sinal: capta_sinal.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
-	
+udp: send_pkt recv_pkt
+	@echo -e 'send_pkt e recv_pkt prontos...\n'
+send_pkt: send_pkt.c
+	$(CC) $< -o $@ 
+recv_pkt: recv_pkt.c
+	$(CC) $< -o $@ 
+
 
 #.PHONY: clean
 clean:
 	@#sudo rm /sys/fs/bpf/signal_monitor
-	sudo rm *.o
-	sudo rm *.skel.h meu_loader signal_monitor
+	sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
+	sudo rm send_pkt recv_pkt envia_sinal capta_sinal
 	@#sudo bpftool prog show
 	@#echo -e '\nProgramas removidos...'
 

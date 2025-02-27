@@ -84,7 +84,7 @@ int xdp_prog(struct xdp_md *ctx){
     
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
-        //bpf_printk("Redirecionando...\n");
+        bpf_printk("Redirecionando...\n");
         return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
     }
 

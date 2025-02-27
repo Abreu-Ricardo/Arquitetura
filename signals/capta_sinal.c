@@ -5,21 +5,26 @@
 
 int cont_sin = 0;
 
-void sigint(){
-    printf("Recebi um sinal de sigint, ate mais...\n");
-}
+void siguser(int signum){
 
-void siguser(){
+    if (signum == 10){
+        printf("Recebeu sinal SIGUSR1(%d): %d!\n", signum, cont_sin);
+    }
+
+    if (signum == 2){
+        printf("Recebi um sinal de SIGINT(%d), ate mais...\n", signum);
+        exit(1);
+    }
+
     cont_sin++;
-    printf("Recebeu sinal(%d)!\n", cont_sin);
 }
 
 
 int main(){
 
     // Capta sinal de SIGUSR1(valor 10)
+    signal( 2, siguser);
     signal(10, siguser);
-    //signal( 2, sigint);
 
     printf("Entrando no loop de espera...\n");
 

@@ -25,7 +25,6 @@ SEC("tracepoint/signal/signal_generate")
 int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
     
     //bpf_printk("VALOR --> %d\n", ctx->sig);
-    
     if ( ctx->sig == 10 ){
         struct signal_event *event;
         struct task_struct *task;
@@ -40,16 +39,10 @@ int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
         // Read the signal number
         event->sig = ctx->sig;
 
-        // Read the task_struct pointer safely
-        //bpf_probe_read_kernel(&task, sizeof(task), &ctx->t);
-
         // Read the PID from task_struct safely
         //bpf_probe_read_kernel(&pid, sizeof(pid), &task->pid);
         event->pid = ctx->pid;
  
-        // Get the sender's UID
-        //event->uid = bpf_get_current_uid_gid() & 0xFFFFFFFF;
-
         // Debug output (visible in trace_pipe)
         bpf_printk("Sinal %d enviado para o PID:%d | %d", event->sig, 
                                                           event->pid, 
