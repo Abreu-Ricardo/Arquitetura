@@ -25,8 +25,6 @@
 SEC("tc")
 int pega_pkt(struct __sk_buff *ctx) {
 
-//SEC("tracepoint/syscalls/sys_exit_kill")
-//int kill_exit(struct trace_event_raw_sys_exit *ctx){
     __u32 *key = 0;
 
     //bpf_map_lookup_elem( &valores, key);
@@ -37,6 +35,8 @@ int pega_pkt(struct __sk_buff *ctx) {
 }
 
 char LICENSE[] SEC("license") = "GPL"; 
+
+
 //char LICENSE[] SEC("license") = "Dual BSD/GPL"; 
 //
 //modprobe cls_bpf
