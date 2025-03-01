@@ -44,8 +44,8 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: signal_ping_2process loader_xdp
-	@echo -e '$^ criado...'
+user: signal_ping_2process loader_xdp poll_ping_2process
+	@echo -e '$^ criados...'
 
 signal_ping_2process: signal_ping_2process.c 
 	$(CC) $< -o $@ $(C_FLAGS)
@@ -53,17 +53,17 @@ signal_ping_2process: signal_ping_2process.c
 loader_xdp: loader_xdp.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
+poll_ping_2process: poll_ping_2process.c
+	$(CC) $< -o $@ $(C_FLAGS)
+
 
 
 
 #.PHONY: clean
 clean:
-	sudo rm $(OBJETOS_BPF) signal_ping_2process
-	sudo rm *.o
+	sudo rm $(OBJETOS_BPF) loader_xdp signal_ping_2process poll_ping_2process
 	sudo rm *.skel.h
 	@#sudo rm /sys/fs/bpf/signal_monitor
-	@#sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
-	@#sudo rm send_pkt recv_pkt envia_sinal capta_sinal
 	@#sudo bpftool prog show
 	@#echo -e '\nProgramas removidos...'
 

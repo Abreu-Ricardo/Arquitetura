@@ -122,7 +122,7 @@ sudo ip netns exec       n3 sh -c 'route add -net 0.0.0.0/0 gw 20.20.20.1 ';
 
 
 # Aqui vai criar um link no dir dados para o bpffs
-sudo mount --bind /sys/fs/bpf $(pwd)/../dados;
+sudo mount --bind /sys/fs/bpf $(pwd)/../dados
 
 
 #sudo ip netns exec n3 sh -c 'ethtool -K veth4 gro on' 

@@ -77,9 +77,6 @@ int long long end;
 pid_t fpid;
 pid_t ppid;
 
-sigset_t set;
-int sig = 10;
-
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
 struct xsk_umem_config umem_cfg = {
@@ -167,9 +164,6 @@ static __always_inline volatile long long RDTSC() {
     return ((long long)hi << 32) | lo;            // Combine high and low parts
 } 
 
-
-static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
-
 /************************************************************************/
 static void capta_sinal(int signum){
     //getchar();
@@ -198,20 +192,16 @@ static void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
-        system("killall signal_ping_2process");
+        system("killall poll_ping_2process");
         
         lock = 0;
 	    exit(1);
     }
 
     //else if( signum == 10){
-    //    //polling_RX( ptr_mem_info_global );
-    //    printf("---->ENTREI AQUI NO CAPTA_SINAL COM VALOR 10<-----\n");
-    //     complete_tx(ptr_mem_info_global->umem_frame_addr, 
-    //                        ptr_mem_info_global->umem_frame_free, 
-    //                        &ptr_mem_info_global->tx_restante); 
+    //    polling_RX( ptr_mem_info_global );
     //}
-    return;
+    //return;
 }
 
 /************************************************************************/
@@ -417,7 +407,7 @@ static int processa_pacote(uint64_t addr, uint32_t len){
     ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
     if (ret != 1) {
         /* No more transmit slots, drop the packet */
-        return true; // se retornar false a inversao de sinal vai desalocar
+        return false;
     }
 
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
@@ -487,7 +477,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
     }
 
     //end = RDTSC();
-    kill( fpid , SIGUSR1 ); 
+    
     //printf("tempo final da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
@@ -495,7 +485,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
 
 /*************************************************************************/
 // info_global == ptr_mem_info_global
-void polling_RX(struct xsk_info_global *info_global ){
+void polling_RX(struct xsk_info_global *info_global){
     //pid_t tid = pthread_self();
     //printf("<Entrou polling_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
     //printf("<Entrou em polling_RX>\n");
@@ -511,10 +501,8 @@ void polling_RX(struct xsk_info_global *info_global ){
     uint64_t addr;
     uint32_t len; 
     
-    //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
-    //while(1){
-    while( /* ret_ring > 0*/ 1 ){
+    while(1){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -532,9 +520,8 @@ void polling_RX(struct xsk_info_global *info_global ){
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
             if( !ret_ring ){
-                //printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
-                //sigwait( &set , &sig );
-                continue;
+                //printf("\n\n <ret_ring deu zero>\n");
+                //continue;
             }
 
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
@@ -579,19 +566,7 @@ void polling_RX(struct xsk_info_global *info_global ){
 
 
             /*********************/
-            //*ptr_trava = 1;
-            // Envia sinal para o processo pai para enviar os pkts
-            if ( kill( ppid , SIGUSR1 ) < 0 ){
-                perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
-                capta_sinal( 2 );
-            }
-            else{
-
-                //printf("<PROC_FILHO>Enviando sinal para o pai(%d)...\n", ppid);
-                //printf("<PROC_FILHO>Esperando o sinal do PAI...\n\n");
-                
-                sigwait( &set , &sig );
-            }
+            *ptr_trava = 1;
            // } 
         }
 }
@@ -753,17 +728,14 @@ int main(int argc, char **argv) {
         exit(1);
     }
     
-    tam_trava = sizeof(int);
     // Atribuindo tamanho para a regiao de mem. compart.
     int retorno_ftruncate = ftruncate(fd_trava, tam_trava);
     if ( ret_ftruncate == -1 ){
         perror("Erro em ftruncate na tam_trava\n");
         exit(1);
     }
-    
-    //ptr_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
-    ptr_trava = (void *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
-    //*ptr_trava = 0;
+    ptr_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
+    *ptr_trava = 0;
     
 
     /*###############################CRIAÇÃO DA REGIÃO DE MEM COMPART MEM_INFO_GLOBAL###################################################*/
@@ -858,24 +830,14 @@ int main(int argc, char **argv) {
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
 
-
-
-    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
-    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
-
-    signal( SIGUSR1 , capta_sinal );
-    ppid = getpid();
     pid = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
     if( pid == 0){
         //printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB %d\n", pid);
-        fpid = getpid();
+        pid_t fpid = getpid();
         char settar_cpuf[30];
-
-        *ptr_trava = fpid;
         
         printf("\n<PID DO FILHO %d>\n", fpid);
         
@@ -883,7 +845,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/80255/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/116968/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -902,7 +864,7 @@ int main(int argc, char **argv) {
     // Processo pai
     else if ( pid > 0){
         //printf("AAAAAAAAAAAAAAAAAAAAAaa %d\n", pid);
-        ppid = getpid();
+        pid_t ppid = getpid();
         char settar_cpup[30]; 
         
         sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
@@ -910,25 +872,21 @@ int main(int argc, char **argv) {
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
         system(settar_cpup);
 
-        int temp=1;
-        fpid = ppid + 1; //*ptr_trava;
-
-        // Espera pelo sinal do proc filho
-        // sigwait(&set, &sig);
+        //int temp=1;
         while(1){
-            if( sigwait(&set, &sig) >= 0 ){
-                //printf("PID do filho %d\n", fpid);
-                if ( kill( fpid , SIGUSR1 ) >= 0 ){
-                  
-                    //printf("<PROC_PAI>enviando sinal...(%d)\n", fpid);
-                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                    complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                                ptr_mem_info_global->umem_frame_free, 
-                                &ptr_mem_info_global->tx_restante);
-                }
-                else{
-                    perror("<PROC_PAI>Erro ao enviar sinal...");
-                }
+            if(*ptr_trava == 1){
+                // ler info_global da mem compart para aatualizar a info_global do pai
+                //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
+                //printf("----valor do umem_free PROCESSO PAI %d ----\n", *ptr_mem_info_global->ret_ring);
+                //printf("Enviando pacote(%d)...\n", temp++);
+            
+                xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+                complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                            ptr_mem_info_global->umem_frame_free, 
+                            &ptr_mem_info_global->tx_restante);
+
+
+                *ptr_trava = 0;
             }
         }
     }

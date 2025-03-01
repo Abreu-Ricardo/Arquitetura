@@ -63,7 +63,7 @@ int main(int argc, char **argv){
         exit(1);
     }
 
-    // Cria qdisc e carrega programa eBPF com a ferramenta ip do iproute2
+    // Cria qdisc e carrega programa eBPF com a ferramenta a ip do iproute2
     system(cria_qdisc);
     system(carrega_tc_ingress);
 
