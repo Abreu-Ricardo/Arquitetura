@@ -54,6 +54,10 @@
 //#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
 //#define FRAME_SIZE 4096
+//
+#define SERVER_IP "20.20.20.1"  // Mudar IP se precisar
+#define CLIENT_IP "20.20.20.2"  // Mudar IP se precisar
+#define SERVER_PORT 8080
 
 
 struct xdp_program *xdp_prog;
@@ -81,6 +85,21 @@ pid_t ppid;
 
 sigset_t set;
 int sig = 10;
+
+
+// Socket UDP do pai
+int fd_sock_server;
+struct sockaddr_in server_addr;
+socklen_t server_len = sizeof(server_addr);
+
+// Socket UDP do filho
+int fd_sock_client;
+struct sockaddr_in server_addr_c, client_addr;
+socklen_t client_len = sizeof(client_addr);
+
+
+static char MSG_UDP[30] = "PODE IR";
+
 
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
@@ -200,7 +219,9 @@ static void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
-        system("killall signal_ping_2process");
+ //       system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
+//        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
+        system("killall pkt_ping_2process");
         
         lock = 0;
 	    exit(1);
@@ -588,21 +609,25 @@ void polling_RX(struct xsk_info_global *info_global ){
 
             /*********************/
             //*ptr_trava = 1;
+            
             // Envia sinal para o processo pai para enviar os pkts
-            if ( kill( ppid , SIGUSR1 ) < 0 ){
-                perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
+            if ( sendto(fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, client_len)  < 0 ){
+                perror("\t\t### <PROC_FILHO>Erro ao enviar pkt para o proc_pai ###");
                 capta_sinal( 2 );
             }
-            else{
-
-                //printf("<PROC_FILHO>Enviando sinal para o pai(%d)...\n", ppid);
-                //printf("<PROC_FILHO>Esperando o sinal do PAI...\n\n");
+            else{ 
+                printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
+                printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
-                sigwait( &set , &sig );
-            }
-           // } 
+                if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
+                    printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
+                }
+            } 
         }
 }
+
+
+
 
 /*************************************************************************/
 int main(int argc, char **argv) {
@@ -875,38 +900,84 @@ int main(int argc, char **argv) {
 
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
+    // ############################## CRIANDO SOCKETS PARA ENVIO DE UDP #############################
+    
+    // Cria socket UDP
+    if ((fd_sock_server = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("FALHA ao criar Socket UDP");
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(SERVER_PORT);
+    //server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
+
+    //if (bind(fd_sock_server, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    //    perror("Falha no Bind do Socket");
+    //    close(fd_sock_server);
+    //    exit(EXIT_FAILURE);
+    //}
+    
+    
+    // ############################## FIM SOCKETS PARA ENVIO DE UDP #############################
 
     pid = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
+    
+
+
     // Processo filho
     if( pid == 0){
         fpid = getpid();
         char settar_cpuf[30];
-        
+
         // Atribui o valor do PID do filho para que o proc pai consiga enviar o sinal
         memcpy(ptr_trava, &fpid, sizeof(fpid));
-        
+
+
         printf("\n<PID DO FILHO %d>\n", fpid);
-        
-        if( setsid() < 0 )
+        if( setsid() < 0 ){
             exit(-1);
+        }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/79034/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/10386/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
             perror("\n\nNao foi possivel mover o processo");
         }
-        
-        
+
+
+        // Create UDP socket
+        if ( (fd_sock_client = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+            perror("Falha ao criar Socket UDP do PROC_FILHO");
+            exit(EXIT_FAILURE);
+        }
+
+        // Bind endereco e porta
+        memset(&client_addr, 0, sizeof(client_addr));
+        client_addr.sin_family = AF_INET;
+        //client_addr.sin_addr.s_addr = INADDR_ANY;
+        client_addr.sin_port = htons(SERVER_PORT);
+        inet_pton(AF_INET, SERVER_IP, &client_addr.sin_addr);
+
+        //if( bind(fd_sock_client, (struct sockaddr*)&client_addr, sizeof(client_addr)) ){
+        //    perror("Erro no BIND do PROC_FILHO");
+        //    capta_sinal( 2 );
+        //}
+
+
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
-        
+
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
+
         polling_RX( ptr_mem_info_global );
     }
 
@@ -914,7 +985,7 @@ int main(int argc, char **argv) {
     else if ( pid > 0){
         ppid = getpid();
         char settar_cpup[30]; 
-        
+
         sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
@@ -922,22 +993,31 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
+        if( bind(fd_sock_server, (struct sockaddr*)&server_addr, sizeof(server_addr)) ){
+            perror("Erro no BIND do PROC_PAI");
+            capta_sinal( 2 );
+        }
+
+        struct sockaddr_in teste;
+        socklen_t tam_teste = sizeof(teste);
         // Espera pelo sinal do proc filho
-        // sigwait(&set, &sig);
         while(1){
-            if( sigwait(&set, &sig) >= 0 ){
-                //printf("PID do filho %d\n", fpid);
-                if ( kill( fpid , SIGUSR1 ) >= 0 ){
-                  
-                    //printf("<PROC_PAI>enviando sinal...(%d)\n", fpid);
-                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                    complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                                ptr_mem_info_global->umem_frame_free, 
-                                &ptr_mem_info_global->tx_restante);
-                }
-                else{
-                    perror("<PROC_PAI>Erro ao enviar sinal...");
-                }
+
+            //printf("PID do filho %d\n", fpid);
+            if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
+                perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            }
+            xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+            complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                            ptr_mem_info_global->umem_frame_free, 
+                            &ptr_mem_info_global->tx_restante);
+            printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
+            if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
+                perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            }
+
+            else{
+                printf("<PROC_PAI>Enviando pkt para filho...\n");
             }
         }
     }

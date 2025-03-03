@@ -1,78 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
-#define SERVER_IP "127.0.0.1"  // Change to the receiver's IP if needed
+//#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "20.20.20.1"
+//#define SERVER_IP "20.20.20.1"
 #define SERVER_PORT 8080
-char MESSAGE[50];
-
-int long long start;
-int long long end;
-
-static __always_inline volatile long long RDTSC() {
-    
-    //register long long TSC asm("eax");
-    //asm volatile (".byte 15, 49" : : : "eax", "edx");
-    //return TSC;
-
-    unsigned int lo, hi;
-    
-    asm ("rdtsc" : "=a" (lo), "=d" (hi));         // Execute RDTSC and store results
-    return ((long long)hi << 32) | lo;            // Combine high and low parts
-} 
-
+#define BUFFER_SIZE 1024
+#define PACKET_COUNT 1000
 
 int main() {
     int sockfd;
     struct sockaddr_in server_addr;
-    socklen_t addr_len = sizeof(server_addr);
+    char buffer[BUFFER_SIZE];
 
     // Create UDP socket
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    // Server address setup
+    // Configure server address
     memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family      = AF_INET;
-    server_addr.sin_port        = htons(SERVER_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
 
-    pid_t pid = getpid();
-    char settar_cpuf[30];
-    
-    printf("Atribuindo processo para a CPU 5...\n");
-    sprintf(settar_cpuf, "taskset -cp 5 %d", pid);
-    system(settar_cpuf);
+    // Send 100 packets and receive acknowledgments
+    for (int i = 0; i < PACKET_COUNT; i++) {
+        char msg[50];
+        sprintf(msg, "Packet %d", i + 1);
 
+        // Send packet
+        sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+        printf("Enviando pkt...\n");
 
-    int i = 0; 
-    start = RDTSC();
-    sprintf(MESSAGE, "Hello from UDP sender!%d", i);
-    
-    // Send UDP message
-    for (i = 0; i < 1000; i++){
-        
-        //sprintf(MESSAGE, "Hello from UDP sender!%d", i);
-        sendto(sockfd, MESSAGE, strlen(MESSAGE), 0,(struct sockaddr *)&server_addr,addr_len);
-        //if (sendto(sockfd, MESSAGE, strlen(MESSAGE), 0,(struct sockaddr *)&server_addr,
-        //            addr_len) < 0) {
-        //    perror("Send failed");
-        //    close(sockfd);
-        //    exit(EXIT_FAILURE);
-        //}
-        
-        //printf("UDP message sent: \"%s\"\n", MESSAGE);
+        // Receive acknowledgment
+        socklen_t addr_len = sizeof(server_addr);
+        ssize_t received_bytes = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
+                                          (struct sockaddr*)&server_addr, &addr_len);
+        if (received_bytes > 0) {
+            buffer[received_bytes] = '\0';
+            printf("Received from server: %s\n", buffer);
+        }
     }
-    end = RDTSC();
-    
-    //printf("UDP message sent: \"%s\"\n", MESSAGE);
-    printf("### Valor final de RDTSC %lld ###\n", end - start);
 
-    // Close socket
+    printf("Finished sending and receiving 100 packets.\n");
     close(sockfd);
     return 0;
 }
