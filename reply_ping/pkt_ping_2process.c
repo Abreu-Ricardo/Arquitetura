@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
+
 
 //#include <bpf/xsk.h>
 #include <bpf/bpf.h>
@@ -156,8 +158,8 @@ struct xsk_socket_config xsk_cfg = {
     .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
     //.xdp_flags = XDP_FLAGS_SKB_MODE,
     .xdp_flags = XDP_FLAGS_DRV_MODE,
-    //.bind_flags =  XDP_COPY | XDP_USE_NEED_WAKEUP,
-    .bind_flags =  XDP_COPY,
+    .bind_flags =  XDP_COPY | XDP_USE_NEED_WAKEUP,
+    //.bind_flags =  XDP_COPY,
 };
 
 // socket XSK2 precisa da flag XDP_SHARED_UMEM para usar a UMEM ja criada
@@ -221,7 +223,7 @@ static void capta_sinal(int signum){
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
  //       system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
 //        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
-        system("killall pkt_ping_2process");
+        system("killall pktping_2proc");
         
         lock = 0;
 	    exit(1);
@@ -539,12 +541,15 @@ void polling_RX(struct xsk_info_global *info_global ){
     uint32_t idx_fq = 0;
     uint64_t addr;
     uint32_t len; 
-    
+   
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
-    //while(1){
-    while( /* ret_ring > 0*/ 1 ){
-        //if(*ptr_trava == 0){ 
+    while( 1 ){
+
+            if (recvfrom( xsk_socket__fd(xsk2) , NULL, 0, MSG_DONTWAIT, NULL, NULL ) < 0)
+                continue;
+            
+            //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
@@ -561,7 +566,7 @@ void polling_RX(struct xsk_info_global *info_global ){
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
             if( !ret_ring ){
-                //printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
+                printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
                 //sigwait( &set , &sig );
                 continue;
             }
@@ -613,11 +618,11 @@ void polling_RX(struct xsk_info_global *info_global ){
             // Envia sinal para o processo pai para enviar os pkts
             if ( sendto(fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, client_len)  < 0 ){
                 perror("\t\t### <PROC_FILHO>Erro ao enviar pkt para o proc_pai ###");
-                capta_sinal( 2 );
+                capta_sinal( SIGINT );
             }
             else{ 
-                printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
-                printf("<PROC_FILHO>Esperando pkt do pai...\n");
+                //printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
+                //printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
                 if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
                     printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
@@ -932,6 +937,9 @@ int main(int argc, char **argv) {
 
     // Processo filho
     if( pid == 0){
+         // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "udpping_FIL", strlen(argv[0]));       
+
         fpid = getpid();
         char settar_cpuf[30];
 
@@ -945,7 +953,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/10386/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/27675/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -983,6 +991,9 @@ int main(int argc, char **argv) {
 
     // Processo pai
     else if ( pid > 0){
+        // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "udpping_PAI", strlen(argv[0]));
+        
         ppid = getpid();
         char settar_cpup[30]; 
 
@@ -995,7 +1006,7 @@ int main(int argc, char **argv) {
 
         if( bind(fd_sock_server, (struct sockaddr*)&server_addr, sizeof(server_addr)) ){
             perror("Erro no BIND do PROC_PAI");
-            capta_sinal( 2 );
+            capta_sinal( SIGINT );
         }
 
         struct sockaddr_in teste;
@@ -1011,13 +1022,13 @@ int main(int argc, char **argv) {
             complete_tx(ptr_mem_info_global->umem_frame_addr, 
                             ptr_mem_info_global->umem_frame_free, 
                             &ptr_mem_info_global->tx_restante);
-            printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
+            //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
             if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
                 perror("<PROC_PAI>Erro ao enviar pkt para filho...");
             }
 
             else{
-                printf("<PROC_PAI>Enviando pkt para filho...\n");
+                //printf("<PROC_PAI>Enviando pkt para filho...\n");
             }
         }
     }

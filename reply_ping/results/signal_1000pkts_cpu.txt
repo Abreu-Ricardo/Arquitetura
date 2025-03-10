@@ -1,0 +1,454 @@
+Linux 6.8.0-55-generic (ricardoPC) 	08/03/2025 	_x86_64_	(12 CPU)
+
+20:31:13      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:14        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:14        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:14      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:15        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:15        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:15      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:16        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:16        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:16      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:17        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:17        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:17      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:18        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:18        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:18      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:19        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:19        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:19      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:20        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:20        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:20      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:21        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:21        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:21      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:22        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:22        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:22      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:23        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:23        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:23      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:24        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:24        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:24      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:25        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:25        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:25      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:26        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:26        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:26      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:27        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:27        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:27      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:28        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:28        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:28      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:29        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:29        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:29      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:30        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:30        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:30      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:31        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:31        0     37676   99,01    0,00    0,00    0,00   99,01     5  signalping_2pro
+
+20:31:31      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:32        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:32        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:32      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:33        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:33        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:33      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:34        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:34        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:34      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:35        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:35        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:35      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:36        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:36        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:36      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:37        0     37675    0,00    1,00    0,00    0,00    1,00     4  signalping_2pro
+20:31:37        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:37      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:38        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:38        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:38      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:39        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:39        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:39      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:40        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:40        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:40      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:41        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:41        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:41      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:42        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:42        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:42      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:43        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:43        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:43      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:44        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:44        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:44      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:45        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:45        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:45      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:46        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:46        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:46      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:47        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:47        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:47      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:48        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:48        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:48      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:49        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:49        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:49      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:50        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:50        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:50      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:51        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:51        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:51      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:52        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:52        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:52      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:53        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:53        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:53      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:54        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:54        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:54      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:55        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:55        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:55      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:56        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:56        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:56      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:57        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:57        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:57      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:58        0     37675    0,00    0,00    0,00    1,00    0,00     4  signalping_2pro
+20:31:58        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:58      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:31:59        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:31:59        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:31:59      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:00        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:00        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:00      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:01        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:01        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:01      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:02        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:02        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:02      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:03        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:03        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:03      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:04        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:04        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:04      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:05        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:05        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:05      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:06        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:06        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:06      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:07        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:07        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:07      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:08        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:08        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:08      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:09        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:09        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:09      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:10        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:10        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:10      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:11        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:11        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:11      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:12        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:12        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:12      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:13        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:13        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:13      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:14        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:14        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:14      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:15        0     37675    0,00    1,00    0,00    0,00    1,00     4  signalping_2pro
+20:32:15        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:15      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:16        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:16        0     37676  100,00    0,00    0,00    1,00  100,00     5  signalping_2pro
+
+20:32:16      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:17        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:17        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:17      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:18        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:18        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:18      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:19        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:19        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:19      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:20        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:20        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:20      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:21        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:21        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:21      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:22        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:22        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:22      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:23        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:23        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:23      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:24        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:24        0     37676   99,00    0,00    0,00    0,00   99,00     5  signalping_2pro
+
+20:32:24      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:25        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:25        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:25      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:26        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:26        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:26      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:27        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:27        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:27      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:28        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:28        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:28      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:29        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:29        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:29      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:30        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:30        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:30      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:31        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:31        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:31      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:32        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:32        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:32      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:33        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:33        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:33      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:34        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:34        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:34      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:35        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:35        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:35      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:36        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:36        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:36      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:37        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:37        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:37      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:38        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:38        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:38      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:39        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:39        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:39      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:40        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:40        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:40      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:41        0     37675    0,00    0,00    0,00    1,00    0,00     4  signalping_2pro
+20:32:41        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:41      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:42        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:42        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:42      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:43        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:43        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:43      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:44        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:44        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:44      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:45        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:45        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:45      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:46        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:46        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:46      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:47        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:47        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:47      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:48        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:48        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:48      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:49        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:49        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:49      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:50        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:50        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:50      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:51        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:51        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:51      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:52        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:52        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:52      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:53        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:53        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:53      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:54        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:54        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:54      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:55        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:55        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:55      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:56        0     37675    0,00    1,00    0,00    0,00    1,00     4  signalping_2pro
+20:32:56        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:56      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:57        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:57        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:57      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:58        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:58        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:58      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:32:59        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:32:59        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:32:59      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:00        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:00        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:33:00      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:01        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:01        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:33:01      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:02        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:02        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:33:02      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:03        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:03        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:33:03      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:04        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:04        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+20:33:04      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+20:33:05        0     37675    0,00    0,00    0,00    0,00    0,00     4  signalping_2pro
+20:33:05        0     37676  100,00    0,00    0,00    0,00  100,00     5  signalping_2pro
+
+
+Average:      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+Average:        0     37675    0,00    0,03    0,00    0,02    0,03     -  signalping_2pro
+Average:        0     37676   99,98    0,00    0,00    0,01   99,98     -  signalping_2pro

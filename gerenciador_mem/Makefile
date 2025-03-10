@@ -1,6 +1,8 @@
 
 $(CC) = gcc
 
+all: produtor consumidor
+
 produtor: consumidor rb_produtor rb_consumidor ptr
 	$(CC) produtor.c ../bib/teste_bib.c -lbpf -lxdp -o produtor
 

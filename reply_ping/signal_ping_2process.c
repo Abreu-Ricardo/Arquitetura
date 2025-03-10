@@ -200,10 +200,14 @@ static void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
-        system("killall signal_ping_2process");
+        system("killall signalping_2proc");
         
         lock = 0;
-	    exit(1);
+	    exit(0);
+    }
+    else if (signum == SIGUSR2){
+        printf("Entrei pra enviar para polling_RX()\n");
+        polling_RX(ptr_mem_info_global);
     }
 
     //else if( signum == 10){
@@ -522,7 +526,7 @@ void polling_RX(struct xsk_info_global *info_global ){
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
     //while(1){
-    while( /* ret_ring > 0*/ 1 ){
+    while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -540,6 +544,7 @@ void polling_RX(struct xsk_info_global *info_global ){
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
             if( !ret_ring ){
+                //raise( SIGUSR2 );
                 //printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
                 //sigwait( &set , &sig );
                 continue;
@@ -591,7 +596,7 @@ void polling_RX(struct xsk_info_global *info_global ){
             // Envia sinal para o processo pai para enviar os pkts
             if ( kill( ppid , SIGUSR1 ) < 0 ){
                 perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
-                capta_sinal( 2 );
+                capta_sinal( SIGINT );
             }
             else{
 
@@ -618,7 +623,8 @@ int main(int argc, char **argv) {
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
     
-    signal(SIGINT, capta_sinal);
+    signal(SIGINT , capta_sinal);
+    signal(SIGUSR2, capta_sinal);
 
 
     int mapa_fd, map_fd_xsk,
@@ -882,6 +888,9 @@ int main(int argc, char **argv) {
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
     if( pid == 0){
+        // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "sigping_FIL", strlen(argv[0]));
+        
         fpid = getpid();
         char settar_cpuf[30];
         
@@ -894,7 +903,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/79034/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/27675/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -912,6 +921,9 @@ int main(int argc, char **argv) {
 
     // Processo pai
     else if ( pid > 0){
+        // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "sigping_PAI", strlen(argv[0]));
+
         ppid = getpid();
         char settar_cpup[30]; 
         
@@ -943,7 +955,7 @@ int main(int argc, char **argv) {
     }
     else{
         perror("+++ ERRO NO FORK +++");
-        capta_sinal(2);
+        capta_sinal(SIGINT);
     }
     
     return 0;

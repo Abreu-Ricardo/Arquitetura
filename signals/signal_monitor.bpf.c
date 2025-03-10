@@ -44,9 +44,15 @@ int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
         event->pid = ctx->pid;
  
         // Debug output (visible in trace_pipe)
-        bpf_printk("Sinal %d enviado para o PID:%d | %d", event->sig, 
+        /*bpf_printk("Sinal %d enviado para o PID:%d | %d \n", event->sig, 
                                                           event->pid, 
-                                                          cont++);
+                                                        cont++);
+        */
+
+        bpf_printk("Sinal %d enviado para o PID:%d | dado: %s", event->sig, 
+                                                                event->pid, 
+                                                                ctx->__data);
+
 
         // Submit event to the ring buffer
         bpf_ringbuf_submit(event, 0);

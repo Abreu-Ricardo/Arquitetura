@@ -45,13 +45,12 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 		struct iphdr *iph = data + sizeof(struct ethhdr);
 
         // Verificar se eh um pacote IP
-        if (bpf_ntohs(eth->h_proto) == ETH_P_IP){
+        //if (bpf_ntohs(eth->h_proto) == ETH_P_IP){
             // Protocolo do pacote
             // 1 = ICMP
             // 6 = TCP
             // 17 = UDP
 
-            struct iphdr *iph = data + sizeof(struct ethhdr);
             if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
                 protocol = iph->protocol;
 
@@ -61,7 +60,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
                 //}
 
             }
-	    }
+	    //}
     }
 	return protocol; 
 }

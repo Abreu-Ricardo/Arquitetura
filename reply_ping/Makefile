@@ -14,7 +14,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 # FLAGS
 BPF_FLAGS = -g -O2 -target bpf -c 
-C_FLAGS = -lbpf -lxdp
+C_FLAGS = -lbpf -lxdp -lpthread
 GERA_SKEL = bpftool gen skeleton
 
 # skeleton libs
@@ -44,26 +44,26 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: signal_ping_2process loader_xdp poll_ping_2process pkt_ping_2process
+user: signalping_2proc loader_xdp pollping_2proc pktping_2proc
 	@echo -e '$^ criados...'
 
-signal_ping_2process: signal_ping_2process.c 
+signalping_2proc: signal_ping_2process.c 
 	$(CC) $< -o $@ $(C_FLAGS)
 
 loader_xdp: loader_xdp.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
-poll_ping_2process: poll_ping_2process.c
+pollping_2proc: poll_ping_2process.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
-pkt_ping_2process: pkt_ping_2process.c
+pktping_2proc: pkt_ping_2process.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
 
 
 #.PHONY: clean
 clean:
-	@sudo rm $(OBJETOS_BPF) loader_xdp signal_ping_2process poll_ping_2process pkt_ping_2process
+	@sudo rm $(OBJETOS_BPF) loader_xdp signalping_2proc pollping_2proc pktping_2proc
 	@sudo rm *.skel.h
 	@#sudo rm /sys/fs/bpf/signal_monitor
 	@#sudo bpftool prog show

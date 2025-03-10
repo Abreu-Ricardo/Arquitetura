@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
+#include <sys/prctl.h>
 
 //#include <bpf/xsk.h>
 #include <bpf/bpf.h>
@@ -180,6 +181,10 @@ static void capta_sinal(int signum){
         xsk_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
+
+        //free(ptr_trava);
+        //free(ptr_mem_info_global);
+        //free(buffer_do_pacote);
         
         // Free a block allocated by \`malloc', \`realloc' or \`calloc'.
         // free(buffer_do_pacote);
@@ -191,12 +196,18 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
-        system("killall poll_ping_2process");
+        //system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
+        system("killall pollping_2proc");
+        //system("killall pollping_FIL");
+        //kill(fpid, SIGKILL);
+        raise(SIGKILL);
         
         lock = 0;
-	    exit(1);
+	    exit(0);
     }
+    else if (signum == SIGUSR2){
+            polling_RX(ptr_mem_info_global);
+        }
 
     //else if( signum == 10){
     //    polling_RX( ptr_mem_info_global );
@@ -520,9 +531,11 @@ void polling_RX(struct xsk_info_global *info_global){
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
             if( !ret_ring ){
+                //raise(SIGUSR2);
                 //printf("\n\n <ret_ring deu zero>\n");
-                //continue;
+                continue;
             }
+
 
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
             // retorna o endereco do pacote --> __u64 address of the packet.
@@ -567,6 +580,7 @@ void polling_RX(struct xsk_info_global *info_global){
 
             /*********************/
             *ptr_trava = 1;
+
            // } 
         }
 }
@@ -585,7 +599,8 @@ int main(int argc, char **argv) {
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
     
-    signal(SIGINT, capta_sinal);
+    signal(SIGINT  , capta_sinal);
+    signal(SIGUSR2 , capta_sinal);
 
 
     int mapa_fd, map_fd_xsk,
@@ -835,7 +850,9 @@ int main(int argc, char **argv) {
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
     if( pid == 0){
-        //printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB %d\n", pid);
+        // Trocando o nome do processo para pollpingFIL
+        strncpy(argv[0], "pollpingFIL", strlen(argv[0]));
+        
         pid_t fpid = getpid();
         char settar_cpuf[30];
         
@@ -845,28 +862,28 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/116968/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/26038/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
             perror("\n\nNao foi possivel mover o processo");
         }
         
-        
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
         
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
-        //polling_RX( info_global );
         polling_RX( ptr_mem_info_global );
     }
     // Processo pai
     else if ( pid > 0){
-        //printf("AAAAAAAAAAAAAAAAAAAAAaa %d\n", pid);
+        // Trocando o nome do processo para pollpingPAI
+        strncpy(argv[0], "pollpingPAI", strlen(argv[0]));
+        
         pid_t ppid = getpid();
         char settar_cpup[30]; 
-        
+       
         sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
