@@ -169,7 +169,8 @@ struct xsk_socket_config xsk_cfg2 = {
     .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
     //.xdp_flags = XDP_FLAGS_SKB_MODE,
     .xdp_flags = XDP_FLAGS_DRV_MODE,
-    .bind_flags =  XDP_SHARED_UMEM,
+    //.bind_flags =  XDP_SHARED_UMEM,
+    .bind_flags =  XDP_SHARED_UMEM | XDP_USE_NEED_WAKEUP,
 };
 
 struct xsk_socket *xsk;
@@ -546,9 +547,6 @@ void polling_RX(struct xsk_info_global *info_global ){
 
     while( 1 ){
 
-            if (recvfrom( xsk_socket__fd(xsk2) , NULL, 0, MSG_DONTWAIT, NULL, NULL ) < 0)
-                continue;
-            
             //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -566,7 +564,7 @@ void polling_RX(struct xsk_info_global *info_global ){
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
 
             if( !ret_ring ){
-                printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
+                //printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
                 //sigwait( &set , &sig );
                 continue;
             }
@@ -624,9 +622,11 @@ void polling_RX(struct xsk_info_global *info_global ){
                 //printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
                 //printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
-                if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
-                    printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
-                }
+            if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
+                printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
+                continue;
+            }
+
             } 
         }
 }
@@ -934,7 +934,6 @@ int main(int argc, char **argv) {
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     
 
-
     // Processo filho
     if( pid == 0){
          // Trocando o nome do processo para poolpingPAI
@@ -953,7 +952,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/27675/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/38796/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1011,9 +1010,9 @@ int main(int argc, char **argv) {
 
         struct sockaddr_in teste;
         socklen_t tam_teste = sizeof(teste);
+        int temp = 0;
         // Espera pelo sinal do proc filho
         while(1){
-
             //printf("PID do filho %d\n", fpid);
             if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
                 perror("<PROC_PAI>Erro ao enviar pkt para filho...");
@@ -1026,10 +1025,32 @@ int main(int argc, char **argv) {
             if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
                 perror("<PROC_PAI>Erro ao enviar pkt para filho...");
             }
+           
+            //if ( recvfrom(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, NULL)  < 0 ) {
+            
+            //if ( recvfrom(xsk_socket__fd(xsk), NULL, 0, /*MSG_TRUNC 0*/ /*MSG_PEEK*/ 0, NULL, NULL)  < 0 ) {
+            //    perror("Erro ao receber syscall do XSK");
+            //    continue;
+            //}
 
-            else{
-                //printf("<PROC_PAI>Enviando pkt para filho...\n");
-            }
+            //printf("errno--> %d\nrecebeu pkt(%d)\n", errno, temp++);
+
+            //if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
+            //    perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            //}
+            //
+            //else{
+            //    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+            //    complete_tx(ptr_mem_info_global->umem_frame_addr, 
+            //            ptr_mem_info_global->umem_frame_free, 
+            //            &ptr_mem_info_global->tx_restante);
+            //    //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
+            //if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
+            //    perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            //    }
+            //}
+            
+
         }
     }
     else{

@@ -590,14 +590,29 @@ void polling_RX(struct xsk_info_global *info_global ){
                 }
              }
 
+            int temp = 888;
+            pid_t pid_alvo = ppid; //atoi(argv[1]); // pega o PID do receiver
+            int dado = temp; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
+
+            union sigval valor;
+            valor.sival_int = dado;  // Anexa dado ao sinal
+
+
+
+            // Envia SIGUSR1 com dados
+            if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
+                perror("sigqueue");
+                capta_sinal(SIGINT);
+                //return 1;
+            }
 
             /*********************/
             //*ptr_trava = 1;
             // Envia sinal para o processo pai para enviar os pkts
-            if ( kill( ppid , SIGUSR1 ) < 0 ){
-                perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
-                capta_sinal( SIGINT );
-            }
+            //if ( kill( ppid , SIGUSR1 ) < 0 ){
+            //    perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
+            //    capta_sinal( SIGINT );
+            //}
             else{
 
                 //printf("<PROC_FILHO>Enviando sinal para o pai(%d)...\n", ppid);
@@ -608,6 +623,13 @@ void polling_RX(struct xsk_info_global *info_global ){
            // } 
         }
 }
+
+void signal_handler(int signum, siginfo_t *info, void *context) {
+    if (signum == SIGUSR1) {
+        printf("Sinal recebido SIGUSR1 com dado: %d\n", info->si_value.sival_int);
+    }
+}
+
 
 /*************************************************************************/
 int main(int argc, char **argv) {
@@ -903,7 +925,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/27675/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/38796/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -934,22 +956,51 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
+        struct sigaction act;
+        act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
+        act.sa_sigaction = signal_handler;
+        sigemptyset(&act.sa_mask);
+
+        // Registra um handler para SIGUSR1
+        if (sigaction(SIGUSR1, &act, NULL) == -1) {
+            perror("sigaction");
+            capta_sinal(SIGINT);
+        }
+
+        pid_t pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
+        int dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
+
+        union sigval valor;
+        valor.sival_int = dado;  // Anexa dado ao sinal
+
         // Espera pelo sinal do proc filho
         // sigwait(&set, &sig);
         while(1){
             if( sigwait(&set, &sig) >= 0 ){
                 //printf("PID do filho %d\n", fpid);
-                if ( kill( fpid , SIGUSR1 ) >= 0 ){
-                  
-                    //printf("<PROC_PAI>enviando sinal...(%d)\n", fpid);
-                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                    complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                                ptr_mem_info_global->umem_frame_free, 
-                                &ptr_mem_info_global->tx_restante);
+                if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
+                    perror("<PROC_PAI>Erro ao enviar sinal...");
+                    perror("sigqueue");
+                    //return 1;
                 }
                 else{
-                    perror("<PROC_PAI>Erro ao enviar sinal...");
+                   xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+                   complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                               ptr_mem_info_global->umem_frame_free, 
+                               &ptr_mem_info_global->tx_restante);
                 }
+
+                //if ( kill( fpid , SIGUSR1 ) >= 0 ){
+                //  
+                //    //printf("<PROC_PAI>enviando sinal...(%d)\n", fpid);
+                //    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+                //    complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                //                ptr_mem_info_global->umem_frame_free, 
+                //                &ptr_mem_info_global->tx_restante);
+                //}
+                //else{
+                //    perror("<PROC_PAI>Erro ao enviar sinal...");
+                //}
             }
         }
     }

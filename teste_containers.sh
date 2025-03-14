@@ -15,6 +15,7 @@ ip netns add n4;
 #sudo ip link add veth1 type veth peer name veth2; 
 sudo ip link add veth1 netns servidor type veth peer name veth2 netns r1;
 
+
 # R1 --> N3
 # 10.10.2.3 --> 192.168.2.4
 #sudo ip link add veth3 type veth peer name veth4;
@@ -120,6 +121,25 @@ sudo ip netns exec       n3 sh -c 'route add -net 0.0.0.0/0 gw 20.20.20.1 ';
 #sudo ip netns exec servidor sh -c 'route add -net 0.0.0.0/0 gw 40.40.40.2 ';  
 #sudo ip netns exec       n3 sh -c 'route add -net 0.0.0.0/0 gw 30.30.30.3 '; 
 
+# Atribuindo o MAC estaticamente para atribuir o arp
+sudo ip netns exec servidor sh -c 'ifconfig veth1 hw ether 00:11:22:33:44:11'
+sudo ip netns exec servidor sh -c 'ifconfig veth8 hw ether 00:11:22:33:44:88'
+
+sudo ip netns exec       r1 sh -c 'ifconfig veth2 hw ether 00:11:22:33:44:22'
+sudo ip netns exec       r1 sh -c 'ifconfig veth3 hw ether 00:11:22:33:44:33'
+
+sudo ip netns exec       n3 sh -c 'ifconfig veth4 hw ether 00:11:22:33:44:44'
+sudo ip netns exec       n3 sh -c 'ifconfig veth5 hw ether 00:11:22:33:44:55'
+
+# Atribuindo ARP esticamente
+
+sudo ip netns exec servidor sh -c 'arp -s 10.10.10.1 00:11:22:33:44:22'
+
+sudo ip netns exec       r1 sh -c 'arp -s 10.10.10.2 00:11:22:33:44:11'
+sudo ip netns exec       r1 sh -c 'arp -s 20.20.20.2 00:11:22:33:44:33'
+
+sudo ip netns exec       n3 sh -c 'arp -s 20.20.20.1 00:11:22:33:44:22'
+
 
 # Aqui vai criar um link no dir dados para o bpffs
 sudo mount --bind /sys/fs/bpf $(pwd)/dados;
@@ -133,18 +153,26 @@ echo "R1--> sudo ip netns exec r1 bash";
 echo "N3--> sudo ip netns exec n3 bash";
 echo "N4--> sudo ip netns exec n4 bash";
 
-echo "mount -t bpf bpffs /sys/fs/bpf"
+echo -e "\n\n(garantir que bpf fs esteja montado)--> mount -t bpf bpffs /sys/fs/bpf"
+echo "(configurar ARP estaticamente)      -->sudo arp -s 10.10.10.1 AA:BB:CC:DD:EE:FF"
+
+echo -e "Para isolar a CPU do kernel e desabilitar threads do nucleo --> sudo vim /etc/default/grub"
+echo -e "Buscar por: GRUB_CMDLINE_LINUX_DEFAULT='... isolcpus=3,4 nosmt'"
+echo -e "E por fim --> sudo update-grub"
+
+#echo -e "servidor--> $(veth1_mac) $(veth8_mac)\nr1 --> $(veth2_mac) $(veth3_mac)\nn3 --> $(veth4_mac) $(veth5_mac)\n"
+#echo -e "servidor--> $(veth1_mac) \n"
 
 # Precisa passar o nome da veth para poder pingar
 # Se nao, vai usar a veth que n tem par com a outra veth
 echo " "
 echo " "
 #echo "Para pingar--> ping 10.10.10.* -c 3 -I <nome_veth>"
-echo "Para alterar a exec entre apenas host e entre containers alterar os seguintes arquivos"
-echo "/bib/teste_bib.c= carrega_ebpf() remove_ebpf()"
-echo "/eBPF/espaco_kernel.c= comentar atributo pinning do mapa"
-
-echo "/gerenciador_mem/consumidor.c= alterar caminho de mapa_fd"
+#echo "Para alterar a exec entre apenas host e entre containers alterar os seguintes arquivos"
+#echo "/bib/teste_bib.c= carrega_ebpf() remove_ebpf()"
+#echo "/eBPF/espaco_kernel.c= comentar atributo pinning do mapa"
+#
+#echo "/gerenciador_mem/consumidor.c= alterar caminho de mapa_fd"
 
 #sudo ip netns exec n1 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
 #sudo ip netns exec n2 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
