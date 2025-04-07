@@ -41,7 +41,7 @@ int pega_pkt(struct xdp_md *ctx) {
     ptr =  bpf_map_lookup_elem( &valores, &key);
     if(ptr == NULL ){
         bpf_printk("Erro no lookup do mapa\n");
-    	return TC_ACT_OK;
+    	return XDP_PASS;
     	//return TCX_DROP;
     }
     //
@@ -51,13 +51,13 @@ int pega_pkt(struct xdp_md *ctx) {
 
     if (temp < 0){
 	bpf_printk("Erro ao enviar o sinal\n");
-    	return TC_ACT_OK;
+    	return XDP_PASS;
     	//return TCX_DROP;
     }
 
     bpf_printk("ESTA CAPTANDO PKTS!!! valor do pid, mapa--> %d\n",  *ptr);
 
-    return TC_ACT_OK;
+    return XDP_PASS;
 }
 
 char LICENSE[] SEC("license") = "GPL"; 

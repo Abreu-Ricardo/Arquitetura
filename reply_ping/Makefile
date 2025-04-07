@@ -44,7 +44,7 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: signalping_2proc loader_xdp pollping_2proc pktping_2proc
+user: signalping_2proc loader_xdp pollping_2proc pktping_2proc mysignal_2proc
 	@echo -e '$^ criados...'
 
 signalping_2proc: signal_ping_2process.c 
@@ -57,6 +57,9 @@ pollping_2proc: poll_ping_2process.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
 pktping_2proc: pkt_ping_2process.c
+	$(CC) $< -o $@ $(C_FLAGS)
+
+mysignal_2proc: mysignal_2proc.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
 

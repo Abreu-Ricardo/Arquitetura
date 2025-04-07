@@ -18,6 +18,13 @@ struct mapa_mem{
  //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_fd SEC(".maps");
 
+struct {
+        __uint(type, BPF_MAP_TYPE_ARRAY);
+        __uint(max_entries, 4);
+        __type(key, __u32);
+        __type(value, sizeof(pid_t)); // Ver o tipo da var que o fd de mem eh   
+ //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
+} mapa_sinal SEC(".maps");
 
 
 // Define um mapa XSKMAP para o socket AF_XDP
@@ -74,15 +81,19 @@ int xdp_prog(struct xdp_md *ctx){
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
     __u64 *ptr;
-    ptr = bpf_map_lookup_elem(&mapa_fd, &key);
+    //ptr = bpf_map_lookup_elem(&mapa_fd, &key);
+    ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
     ret = verifica_ip(ctx);
     
     //ptr2 = bpf_map_lookup_elem(&mapa_fd, &key);
     //bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
     //bpf_printk("valor mapa_xsk: posicao(0)%d posicao(1)%d\n", *ptr, *ptr2);
     
+    int pid = *ptr;
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
+	
+	bpf_minha_func(pid);
         //bpf_printk("Redirecionando...\n");
         return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
     }
