@@ -952,7 +952,11 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
+<<<<<<< HEAD
         fd_namespace = open( "/proc/5444/ns/net",  O_RDONLY );
+=======
+        fd_namespace = open( "/proc/4373/ns/net",  O_RDONLY );
+>>>>>>> 7ed3c19 (arrumar o prog eBPF no kern a enviar o sinal para o pid no mapa)
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
