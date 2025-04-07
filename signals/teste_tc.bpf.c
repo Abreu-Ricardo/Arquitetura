@@ -31,22 +31,28 @@ struct {
 
 
 
-SEC("tc")
-int pega_pkt(struct __sk_buff *ctx) {
+SEC("xdp")
+//int pega_pkt(struct __sk_buff *ctx) {
+int pega_pkt(struct xdp_md *ctx) {
 
     __u32 key = 0;
-    __u64 *ptr = NULL;
+    __u64 *ptr;
     
     ptr =  bpf_map_lookup_elem( &valores, &key);
-    if  (ptr == NULL ){
+    if(ptr == NULL ){
+        bpf_printk("Erro no lookup do mapa\n");
     	return TC_ACT_OK;
+    	//return TCX_DROP;
     }
     //
-    __u32 temp = bpf_minha_func(*ptr);
+    //
+    int pid = *ptr;
+    __u32 temp = bpf_minha_func(pid);
 
     if (temp < 0){
-	    bpf_printk("Erro ao enviar o sinal\n");
+	bpf_printk("Erro ao enviar o sinal\n");
     	return TC_ACT_OK;
+    	//return TCX_DROP;
     }
 
     bpf_printk("ESTA CAPTANDO PKTS!!! valor do pid, mapa--> %d\n",  *ptr);

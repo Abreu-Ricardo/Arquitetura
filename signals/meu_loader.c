@@ -64,15 +64,20 @@ int main(int argc, char **argv){
 
 
     tc_skel = teste_tc_bpf__open_and_load();
+    //tc_skel = teste_tc_bpf__open();
     if ( !tc_skel ){
         perror("Erro ao abrir e carregar o skeleton do programa");
         teste_tc_bpf__destroy(tc_skel);
         exit(1);
     }
 
+
+    tc_skel->links.pega_pkt = bpf_program__attach_xdp( tc_skel->progs.pega_pkt , 2 );
+    //tc_skel->links.pega_pkt = bpf_program__attach( tc_skel->progs.pega_pkt );
+
     // Cria qdisc e carrega programa eBPF com a ferramenta a ip do iproute2
     system(cria_qdisc);
-    system(carrega_tc_ingress);
+    //system(carrega_tc_ingress);
 
     pid_t pid = getpid();
     __u32 valor_pego = -1;
@@ -91,6 +96,7 @@ int main(int argc, char **argv){
 
     if (ret_lookup < 0){
     	printf("Erro ao atualizar o mapa\n");
+	pega_sinal(SIGINT);
     }
 
 
