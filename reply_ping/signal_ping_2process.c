@@ -831,13 +831,13 @@ int main(int argc, char **argv) {
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
 
-    ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
-    ret_xskmap = bpf_map_lookup_elem(map_fd_xsk, &key, &ret_xsk);
-    
-    if(ret_look < 0 && ret_xskmap < 0){
-        printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
-        return -1;
-    }
+    //ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
+    //ret_xskmap = bpf_map_lookup_elem(map_fd_xsk, &key, &ret_xsk);
+    //
+    //if(ret_look < 0 && ret_xskmap < 0){
+    //    printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
+    //    return -1;
+    //}
 
     printf("\nValor do retorno do mapa: %s\n", ret_lookup);
     printf("Valor do retorno do xskmap: %d\n", ret_xskmap);
@@ -925,7 +925,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5444/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/6371/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

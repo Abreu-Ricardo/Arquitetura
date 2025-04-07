@@ -20,10 +20,10 @@ struct mapa_mem{
 
 struct {
         __uint(type, BPF_MAP_TYPE_ARRAY);
-        __uint(max_entries, 4);
+        __uint(max_entries, 1);
         __type(key, __u32);
         __type(value, sizeof(pid_t)); // Ver o tipo da var que o fd de mem eh   
- //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
+    	//__uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_sinal SEC(".maps");
 
 
@@ -61,10 +61,6 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
             if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
                 protocol = iph->protocol;
 
-                //struct icmphdr *icmp = data + sizeof(struct iphdr); 
-                //if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct icmphdr) <= data_end ){
-                //    protocol = 1;
-                //}
 
             }
 	    //}
@@ -81,21 +77,27 @@ int xdp_prog(struct xdp_md *ctx){
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
     __u64 *ptr;
-    //ptr = bpf_map_lookup_elem(&mapa_fd, &key);
-    ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
+
     ret = verifica_ip(ctx);
+    ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
     
-    //ptr2 = bpf_map_lookup_elem(&mapa_fd, &key);
-    //bpf_printk("valor queue_id: %d\n", ctx->rx_queue_index);
-    //bpf_printk("valor mapa_xsk: posicao(0)%d posicao(1)%d\n", *ptr, *ptr2);
-    
+    if (ptr == NULL){
+	    bpf_printk("Erro ao acessar o mapa_sinal");
+	    return XDP_DROP;
+    }
+
     int pid = *ptr;
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
 	
-	bpf_minha_func(pid);
+	int ret_func = bpf_minha_func(pid);
+	if (ret_func < 0){
+		bpf_printk("Erro ao enviar sinal para o pid");
+	        return XDP_DROP;
+	}
+
         //bpf_printk("Redirecionando...\n");
-        return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
+        return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
 
     //bpf_printk("Pkt n foi redirecionado! %d\n", ret);
