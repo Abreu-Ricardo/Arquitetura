@@ -1,0 +1,129 @@
+## **✅ How to Recompile the Linux Kernel with Your Changes**
+After modifying the kernel (e.g., adding a new **BPF helper**), you need to **recompile and install** the updated kernel.
+
+---
+
+## **📌 Step 1: Install Required Dependencies**
+Before compiling, install the necessary tools:
+
+### **Debian/Ubuntu**
+```bash
+sudo apt update
+sudo apt install build-essential libncurses-dev bison flex libssl-dev libelf-dev
+```
+
+### **Fedora**
+```bash
+sudo dnf groupinstall "Development Tools"
+sudo dnf install ncurses-devel bison flex elfutils-libelf-devel openssl-devel
+```
+
+### **Arch Linux**
+```bash
+sudo pacman -S base-devel ncurses flex bison openssl elfutils
+```
+
+---
+
+## **📌 Step 2: Download the Kernel Source**
+If you don’t have the kernel source yet, download it:
+
+```bash
+cd /usr/src/
+git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+cd linux
+```
+✔ This gets the latest **mainline kernel**. If you need a specific version, check your kernel version using:
+
+```bash
+uname -r
+```
+Then, download that specific version from https://www.kernel.org/.
+
+---
+
+## **📌 Step 3: Configure the Kernel**
+Inside the Linux source directory (`/usr/src/linux` or your custom path):
+
+1. Copy your existing configuration to the new kernel:
+   ```bash
+   cp -v /boot/config-$(uname -r) .config
+   ```
+2. Update config options:
+   ```bash
+   make olddefconfig
+   ```
+   ✔ This keeps your current configuration but updates new options.
+
+3. If you want a graphical menu to customize the kernel:
+   ```bash
+   make menuconfig
+   ```
+
+---
+
+## **📌 Step 4: Compile the Kernel**
+Now, start compiling:
+
+```bash
+make -j$(nproc)
+```
+✔ This will **compile the kernel in parallel** using all available CPU cores (`nproc`).
+
+⚠ **Note:** This process can take a long time (30+ minutes).
+
+---
+
+## **📌 Step 5: Install the Kernel**
+Once compiled, install the modules:
+
+```bash
+sudo make modules_install
+```
+Then install the new kernel:
+```bash
+sudo make install
+```
+
+---
+
+## **📌 Step 6: Update GRUB & Reboot**
+### **For Debian/Ubuntu:**
+```bash
+sudo update-grub
+sudo reboot
+```
+### **For Fedora/Arch:**
+```bash
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
+
+---
+
+## **📌 Step 7: Verify Your Kernel**
+After rebooting, check if the new kernel is running:
+```bash
+uname -r
+```
+✔ If it shows your modified version, the **new kernel is successfully installed!**
+
+---
+
+## **🚀 Summary**
+| **Step** | **Command** |
+|----------|------------|
+| **Install dependencies** | `sudo apt install build-essential libncurses-dev bison flex libssl-dev libelf-dev` |
+| **Download kernel source** | `git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git` |
+| **Copy existing config** | `cp /boot/config-$(uname -r) .config` |
+| **Update config** | `make olddefconfig` |
+| **Compile kernel** | `make -j$(nproc)` |
+| **Install modules** | `sudo make modules_install` |
+| **Install kernel** | `sudo make install` |
+| **Update GRUB & reboot** | `sudo update-grub && sudo reboot` |
+| **Check running kernel** | `uname -r` |
+
+---
+
+Now, your **new kernel with the custom BPF helper** is installed! 🚀  
+Would you like help debugging issues if something goes wrong? 😊

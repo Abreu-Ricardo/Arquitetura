@@ -937,7 +937,7 @@ int main(int argc, char **argv) {
     // Processo filho
     if( pid == 0){
          // Trocando o nome do processo para poolpingPAI
-        strncpy(argv[0], "udpping_FIL", strlen(argv[0]));       
+        strncpy(argv[0], "udp_FIL", strlen(argv[0]));       
 
         fpid = getpid();
         char settar_cpuf[30];
@@ -952,7 +952,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/21135/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5444/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -991,7 +991,7 @@ int main(int argc, char **argv) {
     // Processo pai
     else if ( pid > 0){
         // Trocando o nome do processo para poolpingPAI
-        strncpy(argv[0], "udpping_PAI", strlen(argv[0]));
+        strncpy(argv[0], "udp_PAI", strlen(argv[0]));
         
         ppid = getpid();
         char settar_cpup[30]; 

@@ -1,4 +1,6 @@
 #include "vmlinux.h"
+
+
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
@@ -25,7 +27,7 @@ SEC("tracepoint/signal/signal_generate")
 int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
     
     //bpf_printk("VALOR --> %d\n", ctx->sig);
-    if ( ctx->sig == 10 ){
+    //if ( ctx->sig == 10 ){
         struct signal_event *event;
         struct task_struct *task;
         int pid = 0;
@@ -49,15 +51,17 @@ int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
                                                         cont++);
         */
 
-        bpf_printk("Sinal %d enviado para o PID:%d | dado: %s", event->sig, 
-                                                                event->pid, 
-                                                                ctx->__data);
+        bpf_printk("Sinal %d enviado para o PID:%d |group: %d |code %d| resul %d", event->sig, 
+                                                                                   event->pid, 
+                                                                                   ctx->group,
+                                                                                   ctx->code,
+                                                                                   ctx->result);
 
 
         // Submit event to the ring buffer
         bpf_ringbuf_submit(event, 0);
         //return 0;
-    }
+    //}
 
     //bpf_printk("Outro sinal...\n");
     return 0;

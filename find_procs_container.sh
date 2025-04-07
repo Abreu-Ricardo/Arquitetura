@@ -11,14 +11,17 @@ fi
 
 echo $pid
 # List all network namespaces
+echo -e "Listando os namespaces ativos..."
 ip netns list
 
 # Show namespace processes using /proc
-ls -l /proc/$1/ns/net
+#ls -l /proc/$1/ns/net
 
 # Get namespace inode number
+echo -e "\nInode do namespace..."
 ls -l /proc/$1/ns/net | awk '{print $NF}' | cut -d '-' -f 2
 
+echo -e "\nProcessos que estao no NS passado..."
 # Find all processes in the same namespace
 for pid in /proc/[0-9]*; do
     if [ "$(readlink $pid/ns/net)" = "$(readlink /proc/$1/ns/net)" ]; then

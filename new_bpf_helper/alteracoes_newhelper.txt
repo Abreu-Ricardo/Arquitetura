@@ -1,0 +1,75 @@
+Arquivos para modificar e escrever a nova func:
+    1- ./kernel/helpers.c
+    2- ./kernel/core.c
+    3- ./include/linux/bpf.h
+    4- ./include/uapi/linux/bpf.h
+    5- /usr/include/bpf/bpf_helper_defs.h
+    6- /usr/include/linux/bpf.h
+
+Alteracoes nos arquivos:
+    1- ./kernel/bpf/helpers.c:
+
+        // BPF_CALL_0 define uma funcao que n passar argumento
+        BPF_CALL_0(bpf_minha_func)
+        {
+            return 2026;
+        }
+
+        // Define os atributos que a estrutura de dados bpf_func_proto 
+        // precisa usar para criar a funcao
+        const struct bpf_func_proto bpf_minha_func_proto = {
+            .func           = bpf_minha_func,
+            .gpl_only       = false,
+            .ret_type       = RET_INTEGER,
+        };
+
+        // Quando for passado o id da funcao, redirecionar 
+        // para o funcao declarada
+        case BPF_FUNC_minha_func:
+                return &bpf_minha_func_proto;
+
+*****************************************
+
+    2- ./kernel/core.c:
+        // Declaracao da funcao, __weak significa que eh para o compilador
+        // usar uma referencia fraca, pois a funcao ja foi definia em outro lugar
+        const struct bpf_func_proto bpf_minha_func_proto __weak
+
+
+*****************************************
+
+    3- ./include/linux/bpf.h
+        
+        // Declara o prototipo da helper function
+        extern const struct bpf_func_proto bpf_minha_func_proto;
+
+
+*****************************************
+
+    4-  ./include/uapi/linux/bpf.h
+
+        // Coloca a nova funcao no vetor de funcao 
+        // e atualiza o id correspondente a posicao da funcao
+    
+        FN(minha_func, 212, ##ctx)			\
+
+
+*****************************************
+
+    5- /usr/include/bpf/bpf_helper_defs.h
+
+        // Aqui foi onde deu um monte de problema
+        // de n reconhecer.
+        // O numero inteiro no fim eh o id colocado no arquivo ./include/uapi/linux/bpf.h
+
+        static __u64 (* const bpf_minha_func)(void) = (void *) 212;
+
+
+*****************************************
+
+    6- /usr/include/linux/bpf.h
+
+        // Declarei esse e o anterior dentro do diretorio raiz
+        // pois aparentemente na instalacao do novo kernel n tinha
+        // sobrescrito os arquivos ja escritos
+        FN(minha_func, 212, ##ctx)			\

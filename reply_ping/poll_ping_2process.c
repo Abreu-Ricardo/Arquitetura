@@ -595,7 +595,8 @@ int main(int argc, char **argv) {
     const char *iface = argv[1];
    
     /***************Config da regiao de mem compart com shm*****************/
-    char *caminho_prog = "xsk_kern.o";
+    //char *caminho_prog = "xsk_kern.o";
+    char *caminho_prog = "xsk_kern.bpf.o";
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
     
@@ -851,7 +852,7 @@ int main(int argc, char **argv) {
     // Processo filho
     if( pid == 0){
         // Trocando o nome do processo para pollpingFIL
-        strncpy(argv[0], "pollpingFIL", strlen(argv[0]));
+        strncpy(argv[0], "pollFIL", strlen(argv[0]));
         
         pid_t fpid = getpid();
         char settar_cpuf[30];
@@ -862,7 +863,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/21135/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5444/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -879,7 +880,7 @@ int main(int argc, char **argv) {
     // Processo pai
     else if ( pid > 0){
         // Trocando o nome do processo para pollpingPAI
-        strncpy(argv[0], "pollpingPAI", strlen(argv[0]));
+        strncpy(argv[0], "pollPAI", strlen(argv[0]));
         
         pid_t ppid = getpid();
         char settar_cpup[30]; 

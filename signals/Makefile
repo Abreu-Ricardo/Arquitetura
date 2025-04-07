@@ -30,6 +30,7 @@ DIR = $(shell pwd)
 # $(SOURCE_BPF:bpf.c=bpf.o) --> Pega os nomes da var e troca a extensao bpf.c por bpf.o
 
 all: bpf skel user
+	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 	@echo -e '\n+++ Compilação pronta! +++'
 
 bpf: $(SOURCE_BPF)

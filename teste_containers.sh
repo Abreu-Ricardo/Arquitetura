@@ -136,9 +136,9 @@ sudo ip netns exec       n3 sh -c 'ifconfig veth5 hw ether 00:11:22:33:44:55'
 sudo ip netns exec servidor sh -c 'arp -s 10.10.10.1 00:11:22:33:44:22'
 
 sudo ip netns exec       r1 sh -c 'arp -s 10.10.10.2 00:11:22:33:44:11'
-sudo ip netns exec       r1 sh -c 'arp -s 20.20.20.2 00:11:22:33:44:33'
+sudo ip netns exec       r1 sh -c 'arp -s 20.20.20.2 00:11:22:33:44:44'
 
-sudo ip netns exec       n3 sh -c 'arp -s 20.20.20.1 00:11:22:33:44:22'
+sudo ip netns exec       n3 sh -c 'arp -s 20.20.20.1 00:11:22:33:44:33'
 
 
 # Aqui vai criar um link no dir dados para o bpffs
