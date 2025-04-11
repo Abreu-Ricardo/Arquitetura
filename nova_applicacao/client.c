@@ -3,8 +3,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-//#define DEFAULT_SERVER_IP "127.0.0.1"
-#define DEFAULT_SERVER_IP "10.10.10.2"
+#define DEFAULT_SERVER_IP "127.0.0.1"
+//#define DEFAULT_SERVER_IP "10.10.10.2"
 
 int main(int argc, char const *argv[]) {
     int sock = 0;
