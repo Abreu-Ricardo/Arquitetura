@@ -178,8 +178,11 @@ static void capta_sinal(int signum){
 
     if (signum == 2){
 
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");  
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ubuntu/Documents/Arquitetura/dados/xsk_map");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") 	     , "/home/ubuntu/Documents/Arquitetura/dados/mapa_fd");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ubuntu/Documents/Arquitetura/dados/mapa_sinal");
+
 
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_NATIVE, 0);
@@ -199,7 +202,7 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
+        //system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
         system("killall signalping_2proc");
         
         lock = 0;
@@ -526,7 +529,8 @@ void polling_RX(struct xsk_info_global *info_global ){
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
     //while(1){
-    while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
+    // while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
+    while( sigwait(&set, &sig) == 0  ){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -752,7 +756,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
+    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
+    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
+
+
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
@@ -925,17 +933,23 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/6371/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/3101/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
             perror("\n\nNao foi possivel mover o processo");
         }
         
-        
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
-        
+       
+	int chave2 =  0;
+	int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+	if (ret_update2 < 0){
+		perror("+++ erro ao atualizar o mapa com o PID +++");
+		capta_sinal(SIGINT);
+	}
+
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
         polling_RX( ptr_mem_info_global );

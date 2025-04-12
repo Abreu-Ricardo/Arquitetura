@@ -22,6 +22,7 @@ struct {
         __uint(type, BPF_MAP_TYPE_ARRAY);
         __uint(max_entries, 1);
         __type(key, __u32);
+        //__type(value, sizeof(int)); // Ver o tipo da var que o fd de mem eh   
         __type(value, sizeof(pid_t)); // Ver o tipo da var que o fd de mem eh   
     	//__uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_sinal SEC(".maps");
