@@ -7,8 +7,8 @@
 #include <sys/socket.h>
 
 #define PORT 9000
-//#define DEST_IP "127.0.0.1"
-#define DEST_IP "20.20.20.2"
+#define DEST_IP "127.0.0.1"
+//#define DEST_IP "20.20.20.2"
 #define PACKET_SIZE 64
 
 int main() {
@@ -32,7 +32,7 @@ int main() {
         memcpy(buffer, &ts, sizeof(ts)); // put timestamp in the beginning
         sendto(sockfd, buffer, PACKET_SIZE, 0,
                (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-        usleep(10000); // 10ms delay between packets
+        //usleep(10000); // 10ms delay between packets
     }
 
     close(sockfd);
