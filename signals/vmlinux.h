@@ -86997,14 +86997,14 @@ struct input_value {
 
 struct instance_attribute {
 	struct attribute attr;
-	ssize_t (*show)(struct edac_pci_ctl_info *, char *);
-	ssize_t (*store)(struct edac_pci_ctl_info *, const char *, size_t);
+	ssize_t (*show)(struct edac_device_instance *, char *);
+	ssize_t (*store)(struct edac_device_instance *, const char *, size_t);
 };
 
 struct instance_attribute___2 {
 	struct attribute attr;
-	ssize_t (*show)(struct edac_device_instance *, char *);
-	ssize_t (*store)(struct edac_device_instance *, const char *, size_t);
+	ssize_t (*show)(struct edac_pci_ctl_info *, char *);
+	ssize_t (*store)(struct edac_pci_ctl_info *, const char *, size_t);
 };
 
 union intcapxt {
@@ -87299,8 +87299,10 @@ struct pinctrl_desc {
 	bool link_consumers;
 };
 
+struct intel_community_context;
+
 struct intel_pinctrl_context {
-	struct intel_pad_context___3 *pads;
+	struct intel_pad_context *pads;
 	struct intel_community_context *communities;
 };
 
@@ -87319,10 +87321,8 @@ struct intel_pinctrl {
 	int irq;
 };
 
-struct intel_community_context;
-
 struct intel_pinctrl_context___2 {
-	struct intel_pad_context *pads;
+	struct intel_pad_context___3 *pads;
 	struct intel_community_context *communities;
 };
 

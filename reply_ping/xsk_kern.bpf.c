@@ -22,7 +22,6 @@ struct {
         __uint(type, BPF_MAP_TYPE_ARRAY);
         __uint(max_entries, 1);
         __type(key, __u32);
-        //__type(value, sizeof(int)); // Ver o tipo da var que o fd de mem eh   
         __type(value, sizeof(pid_t)); // Ver o tipo da var que o fd de mem eh   
     	//__uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_sinal SEC(".maps");
@@ -42,11 +41,11 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 
 	void *data = (void *)(long)ctx->data;
 	void *data_end = (void *)(long)ctx->data_end;
-    unsigned char protocol = 0;
+    	unsigned char protocol = 0;
 
 	struct ethhdr *eth = data;
 	if (data + sizeof(struct ethhdr) > data_end){
-        return -1; 
+        	return -1; 
 	}
 
 	if (bpf_ntohs(eth->h_proto) == ETH_P_IP){	
@@ -78,6 +77,8 @@ int xdp_prog(struct xdp_md *ctx){
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
     __u64 *ptr;
+    __u32 ret_final;
+    
 
     ret = verifica_ip(ctx);
     ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
@@ -87,18 +88,16 @@ int xdp_prog(struct xdp_md *ctx){
 	    return XDP_DROP;
     }
 
-    int pid = *ptr;
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
-	
-	int ret_func = bpf_minha_func(pid);
-	if (ret_func < 0){
+       // ret_final =  bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+	if ( bpf_minha_func(*ptr)  < 0 ){
 		bpf_printk("Erro ao enviar sinal para o pid");
 	        return XDP_DROP;
 	}
 
-        //bpf_printk("Redirecionando...\n");
-        return bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+        //bpf_printk("Enviando sinal...\n");
+        return /*ret_final;*/ bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
 
     //bpf_printk("Pkt n foi redirecionado! %d\n", ret);
