@@ -171,8 +171,9 @@ static void capta_sinal(int signum){
 
     if (signum == 2){
 
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");  
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd")         , "../dados/mapa_fd");  
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "../dados/xsk_map");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "../dados/xsk_kern_rodata");
 
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_NATIVE, 0);
@@ -689,7 +690,7 @@ int main(int argc, char **argv) {
 	mapa_fd = bpf_object__find_map_fd_by_name( skel->obj, "xsk_map"); 
 	if (mapa_fd < 0) {
 		printf("Erro ao tentar obter o fd do mapa pelo bpf_obj, retorno: %d\n", mapa_fd);
-        bpf_object__close(bpf_obj);
+        	bpf_object__close(bpf_obj);
 		return mapa_fd;
 	}
  
@@ -707,9 +708,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    // Pinnando os mapas do programa eBPF
+    if ( bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ubuntu/Documents/Arquitetura/reply_ping/dados") < 0 ){
+	    perror("Erro ao pinnar os mapas no diretorio /dados");
+    }
+
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
+    fd_mapa_fd = bpf_obj_get("../dados/mapa_fd"); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
     bpf_map    = bpf_object__find_map_by_name(skel->obj, "xsk_map");
 
@@ -863,7 +868,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/3106/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/3116/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

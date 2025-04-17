@@ -80,7 +80,9 @@ pid_t fpid;
 pid_t ppid;
 
 sigset_t set;
-int sig = 10;
+struct sigaction act;
+int sig_usr1  = 10;
+int sig_rtmin = 33;
 
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
@@ -179,7 +181,7 @@ static void capta_sinal(int signum){
     if (signum == 2){
 
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ubuntu/Documents/Arquitetura/dados/xsk_map");
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados");
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados/xsk_kern_rodata");
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") 	     , "/home/ubuntu/Documents/Arquitetura/dados/mapa_fd");
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ubuntu/Documents/Arquitetura/dados/mapa_sinal");
 
@@ -202,24 +204,21 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        //system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
+        system("rm ../dados/xsk_kern_rodata");
         system("killall signalping_2proc");
         
         lock = 0;
 	    exit(0);
     }
-    else if (signum == SIGUSR2){
+    else if (signum == SIGUSR1){
         printf("Entrei pra enviar para polling_RX()\n");
         polling_RX(ptr_mem_info_global);
     }
+    else if( signum == 33){
+    
+    	printf("RECEBI SINAL 33 DO PROGRAMA eBPF!!!\n");
+    }
 
-    //else if( signum == 10){
-    //    //polling_RX( ptr_mem_info_global );
-    //    printf("---->ENTREI AQUI NO CAPTA_SINAL COM VALOR 10<-----\n");
-    //     complete_tx(ptr_mem_info_global->umem_frame_addr, 
-    //                        ptr_mem_info_global->umem_frame_free, 
-    //                        &ptr_mem_info_global->tx_restante); 
-    //}
     return;
 }
 
@@ -514,7 +513,14 @@ void polling_RX(struct xsk_info_global *info_global ){
     //pid_t tid = pthread_self();
     //printf("<Entrou polling_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
     //printf("<Entrou em polling_RX>\n");
-    
+
+    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+    sigaddset(&set, SIGUSR1);         // Atribui o sinal SIGRTMIN+1 para conjunto de sinais q pode "ouvir"
+    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+
+
+
+
     /**************************************************************/
     int i =0;
 
@@ -525,12 +531,14 @@ void polling_RX(struct xsk_info_global *info_global ){
     uint32_t idx_fq = 0;
     uint64_t addr;
     uint32_t len; 
-    
+
+    sig_rtmin = 35;
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
     //while(1){
     // while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
-    while( sigwait(&set, &sig) == 0  ){
+     while( sigwait(&set, &sig_usr1) == 0 ){
+    //while( pause()  ){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -605,7 +613,7 @@ void polling_RX(struct xsk_info_global *info_global ){
 
             // Envia SIGUSR1 com dados
             if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-                perror("sigqueue");
+                perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
                 //return 1;
             }
@@ -622,18 +630,19 @@ void polling_RX(struct xsk_info_global *info_global ){
                 //printf("<PROC_FILHO>Enviando sinal para o pai(%d)...\n", ppid);
                 //printf("<PROC_FILHO>Esperando o sinal do PAI...\n\n");
                 
-                sigwait( &set , &sig );
+                sigwait( &set , &sig_usr1 );
             }
            // } 
         }
+     printf("erro no sigwait()!!!\n");
 }
 
+/*************************************************************************/
 void signal_handler(int signum, siginfo_t *info, void *context) {
     if (signum == SIGUSR1) {
         printf("Sinal recebido SIGUSR1 com dado: %d\n", info->si_value.sival_int);
     }
 }
-
 
 /*************************************************************************/
 int main(int argc, char **argv) {
@@ -650,7 +659,8 @@ int main(int argc, char **argv) {
     uint64_t  *ptr_regiao;
     
     signal(SIGINT , capta_sinal);
-    signal(SIGUSR2, capta_sinal);
+    signal(SIGUSR1, capta_sinal);
+    signal(33, capta_sinal);
 
 
     int mapa_fd, map_fd_xsk,
@@ -762,7 +772,7 @@ int main(int argc, char **argv) {
 
 
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
+    fd_mapa_fd = bpf_obj_get("/home/ubuntu/Documents/Arquitetura/dados/mapa_fd"); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
     bpf_map    = bpf_object__find_map_by_name(skel->obj, "xsk_map");
 
@@ -906,8 +916,14 @@ int main(int argc, char **argv) {
 
 
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+   // sigaddset(&set, SIGRTMIN+1);         // Atribui o sinal SIGRTMIN+1 para conjunto de sinais q pode "ouvir"
     sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+
+    //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
+    //act.sa_sigaction = signal_handler;
+    //sigemptyset(&act.sa_mask);
+
 
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
@@ -933,7 +949,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/3101/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/3111/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -952,7 +968,15 @@ int main(int argc, char **argv) {
 
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
-        polling_RX( ptr_mem_info_global );
+	
+     	//struct sigaction act;
+        //act.sa_flags = SA_SIGINFO | SA_NODEFER ;  // Permite recebimento de sinal com dados
+        //act.sa_sigaction = polling_RX;
+        //sigemptyset(&act.sa_mask);
+
+
+	//while( pause() ) {; }
+	polling_RX( ptr_mem_info_global );
     }
 
     // Processo pai
@@ -970,10 +994,11 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
-        struct sigaction act;
+	struct sigaction act;
         act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
         act.sa_sigaction = signal_handler;
         sigemptyset(&act.sa_mask);
+
 
         // Registra um handler para SIGUSR1
         if (sigaction(SIGUSR1, &act, NULL) == -1) {
@@ -990,7 +1015,7 @@ int main(int argc, char **argv) {
         // Espera pelo sinal do proc filho
         // sigwait(&set, &sig);
         while(1){
-            if( sigwait(&set, &sig) >= 0 ){
+            if( sigwait(&set, &sig_usr1) >= 0 ){
                 //printf("PID do filho %d\n", fpid);
                 if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
                     perror("<PROC_PAI>Erro ao enviar sinal...");
