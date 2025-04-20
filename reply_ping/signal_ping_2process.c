@@ -5,7 +5,6 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <asm-generic/fcntl.h>
 
 #include <sys/shm.h>
 #include <sys/stat.h>
@@ -14,11 +13,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-//#include <bpf/xsk.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
-
-//#include <bpf/xsk.h>
 
 #include <xdp/xsk.h>
 #include <xdp/libxdp.h>
@@ -41,8 +37,8 @@
 #include <linux/sched.h>
 #include <pthread.h>
 
-
 #include "xsk_kern.skel.h"
+
 
 /******************************************************************************/
 #define _GNU_SOURCE
@@ -82,7 +78,13 @@ pid_t ppid;
 sigset_t set;
 struct sigaction act;
 int sig_usr1  = 10;
-int sig_rtmin = 33;
+int sig_rtmin = 35; // Na documentacao fala que eh melhor usar por nomes, pois o valor pode mudar de versao para versao
+
+pid_t pid_alvo; //atoi(argv[1]); // pega o PID do receiver
+int dado; // = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
+union sigval valor;
+//valor.sival_int = 777;  // Anexa dado ao sinal
+
 
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
@@ -210,14 +212,14 @@ static void capta_sinal(int signum){
         lock = 0;
 	    exit(0);
     }
-    else if (signum == SIGUSR1){
-        printf("Entrei pra enviar para polling_RX()\n");
-        polling_RX(ptr_mem_info_global);
-    }
-    else if( signum == 33){
-    
-    	printf("RECEBI SINAL 33 DO PROGRAMA eBPF!!!\n");
-    }
+    //else if (signum == SIGUSR1){
+    //    printf("Entrei pra enviar para polling_RX()\n");
+    //    polling_RX(ptr_mem_info_global);
+    //}
+    //else if( signum == 33){
+    //
+    //	printf("RECEBI SINAL 33 DO PROGRAMA eBPF!!!\n");
+    //}
 
     return;
 }
@@ -343,7 +345,7 @@ static uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
 }
 
 /****************************************************************************/
-static void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
+static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
 	assert(*frame_free < NUM_FRAMES);
 	vetor_frame[*frame_free++] = frame;
 }
@@ -366,6 +368,11 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
 	*sum = ~csum16_add(csum16_sub(~(*sum), old), new);
 }
 /*************************************************************************/
+int ret;
+    uint32_t tx_idx = 0;
+    uint8_t tmp_mac[ETH_ALEN];
+
+
 static int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
@@ -388,10 +395,7 @@ static int processa_pacote(uint64_t addr, uint32_t len){
     //start = RDTSC();
     // Primeiro pkt demora 12K ciclos, dai pra frente menos de 800ciclos
     /******************************************************/
-    int ret;
-    uint32_t tx_idx = 0;
-    uint8_t tmp_mac[ETH_ALEN];
-    
+        
     struct in_addr tmp_ip;
     struct ethhdr  *eth = (struct ethhdr *) pkt;
     struct iphdr   *ip  = (struct iphdr  *) (eth + 1);
@@ -455,15 +459,15 @@ int i, retsend;
 unsigned int completed;
 uint32_t idx_cq;
 
-static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
     //printf("chamando complete_tx: %d\n", cont);
     //cont++;
     
     //start = RDTSC();
 
-    int i, retsend; 
-    unsigned int completed;
-	uint32_t idx_cq;
+   // int i, retsend; 
+   // unsigned int completed;
+   // uint32_t idx_cq;
 	
     if (!*tx_restante){
 	    //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
@@ -500,39 +504,43 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
          printf("*****************************\n\n");
     }
 
+    //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
+    //        perror("<PROC_PAI>Erro ao enviar sinal...");
+    //        perror("sigqueue");
+    //        //return 1;
+    //}
+
     //end = RDTSC();
-    kill( fpid , SIGUSR1 ); 
+    //kill( fpid , SIGUSR1 ); 
     //printf("tempo final da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
 }
 
 /*************************************************************************/
-// info_global == ptr_mem_info_global
+
+int i =0;
+__u32 ret_ring=0, stock_frames=0;
+__uint64_t cont_pkt=0;
+uint32_t idx_rx = 0;
+uint32_t idx_fq = 0;
+uint64_t addr;
+uint32_t len; 
+
 void polling_RX(struct xsk_info_global *info_global ){
     //pid_t tid = pthread_self();
     //printf("<Entrou polling_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
     //printf("<Entrou em polling_RX>\n");
 
-    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);         // Atribui o sinal SIGRTMIN+1 para conjunto de sinais q pode "ouvir"
-    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+    //sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+    //sigaddset(&set, SIGUSR1);         // Atribui o sinal SIGRTMIN+1 para conjunto de sinais q pode "ouvir"
+    //sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
-
-
-
+    
     /**************************************************************/
-    int i =0;
 
-    __u32 ret_ring=0, stock_frames=0;
-    __uint64_t cont_pkt=0;
-   
-    uint32_t idx_rx = 0;
-    uint32_t idx_fq = 0;
-    uint64_t addr;
-    uint32_t len; 
+    pid_alvo = ppid;
 
-    sig_rtmin = 35;
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
     //while(1){
@@ -574,8 +582,8 @@ void polling_RX(struct xsk_info_global *info_global ){
                 int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
 
                 /* This should not happen, but just in case */
-                while (ret_res != stock_frames)
-                    ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
+               //	while (ret_res != stock_frames)
+               //     ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
 
                 for (i = 0; i < stock_frames; i++){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
@@ -602,39 +610,23 @@ void polling_RX(struct xsk_info_global *info_global ){
                 }
              }
 
-            int temp = 888;
-            pid_t pid_alvo = ppid; //atoi(argv[1]); // pega o PID do receiver
-            int dado = temp; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
+            //int temp = 888;
+            ///*pid_t*/ pid_alvo = ppid; //atoi(argv[1]); // pega o PID do receiver
+            ///*int*/ dado = temp; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
 
-            union sigval valor;
-            valor.sival_int = dado;  // Anexa dado ao sinal
+            //union sigval valor;
+            //valor.sival_int = dado;  // Anexa dado ao sinal
 
 
 
             // Envia SIGUSR1 com dados
-            if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
+            //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
+            if ( kill(pid_alvo, SIGUSR1) == -1) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
                 //return 1;
             }
-
-            /*********************/
-            //*ptr_trava = 1;
-            // Envia sinal para o processo pai para enviar os pkts
-            //if ( kill( ppid , SIGUSR1 ) < 0 ){
-            //    perror("<PROC_FILHO>Erro ao enviar para o proc_pai\n");
-            //    capta_sinal( SIGINT );
-            //}
-            else{
-
-                //printf("<PROC_FILHO>Enviando sinal para o pai(%d)...\n", ppid);
-                //printf("<PROC_FILHO>Esperando o sinal do PAI...\n\n");
-                
-                sigwait( &set , &sig_usr1 );
-            }
-           // } 
         }
-     printf("erro no sigwait()!!!\n");
 }
 
 /*************************************************************************/
@@ -927,8 +919,6 @@ int main(int argc, char **argv) {
 
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
-
-
     pid = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
@@ -949,7 +939,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/3111/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/3105/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1006,28 +996,24 @@ int main(int argc, char **argv) {
             capta_sinal(SIGINT);
         }
 
-        pid_t pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
-        int dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
+        /*pid_t*/ pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
+        /*int*/ dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
 
-        union sigval valor;
-        valor.sival_int = dado;  // Anexa dado ao sinal
+        //union sigval valor;
+        //valor.sival_int = dado;  // Anexa dado ao sinal
 
         // Espera pelo sinal do proc filho
         // sigwait(&set, &sig);
         while(1){
             if( sigwait(&set, &sig_usr1) >= 0 ){
                 //printf("PID do filho %d\n", fpid);
-                if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-                    perror("<PROC_PAI>Erro ao enviar sinal...");
-                    perror("sigqueue");
-                    //return 1;
-                }
-                else{
+                
+                //else{
                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
                    complete_tx(ptr_mem_info_global->umem_frame_addr, 
                                ptr_mem_info_global->umem_frame_free, 
                                &ptr_mem_info_global->tx_restante);
-                }
+                //}
 
                 //if ( kill( fpid , SIGUSR1 ) >= 0 ){
                 //  
