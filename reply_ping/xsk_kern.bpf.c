@@ -90,14 +90,14 @@ int xdp_prog(struct xdp_md *ctx){
 
     //if (bpf_map_lookup_elem(&xsk_map, &key)){
     if (ret == 1){
-       // ret_final =  bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
-	if ( bpf_minha_func(*ptr)  < 0 ){
-		bpf_printk("Erro ao enviar sinal para o pid");
-	        return XDP_DROP;
-	}
+       ret_final =  bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+       if ( bpf_minha_func(*ptr, 10)  < 0 ){
+           bpf_printk("Erro ao enviar sinal para o pid");
+           return XDP_DROP;
+       }
 
-        //bpf_printk("Enviando sinal...\n");
-        return /*ret_final;*/ bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+       //bpf_printk("Enviando sinal...\n");
+       return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
 
     //bpf_printk("Pkt n foi redirecionado! %d\n", ret);

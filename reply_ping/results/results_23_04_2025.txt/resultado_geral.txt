@@ -1,0 +1,78 @@
+ping ebpf com:
+	-bpf_minha_func(pid, sinal)
+	-clock e cpu travados
+	-ARP atribuido estaticamente
+	-flag -q
+	-PRINCIPALMENTE container servidor na CPU 3 e processo filho na CPU 4 
+		e processo pai na CPU 5:
+	--> 100pkts:
+		rtt min/avg/max/mdev = 0.024/0.025/0.029/0.000 ms
+		rtt min/avg/max/mdev = 0.024/0.025/0.030/0.000 ms
+		rtt min/avg/max/mdev = 0.024/0.025/0.030/0.001 ms
+		rtt min/avg/max/mdev = 0.023/0.024/0.030/0.001 ms
+		rtt min/avg/max/mdev = 0.023/0.024/0.030/0.001 ms
+
+	
+	--> 1000pkts:
+		rtt min/avg/max/mdev = 0.023/0.025/0.032/0.001 ms
+		rtt min/avg/max/mdev = 0.022/0.024/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.024/0.032/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.024/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.024/0.032/0.001 ms
+	
+ping ebpf com:
+	-bpf_minha_func(pid)
+	-clock e cpu travados
+	-ARP atribuido estaticamente
+	-flag -q
+	-PRINCIPALMENTE container servidor na CPU 3 e processo filho na CPU 4 
+		e processo pai na CPU 5:
+	--> 100pkts:
+		rtt min/avg/max/mdev = 0.023/0.026/0.035/0.001 ms
+		rtt min/avg/max/mdev = 0.023/0.026/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.023/0.026/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.024/0.025/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.024/0.025/0.036/0.001 ms		
+
+	
+	--> 1000pkts:
+		rtt min/avg/max/mdev = 0.021/0.023/0.031/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.023/0.030/0.001 ms
+		rtt min/avg/max/mdev = 0.023/0.024/0.029/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.023/0.030/0.001 ms
+		rtt min/avg/max/mdev = 0.021/0.023/0.030/0.001 ms
+		
+ping normal por roteamento com clock e container servidor travado:
+	
+	-->100pkts:
+		rtt min/avg/max/mdev = 0.013/0.014/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.014/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+	
+	
+	-->1000pkts:
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.013/0.015/0.000 ms
+		rtt min/avg/max/mdev = 0.013/0.034/0.050/0.009 ms
+		rtt min/avg/max/mdev = 0.013/0.034/0.049/0.009 ms
+
+ping com polling clock e containers isolados e travado:
+	
+	-->100pkts:
+		rtt min/avg/max/mdev = 0.009/0.009/0.037/0.003 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.014/0.000 ms
+		rtt min/avg/max/mdev = 0.008/0.009/0.014/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.013/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.013/0.000 ms
+	
+	-->1000pkts:
+		rtt min/avg/max/mdev = 0.009/0.009/0.013/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.014/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.013/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.014/0.000 ms
+		rtt min/avg/max/mdev = 0.009/0.009/0.014/0.000 ms
+	
+			

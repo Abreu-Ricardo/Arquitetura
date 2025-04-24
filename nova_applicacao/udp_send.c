@@ -7,8 +7,8 @@
 #include <sys/socket.h>
 
 #define PORT 9000
-#define DEST_IP "127.0.0.1"
-//#define DEST_IP "20.20.20.2"
+//#define DEST_IP "127.0.0.1"
+#define DEST_IP "20.20.20.2"
 #define PACKET_SIZE 64
 
 int main() {

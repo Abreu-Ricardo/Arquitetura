@@ -54,7 +54,7 @@ loader_xdp: loader_xdp.c
 	$(CC) $< -o $@ $(C_FLAGS)
 
 pollping_2proc: poll_ping_2process.c
-	$(CC) $< -o $@ $(C_FLAGS)
+	$(CC) $<  -o $@ $(C_FLAGS)
 
 pktping_2proc: pkt_ping_2process.c
 	$(CC) $< -o $@ $(C_FLAGS)

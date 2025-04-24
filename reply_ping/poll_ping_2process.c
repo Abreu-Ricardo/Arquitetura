@@ -588,12 +588,13 @@ void polling_RX(struct xsk_info_global *info_global){
 
 /*************************************************************************/
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
-        return 1;
-    }
-
-    const char *iface = argv[1];
+    //if (argc < 2) {
+    //    fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
+    //    return 1;
+    //}
+    
+    //const char *iface = argv[1];
+    const char *iface = "veth2";
    
     /***************Config da regiao de mem compart com shm*****************/
     //char *caminho_prog = "xsk_kern.o";
@@ -868,7 +869,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/3116/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5370/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
