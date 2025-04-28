@@ -14,7 +14,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 # FLAGS
 BPF_FLAGS = -g -O2 -target bpf -c 
-C_FLAGS = -lbpf -lxdp -lpthread
+C_FLAGS = -lbpf -lxdp -lpthread -g
 GERA_SKEL = bpftool gen skeleton
 
 # skeleton libs
@@ -48,7 +48,7 @@ user: signalping_2proc loader_xdp pollping_2proc pktping_2proc mysignal_2proc
 	@echo -e '$^ criados...'
 
 signalping_2proc: signal_ping_2process.c 
-	$(CC) $< -o $@ $(C_FLAGS)
+	$(CC) -pg $< -o $@ $(C_FLAGS)
 
 loader_xdp: loader_xdp.c
 	$(CC) $< -o $@ $(C_FLAGS)

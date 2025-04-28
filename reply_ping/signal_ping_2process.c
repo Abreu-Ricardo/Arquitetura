@@ -180,7 +180,7 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
 static void capta_sinal(int signum){
     //getchar();
 
-    if (signum == 2){
+    if (signum == SIGINT){
 
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
         //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados/xsk_kern_rodata");
@@ -207,7 +207,7 @@ static void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm ../dados/xsk_kern_rodata");
-        system("killall signalping_2proc");
+        //system("killall signalping_2proc");
         
         lock = 0;
 	    exit(0);
@@ -332,7 +332,7 @@ void cria_segundo_socket(const char *iface){
 }
 
 /************************************************************************/
-static uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
+static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
     
     uint64_t frame;
     if(frame_free == 0)
@@ -373,7 +373,7 @@ int ret;
     uint8_t tmp_mac[ETH_ALEN];
 
 
-static int processa_pacote(uint64_t addr, uint32_t len){
+static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
     /******************************************************/
@@ -517,18 +517,41 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     return;
 }
 
-uint64_t sinal_recebido, resul;
-uint64_t antigo;
-void teste(int sig, siginfo_t *info, void *context){
+/**************************************************************************/
+unsigned long long sinal_recebido, resul;
+/*unsigned long long */ 
+int antigo  = 0;
+int cont_sinal = 0;
+static struct timespec inicio, fim;
+
+/**************************************************************************/
+void tempo_sinal(int sig, siginfo_t *info, void *context){
     
-    sinal_recebido = RDTSC();
+    if( clock_gettime( CLOCK_MONOTONIC  , &fim ) < 0 ){
+        printf("<PID:%d>Erro ao pegar o tempo com clock_gettime()", getpid());
+        //return capta_sinal(SIGINT);
+    }
 
-    memcpy(&antigo, &info->si_value.sival_int, sizeof( info->si_value.sival_int) );
+    sinal_recebido = RDTSC(); // Pega o clock do recebimento
+    cont_sinal++;
+    //memcpy(&antigo, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
+    memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
+    
+    //info->_sifields._timer
+    //resul    = sinal_recebido - antigo;                  // Clock final - Clock inicial
+    //double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
+                                                         // Pq para cada 1s 3.6 Bilhoes de insns sao executadas por segundo
+                                                         // O resultado eh um tempo em nano segundos dividindo por 1000 temos
+                                                         // microsegundos
 
-    resul = sinal_recebido - antigo;
-    double r = (double)resul / 3568.234;
-
-    printf("Sinal recebido do kernel tempo: %ld %ld\n", sinal_recebido, antigo);
+    // TODO
+    // Travar o programa eBPF para que o RDTSC pegue o timestamp da CPU que foi travado sempre
+    // para quando for calcular o tempo o timestamp seja sempre na mesma CPU
+    // --> Travar na mesma CPU que o processo filho(CPU 5)
+    
+    //printf("(pkt:%d) Sinal recebido do kernel tempo: %lld - %lld = %f | %.2f us\n", cont_sinal, sinal_recebido , antigo, (sinal_recebido - antigo) / 3600000000.0 , r);
+    //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
+    printf("<pkt:%d | PID:%d> Sinal recebido do kernel: %ld(recebido) - %ld(enviado) = %ld\n", cont_sinal,getpid(), fim.tv_nsec, inicio.tv_nsec, (inicio.tv_nsec -  fim.tv_nsec)* 1000000 / 3600000000);
 
     return;
 }
@@ -549,7 +572,7 @@ void polling_RX(struct xsk_info_global *info_global ){
   
     //struct sigaction act = {0};
     //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
-    //act.sa_sigaction = teste;
+    //act.sa_sigaction = tempo_sinal;
     //sigemptyset(&act.sa_mask);
 
     //if (sigaction(SIGUSR1, &act, NULL) == -1) {
@@ -619,7 +642,7 @@ void polling_RX(struct xsk_info_global *info_global ){
                 addr = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx)->addr;
                 len  = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx++)->len;
 
-                //cont_pkt++;
+                cont_pkt++;
                 //printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
 
                 // CHAMA PROCESSA_PACOTE
@@ -640,19 +663,24 @@ void polling_RX(struct xsk_info_global *info_global ){
 
             // Envia SIGUSR1 com dados
             //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-            if ( kill(pid_alvo, SIGUSR1) == -1) {
-                printf("PID_ALVO %d\n", pid_alvo);
-                perror("Erro no sigqueue do filho");
+            if (cont_pkt < 1000){
+                if ( kill(pid_alvo, SIGUSR1) == -1) {
+                    perror("Erro no sigqueue do filho");
+                    capta_sinal(SIGINT);
+                }    
+            }
+            else{
+                kill(pid_alvo, SIGUSR2);
                 capta_sinal(SIGINT);
-                //return 1;
             }
         }
 }
 
 /*************************************************************************/
 void signal_handler(int signum, siginfo_t *info, void *context) {
-    if (signum == SIGUSR1) {
-        printf("Sinal recebido SIGUSR1 com dado: %d\n", info->si_value.sival_int);
+    if (signum == SIGUSR2) {
+        printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
+        capta_sinal(SIGINT);
     }
 }
 
@@ -664,14 +692,15 @@ int main(int argc, char **argv) {
     }
 
     const char *iface = argv[1];
+    //const char *iface = "veth2";
    
     /***************Config da regiao de mem compart com shm*****************/
-    char *caminho_prog = "xsk_kern.o";
-    char *ptr_fim_regiao;
-    uint64_t  *ptr_regiao;
+    char     *caminho_prog = "xsk_kern.o";
+    char     *ptr_fim_regiao;
+    uint64_t *ptr_regiao;
     
     signal(SIGINT , capta_sinal);
-    //signal(SIGUSR1, capta_sinal);
+    //signal(SIGUSR1, teste);
     //signal(33, capta_sinal);
 
 
@@ -715,6 +744,7 @@ int main(int argc, char **argv) {
     /***********************************************************************/
     // Carrega e anexa o programa XDP usando libxdp
     ifindex = if_nametoindex(argv[1]);
+    //ifindex = if_nametoindex(iface);
 	if (!ifindex) {
 		printf("Erro ao converter o nome da interface para indice\n");
 		return 1;
@@ -927,20 +957,19 @@ int main(int argc, char **argv) {
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
 
 
-
+    /* Bloqueia o sinal para nao executar o mecanismo padrao */
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
     sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
-   // sigaddset(&set, SIGRTMIN+1);         // Atribui o sinal SIGRTMIN+1 para conjunto de sinais q pode "ouvir"
     sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
-    //act.sa_sigaction = signal_handler;
+    //act.sa_sigaction = teste; //signal_handler;
     //sigemptyset(&act.sa_mask);
 
 
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
-    pid = fork();
+    pid  = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho
@@ -960,7 +989,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/23489/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5476/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -970,24 +999,24 @@ int main(int argc, char **argv) {
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
        
-	int chave2 =  0;
-	int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
-	if (ret_update2 < 0){
-		perror("+++ erro ao atualizar o mapa com o PID +++");
-		capta_sinal(SIGINT);
-	}
+        int chave2 =  0;
+        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        if (ret_update2 < 0){
+            perror("+++ erro ao atualizar o mapa com o PID +++");
+            capta_sinal(SIGINT);
+        }
 
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
-	
-     	//struct sigaction act;
+
+        //struct sigaction act;
         //act.sa_flags = SA_SIGINFO | SA_NODEFER ;  // Permite recebimento de sinal com dados
         //act.sa_sigaction = polling_RX;
         //sigemptyset(&act.sa_mask);
 
 
-	//while( pause() ) {; }
-	polling_RX( ptr_mem_info_global );
+        //while( pause() ) {; }
+        polling_RX( ptr_mem_info_global );
     }
 
     // Processo pai
@@ -1005,17 +1034,17 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
-    	//struct sigaction act;
-        //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
-        //act.sa_sigaction = signal_handler;
-        //sigemptyset(&act.sa_mask);
+    	struct sigaction act;
+        act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
+        act.sa_sigaction = signal_handler;
+        sigemptyset(&act.sa_mask);
 
 
         //// Registra um handler para SIGUSR1
-        //if (sigaction(SIGUSR1, &act, NULL) == -1) {
-        //    perror("sigaction");
-        //    capta_sinal(SIGINT);
-        //}
+        if (sigaction(SIGUSR2, &act, NULL) == -1) {
+            perror("sigaction");
+            capta_sinal(SIGINT);
+        }
 
         /*pid_t*/ pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
         /*int*/ dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver

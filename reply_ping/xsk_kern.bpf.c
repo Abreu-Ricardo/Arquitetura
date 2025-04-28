@@ -10,6 +10,8 @@
 #include <bpf/bpf_endian.h> // bpf_ntohs()
 #include <linux/icmp.h>
 
+#include <time.h>
+
 struct mapa_mem{ 
 	__uint(type, BPF_MAP_TYPE_ARRAY);
 	__uint(max_entries, 4);
@@ -78,26 +80,40 @@ int xdp_prog(struct xdp_md *ctx){
     
     __u64 *ptr;
     __u32 ret_final;
+
+
+    uint64_t pid_tgid = bpf_get_current_pid_tgid();
+    uint32_t pid = pid_tgid & 0xFFFFFFFF;
+    uint32_t tgid = pid_tgid >> 32;
     
+    //bpf_printk("Process ID: %d, Thread Group ID: %d\n", pid, tgid);
+
 
     ret = verifica_ip(ctx);
     ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
     
-    if (ptr == NULL){
-	    bpf_printk("Erro ao acessar o mapa_sinal");
-	    return XDP_DROP;
-    }
+    //if (ptr == NULL){
+	//    bpf_printk("Erro ao acessar o mapa_sinal");
+	//    return XDP_DROP;
+    //}
 
-    //if (bpf_map_lookup_elem(&xsk_map, &key)){
-    if (ret == 1){
+    if( /*ptr != NULL  &&*/ 1/*ret ==17*/ ){
+    //if (ret == 1){
        ret_final =  bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
-       if ( bpf_minha_func(*ptr, 10)  < 0 ){
-           bpf_printk("Erro ao enviar sinal para o pid");
-           return XDP_DROP;
-       }
-
-       //bpf_printk("Enviando sinal...\n");
+       //if ( bpf_minha_func(*ptr, 10)  < 0 ){
+       //    bpf_printk("Erro ao enviar sinal para o pid");
+       //    return XDP_DROP;
+       //}
+       
+       //for(int i =0 ; i < 100000; i++)
+       //    ;
+       
+       bpf_printk("Enviando sinal...(pid %d | cpu %d)\n", pid, bpf_get_smp_processor_id());
        return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+    }
+    else{
+	    bpf_printk("Erro ao acessar o mapa_sinal!!!");
+        return XDP_DROP;
     }
 
     //bpf_printk("Pkt n foi redirecionado! %d\n", ret);
