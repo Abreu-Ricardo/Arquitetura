@@ -47,6 +47,8 @@
 #define NUM_FRAMES 4096
 #define FRAME_SIZE 2048
 
+#define PKT_LIMIT 1000
+
 //#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
 //#define FRAME_SIZE 4096
@@ -369,13 +371,14 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
 }
 /*************************************************************************/
 int ret;
-    uint32_t tx_idx = 0;
-    uint8_t tmp_mac[ETH_ALEN];
+uint32_t tx_idx = 0;
+uint8_t tmp_mac[ETH_ALEN];
 
 
 static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
-  
+    
+    //tx_idx = 0;
     /******************************************************/
     //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
@@ -504,14 +507,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
          printf("*****************************\n\n");
     }
 
-    //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-    //        perror("<PROC_PAI>Erro ao enviar sinal...");
-    //        perror("sigqueue");
-    //        //return 1;
-    //}
-
-    //end = RDTSC();
-    //kill( fpid , SIGUSR1 ); 
+     //end = RDTSC();
     //printf("tempo final da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
@@ -586,7 +582,6 @@ void polling_RX(struct xsk_info_global *info_global ){
 
 
     //while(1){
-    // while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
      while( sigwait(&set, &sig_usr1) == 0 ){
     //while( pause()  ){
         //if(*ptr_trava == 0){ 
@@ -652,24 +647,20 @@ void polling_RX(struct xsk_info_global *info_global ){
                 }
              }
 
-            //int temp = 888;
-            ///*pid_t*/ pid_alvo = ppid; //atoi(argv[1]); // pega o PID do receiver
-            ///*int*/ dado = temp; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
-
             //union sigval valor;
-            valor.sival_int = dado;  // Anexa dado ao sinal
+            //valor.sival_int = dado;  // Anexa dado ao sinal
 
-
-
-            // Envia SIGUSR1 com dados
-            //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-            if (cont_pkt < 1000){
-                if ( kill(pid_alvo, SIGUSR1) == -1) {
-                    perror("Erro no sigqueue do filho");
-                    capta_sinal(SIGINT);
-                }    
+            // Enviando sinal e verificando se deu erro
+            if ( kill(pid_alvo, SIGUSR1) == -1 ) {
+                perror("Erro no sigqueue do filho");
+                capta_sinal(SIGINT);
             }
-            else{
+
+            // Se bateu o limite de pkts a serem processados
+            // termina o processo de maneira graciosa para o
+            // gprof rodar sem problemas e salvar os dados de profiling
+            if ( cont_pkt == PKT_LIMIT ){
+                //kill(pid_alvo, SIGUSR1);
                 kill(pid_alvo, SIGUSR2);
                 capta_sinal(SIGINT);
             }
@@ -757,6 +748,7 @@ int main(int argc, char **argv) {
         xsk_kern_bpf__destroy(skel);
     }
 
+    // Aclopa o programa XDP com a funcao propria da libbpf
     skel->links.xdp_prog = bpf_program__attach_xdp( skel->progs.xdp_prog , ifindex );
 
     printf("Indice da interface %d\n",ifindex);
@@ -808,11 +800,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
     bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
-
 
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
@@ -831,8 +819,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // Tamanho da regiao de mem.
-    
     // Atribuindo tamanho para a regiao de mem. compart.
     int ret_ftruncate = ftruncate(fd_shm, tam_regiao);
     if ( ret_ftruncate == -1 ){
@@ -842,7 +828,6 @@ int main(int argc, char **argv) {
     buffer_do_pacote   = ( void *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
 
     /************************************************** Cria mem da trava ************************************************************/
-
 
     fd_trava = shm_open(nome_trava, O_CREAT | O_RDWR, 0777);
     if (fd_trava == -1){
@@ -862,7 +847,6 @@ int main(int argc, char **argv) {
     ptr_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
     //*ptr_trava = 0;
     
-
     /*###############################CRIAÇÃO DA REGIÃO DE MEM COMPART MEM_INFO_GLOBAL###################################################*/
     
     ptr_mem_info_global = (struct xsk_info_global *) malloc( sizeof(struct xsk_info_global));
@@ -890,15 +874,6 @@ int main(int argc, char **argv) {
     cria_segundo_socket( iface );
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
-
-
-    //ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
-    //ret_xskmap = bpf_map_lookup_elem(map_fd_xsk, &key, &ret_xsk);
-    //
-    //if(ret_look < 0 && ret_xskmap < 0){
-    //    printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
-    //    return -1;
-    //}
 
     printf("\nValor do retorno do mapa: %s\n", ret_lookup);
     printf("Valor do retorno do xskmap: %d\n", ret_xskmap);
@@ -989,7 +964,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5476/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5754/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1058,24 +1033,10 @@ int main(int argc, char **argv) {
             if( sigwait(&set, &sig_usr1) >= 0 ){
                 //printf("PID do filho %d\n", fpid);
                 
-                //else{
                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
                    complete_tx(ptr_mem_info_global->umem_frame_addr, 
                                ptr_mem_info_global->umem_frame_free, 
                                &ptr_mem_info_global->tx_restante);
-                //}
-
-                //if ( kill( fpid , SIGUSR1 ) >= 0 ){
-                //  
-                //    //printf("<PROC_PAI>enviando sinal...(%d)\n", fpid);
-                //    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                //    complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                //                ptr_mem_info_global->umem_frame_free, 
-                //                &ptr_mem_info_global->tx_restante);
-                //}
-                //else{
-                //    perror("<PROC_PAI>Erro ao enviar sinal...");
-                //}
             }
         }
     }

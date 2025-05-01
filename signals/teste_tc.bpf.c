@@ -47,7 +47,7 @@ int pega_pkt(struct xdp_md *ctx) {
     //
     //
     int pid = *ptr;
-    __u32 temp = bpf_minha_func(pid);
+    __u32 temp = bpf_minha_func(pid, 10);
 
     if (temp < 0){
 	bpf_printk("Erro ao enviar o sinal\n");

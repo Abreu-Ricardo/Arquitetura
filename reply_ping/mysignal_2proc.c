@@ -28,6 +28,7 @@
 #include <linux/bpf.h>
 #include <linux/ip.h>
 
+#include <netinet/udp.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
@@ -226,14 +227,6 @@ static void capta_sinal(int signum){
         lock = 0;
 	    exit(0);
     }
-    //else if (signum == SIGUSR1){
-    //    printf("Entrei pra enviar para polling_RX()\n");
-    //    polling_RX(ptr_mem_info_global);
-    //}
-    //else if( signum == 33){
-    //
-    //	printf("RECEBI SINAL 33 DO PROGRAMA eBPF!!!\n");
-    //}
 
     return;
 }
@@ -382,14 +375,54 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
 	*sum = ~csum16_add(csum16_sub(~(*sum), old), new);
 }
 /*************************************************************************/
+
+static __always_inline uint16_t udp_checksum(struct udphdr *udp_header, uint16_t *payload, int payload_len,
+                            uint32_t src_addr, uint32_t dest_addr) {
+    // Initialize sum to zero
+    uint32_t sum = 0;
+    
+    // Add pseudo-header
+    sum += (src_addr >> 16) & 0xFFFF;  // Source IP high 16 bits
+    sum += src_addr & 0xFFFF;          // Source IP low 16 bits
+    sum += (dest_addr >> 16) & 0xFFFF; // Dest IP high 16 bits
+    sum += dest_addr & 0xFFFF;         // Dest IP low 16 bits
+    sum += htons(IPPROTO_UDP);         // Protocol
+    sum += htons(payload_len + sizeof(*udp_header)); // Total length
+    
+    // Add UDP header fields
+    sum += htons(udp_header->uh_sport);
+    sum += htons(udp_header->uh_dport);
+    sum += htons(udp_header->uh_ulen);
+    
+    // Add payload
+    while (payload_len > 1) {
+        sum += *payload++;
+        payload_len -= 2;
+    }
+    
+    // Handle odd-length payload
+    if (payload_len == 1) {
+        sum += ((*payload) << 8);
+    }
+    
+    // Fold carries
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+    
+    // Return one's complement
+    return ~sum;
+}
+
+/*************************************************************************/
 int ret;
     uint32_t tx_idx = 0;
     uint8_t tmp_mac[ETH_ALEN];
 
-
 static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
+    tx_idx = 0;
     /******************************************************/
     //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
@@ -397,31 +430,35 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     //end = RDTSC();
     /******************************************************/
 
-    /* Lesson#3: Write an IPv6 ICMP ECHO parser to send responses
-     *
-     * Some assumptions to make it easier:
-     * - No VLAN handling
-     * - Only if nexthdr is ICMP
-     * - Just return all data with MAC/IP swapped, and type set to
-     *   ICMPV6_ECHO_REPLY
-     * - Recalculate the icmp checksum */
-    
     //start = RDTSC();
     // Primeiro pkt demora 12K ciclos, dai pra frente menos de 800ciclos
     /******************************************************/
         
-    //struct in_addr tmp_ip;
-    //struct ethhdr  *eth = (struct ethhdr *) pkt;
-    //struct iphdr   *ip  = (struct iphdr  *) (eth + 1);
+    struct in_addr tmp_ip;
+    struct ethhdr  *eth = (struct ethhdr *) pkt;
+    struct iphdr   *ip  = (struct iphdr  *) (eth + 1);
     //struct icmphdr *icmph = (struct icmphdr *) (ip + 1);
-    //
-    //memcpy(tmp_mac, eth->h_dest, ETH_ALEN);
-    //memcpy(eth->h_dest, eth->h_source, ETH_ALEN);
-    //memcpy(eth->h_source, tmp_mac, ETH_ALEN);
+    struct udphdr *udp = (struct udphdr *) (ip + 1);
+    uint16_t *payload = (uint16_t *) (udp + 1);
+    
+    memcpy(tmp_mac, eth->h_dest, ETH_ALEN);
+    memcpy(eth->h_dest, eth->h_source, ETH_ALEN);
+    memcpy(eth->h_source, tmp_mac, ETH_ALEN);
 
-    //memcpy(&tmp_ip, &ip->saddr, sizeof(tmp_ip));
-    //memcpy(&ip->saddr, &ip->daddr, sizeof(tmp_ip));
-    //memcpy(&ip->daddr, &tmp_ip, sizeof(tmp_ip));
+    memcpy(&tmp_ip, &ip->saddr, sizeof(tmp_ip));
+    memcpy(&ip->saddr, &ip->daddr, sizeof(tmp_ip));
+    memcpy(&ip->daddr, &tmp_ip, sizeof(tmp_ip));
+    
+    __be16	dest;
+    __be16	source;
+    printf("\n\nTamanho ethhdr:%ld iphdr:%ld udphdr:%ld payload:%ld\n", sizeof(*eth), sizeof(*ip), sizeof(*udp), sizeof(*payload));
+    
+    memcpy(&source, &udp->source, sizeof(udp->source));
+    memcpy(&udp->source, &udp->dest, sizeof(source));
+    memcpy(&udp->dest, &source, sizeof(dest));
+
+
+    //udp->check = udp_checksum(udp, payload, sizeof(*payload), ip->saddr, ip->daddr);
 
     //icmph->type = ICMP_ECHOREPLY;
 
@@ -491,7 +528,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    //printf("Retorno do sendto: %d\n", retsend);
+    printf("Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
     if (retsend >= 0){
@@ -506,7 +543,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
         if (completed > 0) {
             //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
-                //printf("Desalocando %d\n", i);
+               // printf("Desalocando %d\n", i);
                 desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
             xsk_ring_cons__release(&umem_info->cq, completed);
@@ -518,14 +555,9 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
          printf("*****************************\n\n");
     }
 
-    //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-    //        perror("<PROC_PAI>Erro ao enviar sinal...");
-    //        perror("sigqueue");
-    //        //return 1;
-    //}
+  
 
     //end = RDTSC();
-    //kill( fpid , SIGUSR1 ); 
     //printf("tempo final da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
@@ -601,7 +633,8 @@ void polling_RX(struct xsk_info_global *info_global ){
 
     //while(1){
     // while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
-     while( sigwait(&set, &sig_usr1) == 0 ){
+    while( sigwait(&set, &sig_usr1) == 0 ){
+    // while( 1 ){
     //while( pause()  ){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
@@ -677,8 +710,8 @@ void polling_RX(struct xsk_info_global *info_global ){
 
             // Envia SIGUSR1 com dados
             //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-            if (cont_pkt < 1000){
-                if ( kill(pid_alvo, SIGUSR1) == -1) {
+            if (cont_pkt < 100){
+                if ( kill(pid_alvo, SIGUSR1) == -1 ) {
                     perror("Erro no sigqueue do filho");
                     capta_sinal(SIGINT);
                 }    
@@ -1003,7 +1036,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/6215/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/18688/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

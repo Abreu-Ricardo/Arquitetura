@@ -30,9 +30,7 @@ int main() {
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
 
-    for (int i = 0; i < 100; i++) {
-
-        printf("enviando pacote %d...\n", i);
+    for (int i = 0; i < 1000; i++) {
         uint64_t start = __rdtsc();
 
         // Send packet
@@ -42,7 +40,6 @@ int main() {
             return 1;
         }
 
-        
         // Wait for reply
         if (recvfrom(sockfd, recv_buf, sizeof(recv_buf), 0,
                      (struct sockaddr *)&server_addr, &addr_len) < 0) {
@@ -50,9 +47,8 @@ int main() {
             return 1;
         }
 
-        //printf("recebendo pacote %d...\n", i);
-
         uint64_t end = __rdtsc();
+
         uint64_t cycles = end - start;
         double latency_us = (double)cycles / (CPU_FREQ_HZ / 1e6);
 

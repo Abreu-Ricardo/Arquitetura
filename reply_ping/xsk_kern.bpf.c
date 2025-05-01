@@ -37,21 +37,29 @@ struct {
     __type(value, __u32);
 } xsk_map SEC(".maps");
 
-
 /****************************************************************************/
+unsigned char protocol = 0;
+void *data; 
+void *data_end;
+
+struct ethhdr *eth;
+struct iphdr *iph;
+
 static __always_inline int verifica_ip(struct xdp_md *ctx){
 
-	void *data = (void *)(long)ctx->data;
-	void *data_end = (void *)(long)ctx->data_end;
-    	unsigned char protocol = 0;
+	//void *data = (void *)(long)ctx->data;
+	//void *data_end = (void *)(long)ctx->data_end;
+    data = (void *)(long)ctx->data;
+    data_end = (void *)(long)ctx->data_end;
+    protocol = 0;
 
-	struct ethhdr *eth = data;
+	eth = data;
 	if (data + sizeof(struct ethhdr) > data_end){
         	return -1; 
 	}
 
 	if (bpf_ntohs(eth->h_proto) == ETH_P_IP){	
-		struct iphdr *iph = data + sizeof(struct ethhdr);
+		 iph = data + sizeof(struct ethhdr);
 
         // Verificar se eh um pacote IP
         //if (bpf_ntohs(eth->h_proto) == ETH_P_IP){
@@ -82,9 +90,9 @@ int xdp_prog(struct xdp_md *ctx){
     __u32 ret_final;
 
 
-    uint64_t pid_tgid = bpf_get_current_pid_tgid();
-    uint32_t pid = pid_tgid & 0xFFFFFFFF;
-    uint32_t tgid = pid_tgid >> 32;
+    //uint64_t pid_tgid = bpf_get_current_pid_tgid();
+    //uint32_t pid = pid_tgid & 0xFFFFFFFF;
+    //uint32_t tgid = pid_tgid >> 32;
     
     //bpf_printk("Process ID: %d, Thread Group ID: %d\n", pid, tgid);
 
@@ -97,22 +105,23 @@ int xdp_prog(struct xdp_md *ctx){
 	//    return XDP_DROP;
     //}
 
-    if( /*ptr != NULL  &&*/ 1/*ret ==17*/ ){
-    //if (ret == 1){
-       ret_final =  bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
-       //if ( bpf_minha_func(*ptr, 10)  < 0 ){
-       //    bpf_printk("Erro ao enviar sinal para o pid");
-       //    return XDP_DROP;
-       //}
-       
-       //for(int i =0 ; i < 100000; i++)
-       //    ;
-       
-       bpf_printk("Enviando sinal...(pid %d | cpu %d)\n", pid, bpf_get_smp_processor_id());
-       return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+    // Se for pacote UDP == 17
+    if( ptr != NULL  && ret == 1){
+        //if( ptr != NULL  && ret == 1 ){
+        //if (ret == 17){
+
+        ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
+        if ( bpf_minha_func(*ptr, 10)  < 0 ){
+            bpf_printk("Erro ao enviar sinal para o pid");
+            return XDP_DROP;
+        }
+
+
+        //bpf_printk("Enviando sinal...(pid %d | cpu %d)\n", *ptr, bpf_get_smp_processor_id());
+        return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{
-	    bpf_printk("Erro ao acessar o mapa_sinal!!!");
+        bpf_printk("Erro ao acessar o mapa_sinal!!!");
         return XDP_DROP;
     }
 
