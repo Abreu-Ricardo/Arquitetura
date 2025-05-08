@@ -5,6 +5,7 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sched.h>
 
 #include <sys/shm.h>
 #include <sys/stat.h>
@@ -208,7 +209,7 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm ../dados/xsk_kern_rodata");
+        system("rm ../dados/xsk_*");
         //system("killall signalping_2proc");
         
         lock = 0;
@@ -514,28 +515,29 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
 }
 
 /**************************************************************************/
-unsigned long long sinal_recebido, resul;
+unsigned long long sig_recebido, resul;
 /*unsigned long long */ 
 int antigo  = 0;
 int cont_sinal = 0;
 static struct timespec inicio, fim;
 
+union sigval sinal_recebido; 
+
 /**************************************************************************/
 void tempo_sinal(int sig, siginfo_t *info, void *context){
-    
-    if( clock_gettime( CLOCK_MONOTONIC  , &fim ) < 0 ){
-        printf("<PID:%d>Erro ao pegar o tempo com clock_gettime()", getpid());
-        //return capta_sinal(SIGINT);
-    }
 
-    sinal_recebido = RDTSC(); // Pega o clock do recebimento
+    sinal_recebido.sival_int = sig_recebido = RDTSC(); // Pega o clock do recebimento
+    if ( sigqueue(ppid, SIGUSR1, sinal_recebido) == -1 ) {                                         
+        perror("Erro no sigqueue do PAI");                                                               
+        capta_sinal(SIGINT);                                                               
+    }  
     cont_sinal++;
     //memcpy(&antigo, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
     memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
     
     //info->_sifields._timer
-    //resul    = sinal_recebido - antigo;                  // Clock final - Clock inicial
-    //double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
+    resul    = sig_recebido - inicio.tv_nsec;                  // Clock final - Clock inicial
+    double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
                                                          // Pq para cada 1s 3.6 Bilhoes de insns sao executadas por segundo
                                                          // O resultado eh um tempo em nano segundos dividindo por 1000 temos
                                                          // microsegundos
@@ -547,8 +549,9 @@ void tempo_sinal(int sig, siginfo_t *info, void *context){
     
     //printf("(pkt:%d) Sinal recebido do kernel tempo: %lld - %lld = %f | %.2f us\n", cont_sinal, sinal_recebido , antigo, (sinal_recebido - antigo) / 3600000000.0 , r);
     //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
-    printf("<pkt:%d | PID:%d> Sinal recebido do kernel: %ld(recebido) - %ld(enviado) = %ld\n", cont_sinal,getpid(), fim.tv_nsec, inicio.tv_nsec, (inicio.tv_nsec -  fim.tv_nsec)* 1000000 / 3600000000);
+    //printf("-->PPID: %d\n", ppid);
 
+    printf("CPU: %d | <pkt:%d | PID:%d> Sinal recebido do kernel: %lld\n", sched_getcpu() , cont_sinal, getpid(), info->si_int + (long long int)0); 
     return;
 }
 
@@ -561,6 +564,9 @@ uint32_t idx_rx = 0;
 uint32_t idx_fq = 0;
 uint64_t addr;
 uint32_t len; 
+
+union sigval valor_struct;
+//valor.sival_int = dado;  // Anexa dado ao sinal
 
 void polling_RX(struct xsk_info_global *info_global ){
     //printf("<Entrou em polling_RX>\n");
@@ -648,10 +654,11 @@ void polling_RX(struct xsk_info_global *info_global ){
              }
 
             //union sigval valor;
-            //valor.sival_int = dado;  // Anexa dado ao sinal
+            valor.sival_int = dado;  // Anexa dado ao sinal
 
             // Enviando sinal e verificando se deu erro
-            if ( kill(pid_alvo, SIGUSR1) == -1 ) {
+            //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
+            if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
             }
@@ -669,9 +676,12 @@ void polling_RX(struct xsk_info_global *info_global ){
 
 /*************************************************************************/
 void signal_handler(int signum, siginfo_t *info, void *context) {
-    if (signum == SIGUSR2) {
-        printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
-        capta_sinal(SIGINT);
+    if (signum == SIGUSR1) {
+
+        printf("CPU: %d | PID:<%d> Sinal recebido do PROC_FILHO: = %lld \n\n", sched_getcpu() , getpid(), info->si_int + (long long int) + 0 );
+ 
+        //printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
+        //capta_sinal(SIGINT);
     }
 }
 
@@ -684,7 +694,14 @@ int main(int argc, char **argv) {
 
     const char *iface = argv[1];
     //const char *iface = "veth2";
-   
+
+    // Atribuindo PROC_PAI a CPU 4 logo cedo
+    ppid = getpid();
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+    system(settar_cpup);
+
+
     /***************Config da regiao de mem compart com shm*****************/
     char     *caminho_prog = "xsk_kern.o";
     char     *ptr_fim_regiao;
@@ -933,9 +950,9 @@ int main(int argc, char **argv) {
 
 
     /* Bloqueia o sinal para nao executar o mecanismo padrao */
-    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
-    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+   sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+   sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+   sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
     //act.sa_sigaction = teste; //signal_handler;
@@ -943,7 +960,7 @@ int main(int argc, char **argv) {
 
 
     //signal( SIGUSR1 , capta_sinal );
-    ppid = getpid();
+    //ppid = getpid();
     pid  = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
@@ -964,7 +981,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5754/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5481/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -999,27 +1016,27 @@ int main(int argc, char **argv) {
         // Trocando o nome do processo para poolpingPAI
         strncpy(argv[0], "sig_PAI", strlen(argv[0]));
 
-        ppid = getpid();
-        char settar_cpup[30]; 
+        //ppid = getpid();
+        //char settar_cpup[30]; 
         
-        sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+        //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-        system(settar_cpup);
+        //system(settar_cpup);
 
         fpid = *ptr_trava;
 
-    	struct sigaction act;
-        act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
-        act.sa_sigaction = signal_handler;
-        sigemptyset(&act.sa_mask);
+    	//struct sigaction act;
+        //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
+        //act.sa_sigaction = signal_handler;
+        //sigemptyset(&act.sa_mask);
 
 
         //// Registra um handler para SIGUSR1
-        if (sigaction(SIGUSR2, &act, NULL) == -1) {
-            perror("sigaction");
-            capta_sinal(SIGINT);
-        }
+        //if (sigaction(SIGUSR1, &act, NULL) == -1) {
+        //    perror("sigaction");
+        //    capta_sinal(SIGINT);
+        //}
 
         /*pid_t*/ pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
         /*int*/ dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
@@ -1031,7 +1048,7 @@ int main(int argc, char **argv) {
         // sigwait(&set, &sig);
         while(1){
             if( sigwait(&set, &sig_usr1) >= 0 ){
-                //printf("PID do filho %d\n", fpid);
+                //printf("<PAI> PID do filho %d\n", fpid);
                 
                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
                    complete_tx(ptr_mem_info_global->umem_frame_addr, 

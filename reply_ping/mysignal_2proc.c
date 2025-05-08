@@ -1,3 +1,6 @@
+
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +8,7 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sched.h>
 
 #include <sys/shm.h>
 #include <sys/stat.h>
@@ -28,7 +32,6 @@
 #include <linux/bpf.h>
 #include <linux/ip.h>
 
-#include <netinet/udp.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
@@ -48,9 +51,8 @@
 #define NUM_FRAMES 4096
 #define FRAME_SIZE 2048
 
-#define SERVER_PORT 12345
-#define PACKET_SIZE 64
-#define PROCESSING_TIME_US 500  // Simulate 500 microseconds processing
+#define PKT_LIMIT 1000
+
 //#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
 //#define FRAME_SIZE 4096
@@ -181,17 +183,6 @@ static __always_inline volatile long long RDTSC() {
 static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 
 /************************************************************************/
-struct timespec ts;                                                                            
-static __always_inline void simulate_processing(){
-    
-    printf("Processando pacote...\n");
-
-    ts.tv_sec = 0;                                                                            
-    ts.tv_nsec = PROCESSING_TIME_US * 1000; // Convert us to ns                                                                            
-    nanosleep(&ts, NULL);                                                                            
-}  
-
-/************************************************************************/
 static void capta_sinal(int signum){
     //getchar();
 
@@ -221,12 +212,20 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm ../dados/xsk_kern_rodata");
+        system("rm ../dados/xsk_*");
         //system("killall signalping_2proc");
         
         lock = 0;
 	    exit(0);
     }
+    //else if (signum == SIGUSR1){
+    //    printf("Entrei pra enviar para polling_RX()\n");
+    //    polling_RX(ptr_mem_info_global);
+    //}
+    //else if( signum == 33){
+    //
+    //	printf("RECEBI SINAL 33 DO PROGRAMA eBPF!!!\n");
+    //}
 
     return;
 }
@@ -375,54 +374,15 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 new){
 	*sum = ~csum16_add(csum16_sub(~(*sum), old), new);
 }
 /*************************************************************************/
-
-static __always_inline uint16_t udp_checksum(struct udphdr *udp_header, uint16_t *payload, int payload_len,
-                            uint32_t src_addr, uint32_t dest_addr) {
-    // Initialize sum to zero
-    uint32_t sum = 0;
-    
-    // Add pseudo-header
-    sum += (src_addr >> 16) & 0xFFFF;  // Source IP high 16 bits
-    sum += src_addr & 0xFFFF;          // Source IP low 16 bits
-    sum += (dest_addr >> 16) & 0xFFFF; // Dest IP high 16 bits
-    sum += dest_addr & 0xFFFF;         // Dest IP low 16 bits
-    sum += htons(IPPROTO_UDP);         // Protocol
-    sum += htons(payload_len + sizeof(*udp_header)); // Total length
-    
-    // Add UDP header fields
-    sum += htons(udp_header->uh_sport);
-    sum += htons(udp_header->uh_dport);
-    sum += htons(udp_header->uh_ulen);
-    
-    // Add payload
-    while (payload_len > 1) {
-        sum += *payload++;
-        payload_len -= 2;
-    }
-    
-    // Handle odd-length payload
-    if (payload_len == 1) {
-        sum += ((*payload) << 8);
-    }
-    
-    // Fold carries
-    while (sum >> 16) {
-        sum = (sum & 0xFFFF) + (sum >> 16);
-    }
-    
-    // Return one's complement
-    return ~sum;
-}
-
-/*************************************************************************/
 int ret;
-    uint32_t tx_idx = 0;
-    uint8_t tmp_mac[ETH_ALEN];
+uint32_t tx_idx = 0;
+uint8_t tmp_mac[ETH_ALEN];
+
 
 static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
-  
-    tx_idx = 0;
+    
+    //tx_idx = 0;
     /******************************************************/
     //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
@@ -430,6 +390,15 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     //end = RDTSC();
     /******************************************************/
 
+    /* Lesson#3: Write an IPv6 ICMP ECHO parser to send responses
+     *
+     * Some assumptions to make it easier:
+     * - No VLAN handling
+     * - Only if nexthdr is ICMP
+     * - Just return all data with MAC/IP swapped, and type set to
+     *   ICMPV6_ECHO_REPLY
+     * - Recalculate the icmp checksum */
+    
     //start = RDTSC();
     // Primeiro pkt demora 12K ciclos, dai pra frente menos de 800ciclos
     /******************************************************/
@@ -437,9 +406,7 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     struct in_addr tmp_ip;
     struct ethhdr  *eth = (struct ethhdr *) pkt;
     struct iphdr   *ip  = (struct iphdr  *) (eth + 1);
-    //struct icmphdr *icmph = (struct icmphdr *) (ip + 1);
-    struct udphdr *udp = (struct udphdr *) (ip + 1);
-    uint16_t *payload = (uint16_t *) (udp + 1);
+    struct icmphdr *icmph = (struct icmphdr *) (ip + 1);
     
     memcpy(tmp_mac, eth->h_dest, ETH_ALEN);
     memcpy(eth->h_dest, eth->h_source, ETH_ALEN);
@@ -448,23 +415,12 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     memcpy(&tmp_ip, &ip->saddr, sizeof(tmp_ip));
     memcpy(&ip->saddr, &ip->daddr, sizeof(tmp_ip));
     memcpy(&ip->daddr, &tmp_ip, sizeof(tmp_ip));
+
+    icmph->type = ICMP_ECHOREPLY;
+
+    //csum_fold_helper_ip(icmph->checksum);
+    csum_replace2(&icmph->checksum, htons(ICMP_ECHO << 8 ), htons(ICMP_ECHOREPLY << 8 ));
     
-    __be16	dest;
-    __be16	source;
-    printf("\n\nTamanho ethhdr:%ld iphdr:%ld udphdr:%ld payload:%ld\n", sizeof(*eth), sizeof(*ip), sizeof(*udp), sizeof(*payload));
-    
-    memcpy(&source, &udp->source, sizeof(udp->source));
-    memcpy(&udp->source, &udp->dest, sizeof(source));
-    memcpy(&udp->dest, &source, sizeof(dest));
-
-
-    //udp->check = udp_checksum(udp, payload, sizeof(*payload), ip->saddr, ip->daddr);
-
-    //icmph->type = ICMP_ECHOREPLY;
-
-    ////csum_fold_helper_ip(icmph->checksum);
-    //csum_replace2(&icmph->checksum, htons(ICMP_ECHO << 8 ), htons(ICMP_ECHOREPLY << 8 ));
-    simulate_processing(); 
     /******************************************************/
    // end = RDTSC();
 
@@ -528,7 +484,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    printf("Retorno do sendto: %d\n", retsend);
+    //printf("Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
     if (retsend >= 0){
@@ -543,7 +499,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
         if (completed > 0) {
             //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
-               // printf("Desalocando %d\n", i);
+                //printf("Desalocando %d\n", i);
                 desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
             xsk_ring_cons__release(&umem_info->cq, completed);
@@ -555,50 +511,40 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
          printf("*****************************\n\n");
     }
 
-  
-
-    //end = RDTSC();
+     //end = RDTSC();
     //printf("tempo final da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
 }
 
 /**************************************************************************/
-unsigned long long sinal_recebido, resul;
+unsigned long long sig_recebido, resul;
 /*unsigned long long */ 
 int antigo  = 0;
 int cont_sinal = 0;
-static struct timespec inicio, fim;
+
+union sigval sinal_recebido; 
 
 /**************************************************************************/
 void tempo_sinal(int sig, siginfo_t *info, void *context){
-    
-    if( clock_gettime( CLOCK_MONOTONIC  , &fim ) < 0 ){
-        printf("<PID:%d>Erro ao pegar o tempo com clock_gettime()", getpid());
-        //return capta_sinal(SIGINT);
-    }
 
-    sinal_recebido = RDTSC(); // Pega o clock do recebimento
-    cont_sinal++;
-    //memcpy(&antigo, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
-    memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
+    //sig_recebido = RDTSC(); // Pega o clock do recebimento
+    sinal_recebido.sival_int = info->si_int; // Pega o clock do recebimento
+    if ( sigqueue(ppid, SIGUSR1, sinal_recebido) == -1 ) {                                         
+    //if ( kill(ppid, SIGUSR1) == -1 ) {                                         
+        perror("Erro no sigqueue do PAI");                                                               
+        capta_sinal(SIGINT);                                                               
+    }  
+    //cont_sinal++;
+    //memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
     
-    //info->_sifields._timer
-    //resul    = sinal_recebido - antigo;                  // Clock final - Clock inicial
-    //double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
-                                                         // Pq para cada 1s 3.6 Bilhoes de insns sao executadas por segundo
-                                                         // O resultado eh um tempo em nano segundos dividindo por 1000 temos
-                                                         // microsegundos
+    //resul    = sig_recebido - inicio.tv_nsec;                  // Clock final - Clock inicial
+    //double r = ( (double)resul / 3600000000.0 ) / 1000; 
 
-    // TODO
-    // Travar o programa eBPF para que o RDTSC pegue o timestamp da CPU que foi travado sempre
-    // para quando for calcular o tempo o timestamp seja sempre na mesma CPU
-    // --> Travar na mesma CPU que o processo filho(CPU 5)
-    
-    //printf("(pkt:%d) Sinal recebido do kernel tempo: %lld - %lld = %f | %.2f us\n", cont_sinal, sinal_recebido , antigo, (sinal_recebido - antigo) / 3600000000.0 , r);
     //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
-    printf("<pkt:%d | PID:%d> Sinal recebido do kernel: %ld(recebido) - %ld(enviado) = %ld\n", cont_sinal,getpid(), fim.tv_nsec, inicio.tv_nsec, (inicio.tv_nsec -  fim.tv_nsec)* 1000000 / 3600000000);
+    //printf("-->PPID: %d\n", ppid);
 
+    //printf("CPU: %d | <pkt:%d | PID:%d> Sinal recebido do kernel: %d\n", sched_getcpu() , cont_sinal, getpid(), info->si_int ); 
     return;
 }
 
@@ -612,19 +558,22 @@ uint32_t idx_fq = 0;
 uint64_t addr;
 uint32_t len; 
 
+union sigval valor_struct;
+//valor.sival_int = dado;  // Anexa dado ao sinal
+
 void polling_RX(struct xsk_info_global *info_global ){
     //printf("<Entrou em polling_RX>\n");
 
   
-    //struct sigaction act = {0};
-    //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
-    //act.sa_sigaction = tempo_sinal;
-    //sigemptyset(&act.sa_mask);
+    struct sigaction act = {0};
+    act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
+    act.sa_sigaction = tempo_sinal;
+    sigemptyset(&act.sa_mask);
 
-    //if (sigaction(SIGUSR1, &act, NULL) == -1) {
-    //    perror("sigaction");
-    //    capta_sinal(SIGINT);
-    //}
+    if (sigaction(SIGUSR1, &act, NULL) == -1) {
+        perror("sigaction");
+        capta_sinal(SIGINT);
+    }
 
     /**************************************************************/
 
@@ -632,9 +581,7 @@ void polling_RX(struct xsk_info_global *info_global ){
 
 
     //while(1){
-    // while( /* ret_ring > 0*/ 1 /*xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx) <=  0*/){
-    while( sigwait(&set, &sig_usr1) == 0 ){
-    // while( 1 ){
+     while( sigwait(&set, &sig_usr1) == 0 ){
     //while( pause()  ){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
@@ -699,24 +646,21 @@ void polling_RX(struct xsk_info_global *info_global ){
                 }
              }
 
-            //int temp = 888;
-            ///*pid_t*/ pid_alvo = ppid; //atoi(argv[1]); // pega o PID do receiver
-            ///*int*/ dado = temp; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
-
             //union sigval valor;
             valor.sival_int = dado;  // Anexa dado ao sinal
 
-
-
-            // Envia SIGUSR1 com dados
-            //if (sigqueue(pid_alvo, SIGUSR1, valor) == -1) {
-            if (cont_pkt < 100){
-                if ( kill(pid_alvo, SIGUSR1) == -1 ) {
-                    perror("Erro no sigqueue do filho");
-                    capta_sinal(SIGINT);
-                }    
+            // Enviando sinal e verificando se deu erro
+            //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
+            if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+                perror("Erro no sigqueue do filho");
+                capta_sinal(SIGINT);
             }
-            else{
+
+            // Se bateu o limite de pkts a serem processados
+            // termina o processo de maneira graciosa para o
+            // gprof rodar sem problemas e salvar os dados de profiling
+            if ( cont_pkt == PKT_LIMIT ){
+                //kill(pid_alvo, SIGUSR1);
                 kill(pid_alvo, SIGUSR2);
                 capta_sinal(SIGINT);
             }
@@ -724,15 +668,35 @@ void polling_RX(struct xsk_info_global *info_global ){
 }
 
 /*************************************************************************/
+unsigned long long int sinal_final;
+unsigned long inicio, fim, res;
+int sig_cont = 0;
+int aux;
+
 void signal_handler(int signum, siginfo_t *info, void *context) {
-    if (signum == SIGUSR2) {
-        printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
-        capta_sinal(SIGINT);
+    
+    sinal_final = RDTSC();
+
+    inicio = (unsigned int)info->si_int;
+
+    aux = sinal_final & 0xffffffff;
+    fim = (unsigned int)aux;
+    if(fim < inicio){
+        fim += 0x100000000;
     }
+    res = fim - inicio; 
+
+    //printf("CPU: %d | PID:<%d> Sinal recebido do PROC_FILHO: %d | %lu\n\n", sched_getcpu() , getpid(), info->si_int, res/3600);
+    //printf("Sinal recebido do PROC_FILHO: %lu - %lu | %.2f us\n\n", fim, inicio, (float)res/3600);
+    printf("%.2f us\n\n", (float)res/3600);
+
+    //printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
+    //capta_sinal(SIGINT);
 }
 
 /*************************************************************************/
 int main(int argc, char **argv) {
+    
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
         return 1;
@@ -740,7 +704,20 @@ int main(int argc, char **argv) {
 
     const char *iface = argv[1];
     //const char *iface = "veth2";
-   
+
+    // Atribuindo PROC_PAI a CPU 4 logo cedo
+    ppid = getpid();
+
+    //cpu_set_t my_set;        /* Define your cpu_set bit mask. */
+    //CPU_ZERO(&my_set);       /* Initialize it all to 0, i.e. no CPUs selected. */
+    //CPU_SET(4, &my_set);     /* set the bit that represents core 7. */
+    //sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+     
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+    system(settar_cpup);
+
+
     /***************Config da regiao de mem compart com shm*****************/
     char     *caminho_prog = "xsk_kern.o";
     char     *ptr_fim_regiao;
@@ -804,6 +781,7 @@ int main(int argc, char **argv) {
         xsk_kern_bpf__destroy(skel);
     }
 
+    // Aclopa o programa XDP com a funcao propria da libbpf
     skel->links.xdp_prog = bpf_program__attach_xdp( skel->progs.xdp_prog , ifindex );
 
     printf("Indice da interface %d\n",ifindex);
@@ -855,11 +833,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
     bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
-    //bpf_object__pin_maps( skel->obj , "/home/ubuntu/Documents/Arquitetura/dados");
-
 
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
@@ -878,8 +852,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // Tamanho da regiao de mem.
-    
     // Atribuindo tamanho para a regiao de mem. compart.
     int ret_ftruncate = ftruncate(fd_shm, tam_regiao);
     if ( ret_ftruncate == -1 ){
@@ -889,7 +861,6 @@ int main(int argc, char **argv) {
     buffer_do_pacote   = ( void *) mmap(0, tam_regiao, PROT_WRITE, MAP_SHARED, fd_shm, 0);
 
     /************************************************** Cria mem da trava ************************************************************/
-
 
     fd_trava = shm_open(nome_trava, O_CREAT | O_RDWR, 0777);
     if (fd_trava == -1){
@@ -909,7 +880,6 @@ int main(int argc, char **argv) {
     ptr_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
     //*ptr_trava = 0;
     
-
     /*###############################CRIAÇÃO DA REGIÃO DE MEM COMPART MEM_INFO_GLOBAL###################################################*/
     
     ptr_mem_info_global = (struct xsk_info_global *) malloc( sizeof(struct xsk_info_global));
@@ -937,15 +907,6 @@ int main(int argc, char **argv) {
     cria_segundo_socket( iface );
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
-
-
-    //ret_look = bpf_map_lookup_elem(fd_mapa_fd, &key, &ret_lookup);
-    //ret_xskmap = bpf_map_lookup_elem(map_fd_xsk, &key, &ret_xsk);
-    //
-    //if(ret_look < 0 && ret_xskmap < 0){
-    //    printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
-    //    return -1;
-    //}
 
     printf("\nValor do retorno do mapa: %s\n", ret_lookup);
     printf("Valor do retorno do xskmap: %d\n", ret_xskmap);
@@ -1005,9 +966,9 @@ int main(int argc, char **argv) {
 
 
     /* Bloqueia o sinal para nao executar o mecanismo padrao */
-    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
-    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+    //sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+    //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+    //sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
     //act.sa_sigaction = teste; //signal_handler;
@@ -1015,7 +976,7 @@ int main(int argc, char **argv) {
 
 
     //signal( SIGUSR1 , capta_sinal );
-    ppid = getpid();
+    //ppid = getpid();
     pid  = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
@@ -1036,15 +997,20 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/18688/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5481/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
             perror("\n\nNao foi possivel mover o processo");
         }
-        
-        sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
-        system(settar_cpuf);
+
+        cpu_set_t my_set;        /* Define your cpu_set bit mask. */
+        CPU_ZERO(&my_set);       /* Initialize it all to 0, i.e. no CPUs selected. */
+        CPU_SET(5, &my_set);     /* set the bit that represents core 7. */
+        sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+
+        //sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
+        //system(settar_cpuf);
        
         int chave2 =  0;
         int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
@@ -1071,13 +1037,13 @@ int main(int argc, char **argv) {
         // Trocando o nome do processo para poolpingPAI
         strncpy(argv[0], "sig_PAI", strlen(argv[0]));
 
-        ppid = getpid();
-        char settar_cpup[30]; 
+        //ppid = getpid();
+        //char settar_cpup[30]; 
         
-        sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+        //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-        system(settar_cpup);
+        //system(settar_cpup);
 
         fpid = *ptr_trava;
 
@@ -1088,10 +1054,17 @@ int main(int argc, char **argv) {
 
 
         //// Registra um handler para SIGUSR1
-        if (sigaction(SIGUSR2, &act, NULL) == -1) {
+        if (sigaction(SIGUSR1, &act, NULL) == -1) {
             perror("sigaction");
             capta_sinal(SIGINT);
         }
+        
+        //int chave2 =  0;
+        //int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &ppid, BPF_ANY );
+        //if (ret_update2 < 0){
+        //    perror("+++ erro ao atualizar o mapa com o PID +++");
+        //    capta_sinal(SIGINT);
+        //}
 
         /*pid_t*/ pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
         /*int*/ dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
@@ -1103,11 +1076,12 @@ int main(int argc, char **argv) {
         // sigwait(&set, &sig);
         while(1){
             if( sigwait(&set, &sig_usr1) >= 0 ){
-                //printf("PID do filho %d\n", fpid);
-                xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                        ptr_mem_info_global->umem_frame_free, 
-                        &ptr_mem_info_global->tx_restante);
+                printf("<PAI> PID do filho %d\n", fpid);
+                
+                   xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+                   complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                               ptr_mem_info_global->umem_frame_free, 
+                               &ptr_mem_info_global->tx_restante);
             }
         }
     }

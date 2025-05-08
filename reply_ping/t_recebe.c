@@ -9,12 +9,12 @@
 
 #define SERVER_PORT 12345
 #define PACKET_SIZE 64
-#define PROCESSING_TIME_US 1  // Quantidade de microsecondos para processar
+#define PROCESSING_TIME_US 500  // Quantidade de microsecondos para processar
 
 static __always_inline void simulate_processing() {
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = PROCESSING_TIME_US * 1000; // Convert us to ns
+    ts.tv_nsec = PROCESSING_TIME_US * 1000; // Converte us to ns
     nanosleep(&ts, NULL);
 }
 

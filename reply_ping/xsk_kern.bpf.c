@@ -88,6 +88,7 @@ int xdp_prog(struct xdp_md *ctx){
     
     __u64 *ptr;
     __u32 ret_final;
+    __u64 ret_func;
 
 
     //uint64_t pid_tgid = bpf_get_current_pid_tgid();
@@ -106,18 +107,19 @@ int xdp_prog(struct xdp_md *ctx){
     //}
 
     // Se for pacote UDP == 17
-    if( ptr != NULL  && ret == 1){
-        //if( ptr != NULL  && ret == 1 ){
-        //if (ret == 17){
+    //if( ret == 17){
+    if( ptr != NULL  && ret == 1 ){
+    //if (ret == 17){
 
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
-        if ( bpf_minha_func(*ptr, 10)  < 0 ){
+        ret_func = bpf_minha_func(*ptr, 10);
+        if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
             bpf_printk("Erro ao enviar sinal para o pid");
             return XDP_DROP;
         }
 
 
-        //bpf_printk("Enviando sinal...(pid %d | cpu %d)\n", *ptr, bpf_get_smp_processor_id());
+        //bpf_printk("Enviando sinal...(pid %d | cpu %d) %d\n", *ptr, bpf_get_smp_processor_id(), ret_func);
         return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{

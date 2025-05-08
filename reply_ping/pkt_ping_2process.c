@@ -222,7 +222,7 @@ static void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
+        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_*");
  //       system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
 //        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
         system("killall pktping_2proc");
@@ -624,10 +624,10 @@ void polling_RX(struct xsk_info_global *info_global ){
                 //printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
                 //printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
-            if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
-                printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
-                continue;
-            }
+                if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
+                    printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
+                    continue;
+                }
 
             } 
         }
@@ -954,7 +954,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5754/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/17610/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

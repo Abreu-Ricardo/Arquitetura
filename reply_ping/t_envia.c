@@ -7,10 +7,9 @@
 #include <sys/socket.h>
 
 #define SERVER_PORT 12345
-//#define SERVER_IP "127.0.0.1"
 #define SERVER_IP "20.20.20.2"
 #define PACKET_SIZE 64
-#define CPU_FREQ_HZ 3600000000ULL // Adjust to your CPU freq (e.g., 3.6GHz)
+#define CPU_FREQ_HZ 3600000000ULL //  CPU freq 
 
 int main() {
     int sockfd;
@@ -43,7 +42,7 @@ int main() {
         }
 
         
-        // Wait for reply
+        // Espera reply 
         if (recvfrom(sockfd, recv_buf, sizeof(recv_buf), 0,
                      (struct sockaddr *)&server_addr, &addr_len) < 0) {
             perror("recvfrom");
