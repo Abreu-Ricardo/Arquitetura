@@ -12,6 +12,8 @@
 
 #include <time.h>
 
+// Salvar o nome da regiao de mem, ja que o
+// open_shm() usa nome de regiao de mem para identificar
 struct mapa_mem{ 
 	__uint(type, BPF_MAP_TYPE_ARRAY);
 	__uint(max_entries, 4);
@@ -20,14 +22,25 @@ struct mapa_mem{
  //   __uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_fd SEC(".maps");
 
+
+// Mapa usado para que o usar space acesse e coloque o PID do processo
+// a ser sinalizado
 struct {
         __uint(type, BPF_MAP_TYPE_ARRAY);
         __uint(max_entries, 1);
         __type(key, __u32);
-        __type(value, sizeof(pid_t)); // Ver o tipo da var que o fd de mem eh   
+        __type(value, sizeof(pid_t)); 
     	//__uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
 } mapa_sinal SEC(".maps");
 
+// Mapa necessario para salvar tempos do rdtsc() do sinal
+struct {
+        __uint(type, BPF_MAP_TYPE_ARRAY);
+        __uint(max_entries, 1000);
+        __type(key, __u32);
+        __type(value, __u64); // Ver o tipo da var que o fd de mem eh   
+    	//__uint(pinning, LIBBPF_PIN_BY_NAME); // atributo para pinnar o mapa em /sys/fs/bpf/
+} tempo_sig SEC(".maps");
 
 // Define um mapa XSKMAP para o socket AF_XDP
 struct {
@@ -78,7 +91,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 	return protocol; 
 }
 /*****************************************************************************/
-
+__u32 pkt_global = 0;
 
 SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
@@ -87,6 +100,7 @@ int xdp_prog(struct xdp_md *ctx){
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
     
     __u64 *ptr;
+    __u64 *ptr_sig;
     __u32 ret_final;
     __u64 ret_func;
 
@@ -100,7 +114,8 @@ int xdp_prog(struct xdp_md *ctx){
 
     ret = verifica_ip(ctx);
     ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
-    
+    //ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
+
     //if (ptr == NULL){
 	//    bpf_printk("Erro ao acessar o mapa_sinal");
 	//    return XDP_DROP;
@@ -108,18 +123,21 @@ int xdp_prog(struct xdp_md *ctx){
 
     // Se for pacote UDP == 17
     //if( ret == 17){
-    if( ptr != NULL  && ret == 1 ){
+    if( ptr != NULL  && ret == 1 /*&& ptr_sig != NULL*/){
     //if (ret == 17){
 
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
         ret_func = bpf_minha_func(*ptr, 10);
+        //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
         if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
             bpf_printk("Erro ao enviar sinal para o pid");
             return XDP_DROP;
         }
 
-
-        //bpf_printk("Enviando sinal...(pid %d | cpu %d) %d\n", *ptr, bpf_get_smp_processor_id(), ret_func);
+        //bpf_map_update_elem(&tempo_sig , &pkt_global , &ret_func , BPF_ANY);
+        //bpf_printk("Enviando sinal...(pid %d | cpu %d) %llu\n", *ptr, bpf_get_smp_processor_id(), ret_func);
+       
+        //pkt_global++; 
         return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{

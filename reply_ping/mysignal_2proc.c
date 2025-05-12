@@ -91,6 +91,8 @@ int dado; // = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receive
 union sigval valor;
 //valor.sival_int = 777;  // Anexa dado ao sinal
 
+static unsigned long long int vet_sinais[1000]= {0};
+float lat_sinais[1000] = {0.0};
 
 //struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
@@ -185,6 +187,13 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
 /************************************************************************/
 static void capta_sinal(int signum){
     //getchar();
+    printf("\n\n\n\n\n");
+    unsigned long long int temp_bpf;
+    for(unsigned int i =0 ; i< 1000; i++){
+        //bpf_map__lookup_elem(skel->maps.tempo_sig, &i, sizeof(i), &temp_bpf, sizeof(temp_bpf), BPF_ANY  );
+        //printf("%llu - %llu = %.2f\n",vet_sinais[i], temp_bpf ,(float)(vet_sinais[i] - temp_bpf)/3600.0 );
+        printf("%.2f us\n", lat_sinais[i]);
+    }
 
     if (signum == SIGINT){
 
@@ -192,6 +201,7 @@ static void capta_sinal(int signum){
         //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados/xsk_kern_rodata");
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") 	     , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "tempo_sig")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/tempo_sig");
 
 
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
@@ -201,7 +211,7 @@ static void capta_sinal(int signum){
         xsk_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
-        
+
         // Free a block allocated by \`malloc', \`realloc' or \`calloc'.
         // free(buffer_do_pacote);
 
@@ -209,14 +219,16 @@ static void capta_sinal(int signum){
         shm_unlink(nome_regiao);
         shm_unlink(nome_trava);
         shm_unlink(nome_info_global );
-       
+
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm ../dados/xsk_*");
         //system("killall signalping_2proc");
-        
+
+
+
         lock = 0;
-	    exit(0);
+        exit(0);
     }
     //else if (signum == SIGUSR1){
     //    printf("Entrei pra enviar para polling_RX()\n");
@@ -536,10 +548,7 @@ void tempo_sinal(int sig, siginfo_t *info, void *context){
         capta_sinal(SIGINT);                                                               
     }  
     //cont_sinal++;
-    //memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
     
-    //resul    = sig_recebido - inicio.tv_nsec;                  // Clock final - Clock inicial
-    //double r = ( (double)resul / 3600000000.0 ) / 1000; 
 
     //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
     //printf("-->PPID: %d\n", ppid);
@@ -673,11 +682,12 @@ unsigned long inicio, fim, res;
 int sig_cont = 0;
 int aux;
 
+
 void signal_handler(int signum, siginfo_t *info, void *context) {
     
     sinal_final = RDTSC();
-
     inicio = (unsigned int)info->si_int;
+
 
     aux = sinal_final & 0xffffffff;
     fim = (unsigned int)aux;
@@ -685,13 +695,14 @@ void signal_handler(int signum, siginfo_t *info, void *context) {
         fim += 0x100000000;
     }
     res = fim - inicio; 
-
+    
+    //vet_sinais[sig_cont] = sinal_final;
+    lat_sinais[sig_cont] = (float)res/3600;
+    sig_cont++;
+    
     //printf("CPU: %d | PID:<%d> Sinal recebido do PROC_FILHO: %d | %lu\n\n", sched_getcpu() , getpid(), info->si_int, res/3600);
-    //printf("Sinal recebido do PROC_FILHO: %lu - %lu | %.2f us\n\n", fim, inicio, (float)res/3600);
-    printf("%.2f us\n\n", (float)res/3600);
-
-    //printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
-    //capta_sinal(SIGINT);
+    //printf("%lu - %lu = %f\n", fim, inicio, (float)res/3600);
+    //printf("%.2f us\n", (float)res/3600);
 }
 
 /*************************************************************************/
@@ -997,7 +1008,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5481/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5996/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

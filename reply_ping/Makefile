@@ -71,7 +71,7 @@ t_envia: t_envia.c
 
 #.PHONY: clean
 clean:
-	@sudo rm $(OBJETOS_BPF) loader_xdp signalping_2proc pollping_2proc pktping_2proc t_envia t_recebe
+	@sudo rm $(OBJETOS_BPF) loader_xdp signalping_2proc pollping_2proc pktping_2proc t_envia t_recebe mysignal_2proc
 	@sudo rm *.skel.h
 	@#sudo rm /sys/fs/bpf/signal_monitor
 	@#sudo bpftool prog show
