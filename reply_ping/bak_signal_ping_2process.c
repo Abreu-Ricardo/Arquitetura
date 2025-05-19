@@ -49,7 +49,7 @@
 //#define FRAME_SIZE 2048
 #define FRAME_SIZE XSK_UMEM__DEFAULT_FRAME_SIZE
 
-#define PKT_LIMIT 1000000
+#define PKT_LIMIT 2050
 
 //#define NUM_FRAMES 8192
 //#define NUM_FRAMES 2048
@@ -585,7 +585,7 @@ void tempo_sinal(int sig, siginfo_t *info, void *context){
 
 int i =0;
 __u32 ret_ring=0, stock_frames=0;
-__uint64_t cont_pkt=0;
+__uint64_t cont_pkt=1;
 uint32_t idx_rx = 0;
 uint32_t idx_fq = 0;
 uint64_t addr;
@@ -593,12 +593,23 @@ uint32_t len;
 
 union sigval valor_struct;
 //valor.sival_int = dado;  // Anexa dado ao sinal
+int flag = 0;
 
+void teste_mem(){
 
+    for(int i =0; i < 2048; i++){
+        printf("+++ umem_frame_addr[%d] =  %ld +++\n", i , ptr_mem_info_global->umem_frame_addr[i]);
+    }
+    flag = 1;
+}
 
 void polling_RX(struct xsk_info_global *info_global ){
     //printf("<Entrou em polling_RX>\n");
 
+    //if(flag == 0){
+    //    teste_mem();
+    //}
+    
     //struct sigaction act = {0};
     //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
     //act.sa_sigaction = tempo_sinal;
@@ -639,8 +650,6 @@ void polling_RX(struct xsk_info_global *info_global ){
                 //sigwait( &set , &sig );
                 continue;
             }
-
-            ptr_mem_info_global->ret_ring = ret_ring;
 
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
             // retorna o endereco do pacote --> __u64 address of the packet.
@@ -692,13 +701,12 @@ void polling_RX(struct xsk_info_global *info_global ){
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
             }
-            
-            printf("\n\npkt = %lu\n\n", cont_pkt );
+            //printf("umem_frame_addr[%ld] = %d\n", cont_pkt , info_global->umem_frame_addr[cont_pkt]);
             // Se bateu o limite de pkts a serem processados
             // termina o processo de maneira graciosa para o
             // gprof rodar sem problemas e salvar os dados de profiling
-            if ( cont_pkt >= PKT_LIMIT ){
-                kill(pid_alvo, SIGUSR1);
+            if ( cont_pkt == PKT_LIMIT ){
+                //kill(pid_alvo, SIGUSR1);
                 kill(pid_alvo, SIGUSR2);
                 capta_sinal(SIGINT);
             }
@@ -1039,7 +1047,12 @@ int main(int argc, char **argv) {
         //act.sa_sigaction = polling_RX;
         //sigemptyset(&act.sa_mask);
 
+        for(int i =0; i < 2048; i++){
+            //printf("+++ umem_frame_addr[%d] =  %ld +++\n", i , ptr_mem_info_global->umem_frame_addr[i]);
+        }
 
+
+        //while( pause() ) {; }
         polling_RX( ptr_mem_info_global );
     }
 
@@ -1049,7 +1062,7 @@ int main(int argc, char **argv) {
         strncpy(argv[0], "sig_PAI", strlen(argv[0]));
 
         //ppid = getpid();
-        char settar_cpup[30]; 
+        //char settar_cpup[30]; 
         
         //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
@@ -1069,6 +1082,9 @@ int main(int argc, char **argv) {
         //    perror("sigaction");
         //    capta_sinal(SIGINT);
         //}
+
+        /*pid_t*/ pid_alvo = fpid;//atoi(argv[1]); // pega o PID do receiver
+        /*int*/ dado = 777; //atoi(argv[2]);       // Pega o dado para enviar p/ receiver
 
         //union sigval valor;
         //valor.sival_int = dado;  // Anexa dado ao sinal
