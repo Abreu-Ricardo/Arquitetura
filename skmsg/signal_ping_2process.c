@@ -38,7 +38,7 @@
 #include <linux/sched.h>
 #include <pthread.h>
 
-#include "xsk_kern.skel.h"
+#include "skmsg_kern.skel.h"
 
 
 /******************************************************************************/
@@ -132,7 +132,7 @@ struct xsk_info_global *ptr_mem_info_global;
 /*****************************************/
 
 
-struct xsk_kern_bpf *skel;
+struct skmsg_kern_bpf *skel;
 
 void polling_RX(struct xsk_info_global *info_global);
 
@@ -191,18 +191,17 @@ static void capta_sinal(int signum){
     if (signum == SIGINT){
 
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ubuntu/Documents/Arquitetura/dados/xsk_kern_rodata");
         bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd") 	     , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
         
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "tempo_sig")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/tempo_sig");
+        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sock")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sock");
 
 
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_NATIVE, 0);
         //xdp_program__close(xdp_prog);
 
-        xsk_kern_bpf__destroy(skel);
+        skmsg_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
         
@@ -331,7 +330,7 @@ void cria_segundo_socket(const char *iface){
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         //xdp_program__close(xdp_prog);
-        xsk_kern_bpf__destroy(skel);
+        skmsg_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
@@ -734,7 +733,7 @@ int main(int argc, char **argv) {
 
 
     /***************Config da regiao de mem compart com shm*****************/
-    char     *caminho_prog = "xsk_kern.o";
+    char     *caminho_prog = "skmsg_kern.o";
     char     *ptr_fim_regiao;
     uint64_t *ptr_regiao;
     
@@ -790,14 +789,14 @@ int main(int argc, char **argv) {
 	}
 
     // Abre e carrega o programa usando o skeleton
-    skel = xsk_kern_bpf__open_and_load();
+    skel = skmsg_kern_bpf__open_and_load();
     if (!skel){
         perror("Erro ao abrir/carregar programa");
-        xsk_kern_bpf__destroy(skel);
+        skmsg_kern_bpf__destroy(skel);
     }
 
     // Aclopa o programa XDP com a funcao propria da libbpf
-    skel->links.xdp_prog = bpf_program__attach_xdp( skel->progs.xdp_prog , ifindex );
+    //skel->links.xdp_prog = bpf_program__attach_xdp( skel->progs.xdp_prog , ifindex );
 
     printf("Indice da interface %d\n",ifindex);
 	// load XDP object by libxdp 
@@ -841,7 +840,7 @@ int main(int argc, char **argv) {
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         //xdp_program__close(xdp_prog);
-        xsk_kern_bpf__destroy(skel);
+        skmsg_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
@@ -919,7 +918,7 @@ int main(int argc, char **argv) {
     
     configura_umem();
     configura_socket( iface );
-    cria_segundo_socket( iface );
+    //cria_segundo_socket( iface );
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
@@ -950,7 +949,7 @@ int main(int argc, char **argv) {
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
         //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
         //xdp_program__close(xdp_prog);
-        xsk_kern_bpf__destroy(skel);
+        skmsg_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
@@ -1014,7 +1013,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/22577/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/7824/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1025,7 +1024,8 @@ int main(int argc, char **argv) {
         system(settar_cpuf);
        
         int chave2 =  0;
-        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        //int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sock) , &chave2 , &fpid, BPF_ANY );
         if (ret_update2 < 0){
             perror("+++ erro ao atualizar o mapa com o PID +++");
             capta_sinal(SIGINT);
