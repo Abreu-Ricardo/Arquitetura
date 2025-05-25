@@ -102,7 +102,9 @@ int main() {
 
     // Attach sk_msg program to source socket
     //err = bpf_prog_attach(prog_fd, listener_fd, BPF_SK_MSG_VERDICT, 0);
-
+    //while(1){
+    //    ;
+    //}
 
     // Test sending a message from sock1 (should be redirected to sock2)
     const char *msg = "hello via ebpf";
@@ -114,8 +116,8 @@ int main() {
     printf("sock2 received: %s\n", buf);
 
     // Cleanup
-    close(sock1);
-    close(sock2);
+    close(listener_fd);
+    close(client_fd);
     bpf_object__close(obj);
 
     return 0;
