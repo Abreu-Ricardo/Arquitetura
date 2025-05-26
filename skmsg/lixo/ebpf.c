@@ -45,6 +45,7 @@ int bpf_redir(struct sk_msg_md *msg)
     //return bpf_msg_redirect_hash(msg, &sock_ops_map, &key, BPF_F_INGRESS);
     
     int ret = bpf_msg_redirect_map(msg, &sock_ops_map, chave, BPF_F_INGRESS);
+    bpf_printk("Valor retornado de msg_redirect_map: %d\n", ret);
     return ret;
 }
 

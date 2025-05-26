@@ -58,7 +58,8 @@ int main(void) {
     // Configure server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
-    if( inet_pton(AF_INET, "127.0.0.1", &(server_addr.sin_addr)) <= 0 ){
+    //if( inet_pton(AF_INET, "127.0.0.1", &(server_addr.sin_addr)) <= 0 ){
+    if( inet_pton(AF_INET, "10.10.10.1", &(server_addr.sin_addr)) <= 0 ){
         perror("Erro no inet_pton");
     }
 
@@ -94,7 +95,7 @@ int main(void) {
     int chave = 0;
     //if (bpf_map_update_elem(map_fd, &key, &server_fd, BPF_ANY)) {
     if ( bpf_map_update_elem(map_fd, &chave, &server_fd, BPF_ANY) < 0) {
-        perror("Failed to register socket");
+        perror("Erro ao atualizar o mapa com o FD do socket");
         exit(1);
     }
 
@@ -120,8 +121,10 @@ int main(void) {
         char* message = "Message received by server\n";
         send(client_fd, message, strlen(message), 0);
     }
-
-    close(client_fd);
-    close(server_fd);
+    
+    capta_sinal(SIGINT);
+    //close(client_fd);
+    //close(server_fd);
+    
     return 0;
 }

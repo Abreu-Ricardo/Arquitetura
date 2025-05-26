@@ -18,7 +18,9 @@
 #define BUFFER_SIZE 1024
 #define SERVER_PORT 8080
 #define MAX_Pending 3
-#define LOCALHOST_IPV4 127001
+//#define LOCALHOST_IPV4 127001
+
+#define LOCALHOST_IPV4 1010101
 
 #include "ebpf.skel.h"
 // Message structure for client-server communication
