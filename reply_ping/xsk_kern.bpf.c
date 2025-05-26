@@ -110,6 +110,7 @@ int xdp_prog(struct xdp_md *ctx){
     //uint32_t tgid = pid_tgid >> 32;
     
     //bpf_printk("Process ID: %d, Thread Group ID: %d\n", pid, tgid);
+    bpf_printk("Entrou no programa XDP!\n");
 
 
     ret = verifica_ip(ctx);

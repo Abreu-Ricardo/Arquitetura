@@ -1,16 +1,37 @@
 #include "packet.h"
 #include "ebpf.skel.h"
 
-    struct sock_key key = {
-        .sip    = LOCALHOST_IPV4,
-        .dip    = LOCALHOST_IPV4,
-        .sport  = SERVER_PORT,
-        .dport  = SERVER_PORT,
-        .family = AF_INET,
-    };
+
+struct ebpf *skel;
+struct sock_key key = {
+    .sip    = LOCALHOST_IPV4,
+    .dip    = LOCALHOST_IPV4,
+    .sport  = SERVER_PORT,
+    .dport  = SERVER_PORT,
+    .family = AF_INET,
+};
+
+void capta_sinal(int signum){
+    
+    if (signum == SIGINT){
+        bpf_map__unpin( skel->maps.sock_ops_map , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/sock_ops_map");
+    }
+
+    ebpf__detach(skel);
+    ebpf__destroy(skel);
+    close(server_fd);
+    close(client_fd);
+
+    system("rm ../../dados/ebpf*");
+
+    exit(0);
+}
+
 
 int main(void) {
     
+    signal( SIGINT , capta_sinal);
+
     struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
     if (setrlimit(RLIMIT_MEMLOCK, &r)) {
         perror("Erro ao configurar limite de memória bloqueada");
@@ -18,7 +39,6 @@ int main(void) {
     }
 
 
-    int server_fd, client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
     
@@ -56,8 +76,10 @@ int main(void) {
 
     printf("Server listening on port %d...\n", SERVER_PORT);
 
-    struct ebpf *skel;
+
     skel = ebpf__open_and_load();
+
+    bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
 
     int prog_fd = bpf_program__fd( skel->progs.bpf_redir );
     int map_fd  = bpf_map__fd( skel->maps.sock_ops_map);
@@ -71,19 +93,21 @@ int main(void) {
 
     int chave = 0;
     //if (bpf_map_update_elem(map_fd, &key, &server_fd, BPF_ANY)) {
-    if (bpf_map_update_elem(map_fd, &chave, &server_fd, BPF_ANY)) {
+    if ( bpf_map_update_elem(map_fd, &chave, &server_fd, BPF_ANY) < 0) {
         perror("Failed to register socket");
         exit(1);
     }
 
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+    if (client_fd < 0) {
+        perror("accept failed");
+        //continue;
+    }
+
     // Accept and handle connections
     while (1) {
-        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
-        if (client_fd < 0) {
-            perror("accept failed");
-            continue;
-        }
 
+        //printf("recebeu\n");
         char buffer[1024];
         ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
         
