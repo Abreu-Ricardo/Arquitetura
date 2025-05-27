@@ -134,7 +134,7 @@ struct xsk_umem_info *umem_info2;   // xsk2 -- Processo
 struct xsk_info_global {
     //struct xsk_umem_info *umem_info;
     uint64_t *umem_frame_addr;
-    uint32_t *umem_frame_free;
+    uint32_t umem_frame_free;
     uint32_t ret_ring;
     uint32_t tx_restante;
 
@@ -349,22 +349,33 @@ void cria_segundo_socket(const char *iface){
 }
 
 /************************************************************************/
-static uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
+static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
     
     uint64_t frame;
-    if(frame_free == 0)
+    //if(frame_free == 0)
+    if( ptr_mem_info_global->umem_frame_free == 0){
+        printf("Erro em alloca_umem_frame() %d\n", ptr_mem_info_global->umem_frame_free);
         return INVALID_UMEM_FRAME;
-    
-	frame = vetor_frame[--*frame_free];
-	vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
+    }
+   
+    frame = ptr_mem_info_global->umem_frame_addr[--ptr_mem_info_global->umem_frame_free ];
+
+    printf("(alloca_umem)#### frame: %lu\n", frame);
+    ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
+	
+    //frame = vetor_frame[--*frame_free];
+	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
 
     return frame;
 }
 
 /****************************************************************************/
 static void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
-	assert(*frame_free < NUM_FRAMES);
-	vetor_frame[*frame_free++] = frame;
+	
+    assert( ptr_mem_info_global->umem_frame_free < NUM_FRAMES);
+    ptr_mem_info_global->umem_frame_addr[ ptr_mem_info_global->umem_frame_free++ ] = frame;
+    //assert(*frame_free < NUM_FRAMES);
+	//vetor_frame[*frame_free++] = frame;
 }
 
 /****************************************************************************/
@@ -484,7 +495,8 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
     unsigned int completed;
 	uint32_t idx_cq;
 	
-    if (!*tx_restante){
+    //if (!*tx_restante){
+    if (!ptr_mem_info_global->tx_restante){
 	    //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
         return;
     }
@@ -508,10 +520,11 @@ static void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *t
             //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
                 //printf("Desalocando %d\n", i);
-                desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+                //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+                desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
             xsk_ring_cons__release(&umem_info->cq, completed);
-            *tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
+            ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
         }
     }
     else{
@@ -571,9 +584,11 @@ void polling_RX(struct xsk_info_global *info_global ){
                 continue;
             }
 
+            ptr_mem_info_global->ret_ring = ret_ring;
+
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
             // retorna o endereco do pacote --> __u64 address of the packet.
-            stock_frames = xsk_prod_nb_free(&umem_info->fq,	*info_global->umem_frame_free);
+            stock_frames = xsk_prod_nb_free(&umem_info->fq,	ptr_mem_info_global->umem_frame_free);
             //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
             if(stock_frames > 0){
@@ -588,7 +603,7 @@ void polling_RX(struct xsk_info_global *info_global ){
 
                 for (i = 0; i < stock_frames; i++){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-                    *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free);
+                    *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
                 }
                 // Submit the filled slots so the kernel can process them
                 xsk_ring_prod__submit(&umem_info->fq, stock_frames);
@@ -607,7 +622,8 @@ void polling_RX(struct xsk_info_global *info_global ){
                 // CHAMA PROCESSA_PACOTE
                 //if (!processa_pacote(umem_info,  addr, len)){
                 if ( !processa_pacote( addr, len) ){
-                    desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
+                    //desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
+                    desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
                 }
              }
 
@@ -877,28 +893,32 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    // Carregando os buffers
-    for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
-    	//xsk_ring_prod__fill_addr() --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
 
-        //retorna o endereco do pacote
-        *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(umem_frame_addr, &umem_frame_free);
-    }
-
-    // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
-   	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
     
     
     info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
    
     info_global->umem_frame_addr = umem_frame_addr;
-    info_global->umem_frame_free = &umem_frame_free;
+    info_global->umem_frame_free = umem_frame_free;
     info_global->ret_ring        = ret_ring;
 
     // Apos o fork essa var(ptr_mem_info_global) fica compartilhada entre os dois processos
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
 
+
+    /*******************************************************************************************/
+    // Carregando os buffers
+    for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
+    	//xsk_ring_prod__fill_addr() --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+
+        //retorna o endereco do pacote
+        *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
+    }
+
+    // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
+   	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
+    /*******************************************************************************************/
 
 
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
@@ -954,7 +974,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/17610/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/15323/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1021,37 +1041,12 @@ int main(int argc, char **argv) {
             }
             xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
             complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                            ptr_mem_info_global->umem_frame_free, 
+                            &ptr_mem_info_global->umem_frame_free, 
                             &ptr_mem_info_global->tx_restante);
             //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
             if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
                 perror("<PROC_PAI>Erro ao enviar pkt para filho...");
             }
-           
-            //if ( recvfrom(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, NULL)  < 0 ) {
-            
-            //if ( recvfrom(xsk_socket__fd(xsk), NULL, 0, /*MSG_TRUNC 0*/ /*MSG_PEEK*/ 0, NULL, NULL)  < 0 ) {
-            //    perror("Erro ao receber syscall do XSK");
-            //    continue;
-            //}
-
-            //printf("errno--> %d\nrecebeu pkt(%d)\n", errno, temp++);
-
-            //if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
-            //    perror("<PROC_PAI>Erro ao enviar pkt para filho...");
-            //}
-            //
-            //else{
-            //    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-            //    complete_tx(ptr_mem_info_global->umem_frame_addr, 
-            //            ptr_mem_info_global->umem_frame_free, 
-            //            &ptr_mem_info_global->tx_restante);
-            //    //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
-            //if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
-            //    perror("<PROC_PAI>Erro ao enviar pkt para filho...");
-            //    }
-            //}
-            
 
         }
     }

@@ -3,21 +3,21 @@
 #include <bpf/bpf_endian.h>
 
 struct {
-    __uint(type, BPF_MAP_TYPE_SOCKHASH);
-    __uint(max_entries, 128);
-    __type(key, __u32); // Can be socket cookie or connection ID
-    __type(value, __u64); // Socket FD
-    __uint(map_flags, 0);
-} sock_hash_map SEC(".maps");
+    __uint(type, BPF_MAP_TYPE_SOCKMAP);
+    __uint(max_entries, 64);
+    __type(key, __u32); 
+    __type(value, __u64); 
+    __uint(pinning, LIBBPF_PIN_BY_NAME);
+} sock_map SEC(".maps");
 
-// BPF program of type sk_msg
 SEC("sk_msg")
 int bpf_sock_msg_redirect(struct sk_msg_md *msg)
 {
-    //__u32 key = 1; // redirect to the socket with key == 1
-    __u32 key = 0; // redirect to the socket with key == 1
+    __u32 key = 0; 
+        
+    bpf_printk("Entrou no programa eBPF\n");
 
-    int ret = bpf_msg_redirect_hash(msg, &sock_hash_map, &key, BPF_F_INGRESS);
+    int ret = bpf_msg_redirect_map(msg, &sock_map, key, BPF_F_INGRESS);
     return ret;
 }
 

@@ -13,19 +13,17 @@ int main() {
     struct sockaddr_in server_addr;
     const char *message = "Hello from client via eBPF!";
 
-    // Create TCP socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("socket");
         exit(1);
     }
 
-    // Server address setup
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(12345); // Must match server
-    server_addr.sin_addr.s_addr = inet_addr("10.10.10.2");
+    server_addr.sin_port = htons(12345); 
+    //server_addr.sin_addr.s_addr = inet_addr("10.10.10.1");
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    // Connect to server
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("connect");
         close(sock);
@@ -34,7 +32,6 @@ int main() {
 
     printf("Connected to server. Sending message...\n");
 
-    // Send message
     ssize_t sent = send(sock, message, strlen(message), 0);
     if (sent < 0) {
         perror("send");
@@ -44,7 +41,6 @@ int main() {
 
     printf("Sent %zd bytes\n", sent);
 
-    // Close socket
     close(sock);
     return 0;
 }
