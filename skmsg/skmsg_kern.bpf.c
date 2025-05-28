@@ -42,15 +42,6 @@ struct {
 } mapa_sock SEC(".maps");
 
 
-
-// Define um mapa XSKMAP para o socket AF_XDP
-struct {
-    __uint(type, BPF_MAP_TYPE_XSKMAP);
-    __uint(max_entries, 4); 
-    __type(key, __u32);
-    __type(value, __u32);
-} xsk_map SEC(".maps");
-
 /****************************************************************************/
 unsigned char protocol = 0;
 void *data; 

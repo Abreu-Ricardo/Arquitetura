@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include <bpf/libbpf.h>
 #include <bpf/bpf.h>
+#include <arpa/inet.h>
+#include <sys/resource.h>
 
 #define SOCK_MAP_KEY 1
 
@@ -18,19 +20,27 @@ int main() {
     int sock1, sock2;
     int err;
 
-    //struct kern_teste_sk_bpf *skeleton;
-    //skeleton = kern_teste_sk_bpf__open_and_load();
-    //if (skeleton == NULL){
-    //    printf("errro ao abrir o programa kern.bpf.o\n");
-    //}
+    struct kern_teste_sk_bpf *skeleton;
+    skeleton = kern_teste_sk_bpf__open_and_load();
+    if (skeleton == NULL){
+        printf("errro ao abrir o programa kern.bpf.o\n");
+    }
     //int ret_attach = kern_teste_sk_bpf__attach(skeleton);
 
     int listener_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    // Set address reuse option
+    int optval = 1;
+    if ( setsockopt(listener_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0){
+        perror("Erro no setsockopt");
+    }
+
     struct sockaddr_in addr = {
         .sin_family = AF_INET,
         //.sin_port = htons(12345),
         .sin_port = htons(12345),
-        .sin_addr.s_addr = htonl(INADDR_LOOPBACK),
+        //.sin_addr.s_addr = htonl(INADDR_LOOPBACK),
+        .sin_addr.s_addr = inet_pton("10.10.10.1"),
     };
     if ( bind(listener_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0){
         perror("erro no bind");
@@ -47,22 +57,25 @@ int main() {
     //}
 
     // Load BPF program
-    obj = bpf_object__open_file("kern_teste_sk.bpf.o", NULL);
-    if (libbpf_get_error(obj)) {
-        perror("Failed to open BPF object");
-        return 1;
-    }
+    //obj = bpf_object__open_file("kern_teste_sk.bpf.o", NULL);
+    //if (libbpf_get_error(obj)) {
+    //    perror("Failed to open BPF object");
+    //    return 1;
+    //}
 
-    bpf_object__load(obj);
+    //bpf_object__load(obj);
+    //bpf_object__pin_maps(obj, "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    bpf_object__pin_maps(skeleton->obj, "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
 
-    prog_fd = bpf_program__fd(bpf_object__find_program_by_name(obj, "bpf_sock_msg_redirect"));
-    map_fd  = bpf_object__find_map_fd_by_name(obj, "sock_hash_map");
+    //prog_fd = bpf_program__fd(bpf_object__find_program_by_name(obj, "bpf_sock_msg_redirect"));
+    //map_fd  = bpf_object__find_map_fd_by_name(obj, "sock_hash_map");
 
-    //prog_fd = bpf_program__fd( skeleton->progs.bpf_sock_msg_redirect); 
-    //map_fd  = bpf_map__fd( skeleton->maps.sock_hash_map );
+
+    prog_fd = bpf_program__fd( skeleton->progs.bpf_sock_msg_redirect); 
+    map_fd  = bpf_map__fd( skeleton->maps.sock_map );
 
     if (prog_fd < 0 || map_fd < 0) {
-        fprintf(stderr, "Failed to find prog or map fd\n");
+        fprintf(stderr, "Erro ao pegar fd do prog ou mapa\n");
         return 1;
     }
 
@@ -94,7 +107,7 @@ int main() {
     // Add destination socket to sockhash
     //__u32 key = SOCK_MAP_KEY;
     __u32 key = 0;
-    err = bpf_map_update_elem(map_fd, &key, &client_fd, BPF_ANY);
+    err = bpf_map_update_elem(map_fd, &key, &server, BPF_ANY);
     if (err) {
         perror("bpf_map_update_elem");
         return 1;

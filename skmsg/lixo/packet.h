@@ -16,7 +16,8 @@
 
 
 #define BUFFER_SIZE 1024
-#define SERVER_PORT 8080
+//#define SERVER_PORT 8080
+#define SERVER_PORT 12345
 #define MAX_Pending 3
 //#define LOCALHOST_IPV4 127001
 

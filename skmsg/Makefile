@@ -14,7 +14,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 # FLAGS
 BPF_FLAGS = -g -O2 -target bpf -c 
-C_FLAGS = -lbpf -lxdp -lpthread -g
+C_FLAGS   = -lbpf -lxdp -lpthread -g
 GERA_SKEL = bpftool gen skeleton
 
 # skeleton libs
@@ -32,7 +32,7 @@ DIR = $(shell pwd)
 all: bpf skel user
 	@echo -e '\n+++ Compilação pronta! +++'
 
-bpf: $(SOURCE_BPF) *.bpf.c
+bpf: $(SOURCE_BPF) 
 	$(CL) $(BPF_FLAGS) $^
 
 skel: $(OBJETOS_BPF)

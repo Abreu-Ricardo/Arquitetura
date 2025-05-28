@@ -92,34 +92,74 @@ int main(void) {
         return 1;
     }
 
-    int chave = 0;
-    //if (bpf_map_update_elem(map_fd, &key, &server_fd, BPF_ANY)) {
-    if ( bpf_map_update_elem(map_fd, &chave, &server_fd, BPF_ANY) < 0) {
-        perror("Erro ao atualizar o mapa com o FD do socket");
-        exit(1);
-    }
-
     client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
         perror("accept failed");
         //continue;
     }
 
+    int chave = 0;
+    //if (bpf_map_update_elem(map_fd, &key, &server_fd, BPF_ANY)) {
+    if ( bpf_map_update_elem(map_fd, &chave, &client_fd, BPF_ANY) < 0) {
+        perror("Erro ao atualizar o mapa com o FD do socket");
+        exit(1);
+    }
+
+/*************************************************/
+    char message[] = "Ola, do servidor";
+    struct iovec iov = {
+        .iov_base = (void *)message,
+        .iov_len = strlen(message)
+    };
+    struct msghdr msg = {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+    struct msghdr resp = {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+/*************************************************/
+/*************************************************/
+ 
+
+
+
+/*************************************************/
+
     // Accept and handle connections
     while (1) {
 
         //printf("recebeu\n");
         char buffer[1024];
-        ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+        //ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+        ssize_t bytes_received = recvmsg(client_fd, &resp, 0);
         
         if (bytes_received <= 0) {
+            printf("ERRO--> bytes_received <= 0\n");
             break;
         }
         
-        printf("Received: %s\n", buffer);
+        //printf("Received: %s\n", buffer);
+        printf("Received: %s\n", (char *)resp.msg_iov->iov_base);
         
         char* message = "Message received by server\n";
         send(client_fd, message, strlen(message), 0);
+        //int ret_sendmsg = sendmsg(client_fd, &msg, 0);
+        //if ( ret_sendmsg < 0 ){
+        //    printf("Valor %d\n", ret_sendmsg);
+        //    perror("Erro no sendmsg()");
+        //}
     }
     
     capta_sinal(SIGINT);

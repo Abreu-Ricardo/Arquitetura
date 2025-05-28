@@ -1,5 +1,7 @@
 #include "packet.h"
 
+#include "ebpf.skel.h"
+
 int main() {
     int sockfd;
     struct sockaddr_in server_addr;
@@ -26,6 +28,32 @@ int main() {
 
     printf("Connected to server\n");
 
+    char message[] = "Oi do cliente";
+    struct iovec iov = {
+        .iov_base = message,
+        .iov_len = strlen(message)
+    };
+
+    struct msghdr mesg = {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+
+    struct msghdr resp = {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+
     while (1) {
         // Get message from user
         printf("Enter message (or 'quit' to exit): ");
@@ -36,11 +64,20 @@ int main() {
         }
 
         // Send message to server
-        send(sockfd, msg.data, strlen(msg.data), 0);
+        //send(sockfd, msg.data, strlen(msg.data), 0);
+        if (sendmsg(sockfd, &mesg, 0) < 0){
+            perror("Erro no sendmsg()");
+        }
         
         // Receive response
         recv(sockfd, msg.data, BUFFER_SIZE, 0);
+        //if(recvmsg(sockfd, &resp, 0) < 0){
+        //    perror("Erro no recvmsg()");
+        //}
+        
+
         printf("Server response: %s\n", msg.data);
+        //printf("Server response: %s\n", (char *)resp.msg_iov->iov_base);
     }
 
     close(sockfd);
