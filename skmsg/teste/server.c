@@ -15,6 +15,7 @@ void capta_sinal(int signum){
     
     if (signum == SIGINT){
         bpf_map__unpin( skel->maps.sock_ops_map , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/sock_ops_map");
+        bpf_map__unpin( skel->maps.temp , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/temp");
     }
 
     ebpf__detach(skel);
@@ -120,7 +121,7 @@ int main(void) {
         .msg_controllen = 0,
         .msg_flags = 0
     };
-    struct msghdr resp = {
+    struct msghdr recebe = {
         .msg_name = NULL,
         .msg_namelen = 0,
         .msg_iov = &iov,
@@ -134,16 +135,13 @@ int main(void) {
  
 
 
-
-/*************************************************/
-
     // Accept and handle connections
     while (1) {
 
         //printf("recebeu\n");
         char buffer[1024];
         //ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-        ssize_t bytes_received = recvmsg(client_fd, &resp, 0);
+        ssize_t bytes_received = recvmsg(client_fd, &recebe, 0);
         
         if (bytes_received <= 0) {
             printf("ERRO--> bytes_received <= 0\n");
@@ -151,15 +149,16 @@ int main(void) {
         }
         
         //printf("Received: %s\n", buffer);
-        printf("Received: %s\n", (char *)resp.msg_iov->iov_base);
+        printf("Received: %s\n", (char *)recebe.msg_iov->iov_base);
         
         char* message = "Message received by server\n";
-        send(client_fd, message, strlen(message), 0);
-        //int ret_sendmsg = sendmsg(client_fd, &msg, 0);
-        //if ( ret_sendmsg < 0 ){
-        //    printf("Valor %d\n", ret_sendmsg);
-        //    perror("Erro no sendmsg()");
-        //}
+        msg.msg_iov->iov_base = (void *)"Message received by server\n";
+        //send(client_fd, message, strlen(message), 0);
+        int ret_sendmsg = sendmsg(client_fd, &msg, 0);
+        if ( ret_sendmsg < 0 ){
+            printf("Valor %d\n", ret_sendmsg);
+            perror("Erro no sendmsg()");
+        }
     }
     
     capta_sinal(SIGINT);
