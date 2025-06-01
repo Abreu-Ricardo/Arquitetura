@@ -1,6 +1,6 @@
 #include "packet.h"
 #include "ebpf.skel.h"
-
+#include <string.h>
 
 struct ebpf *skel;
 struct sock_key key = {
@@ -107,54 +107,67 @@ int main(void) {
     }
 
 /*************************************************/
-    char message[] = "Ola, do servidor";
-    struct iovec iov = {
-        .iov_base = (void *)message,
-        .iov_len = strlen(message)
-    };
-    struct msghdr msg = {
-        .msg_name = NULL,
-        .msg_namelen = 0,
-        .msg_iov = &iov,
-        .msg_iovlen = 1,
-        .msg_control = NULL,
-        .msg_controllen = 0,
-        .msg_flags = 0
-    };
-    struct msghdr recebe = {
-        .msg_name = NULL,
-        .msg_namelen = 0,
-        .msg_iov = &iov,
-        .msg_iovlen = 1,
-        .msg_control = NULL,
-        .msg_controllen = 0,
-        .msg_flags = 0
-    };
+    char buffer[1024];
+    char *message = "Ola do servidor";
+    //strcpy(buffer, message);
 /*************************************************/
-/*************************************************/
- 
 
+
+    struct iovec rcv_iov = {
+        .iov_base = buffer,
+        .iov_len = sizeof(buffer)
+    };
+    struct msghdr rcv_msg = {
+        .msg_name    = NULL,
+        .msg_namelen = 0,
+        .msg_iov     = &rcv_iov,
+        .msg_iovlen  = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags   = 0
+    };
+
+    struct iovec send_iov = {
+        .iov_base = buffer,
+        .iov_len  = sizeof(buffer)
+    };
+
+    struct msghdr send_msg = {
+        .msg_name    = NULL,
+        .msg_namelen = 0,
+        .msg_iov     = &send_iov,
+        .msg_iovlen  = 1,
+        .msg_control = NULL,
+        .msg_controllen = 0,
+        .msg_flags   = 0
+    };
+/*************************************************/
 
     // Accept and handle connections
     while (1) {
 
-        //printf("recebeu\n");
-        char buffer[1024];
         //ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-        ssize_t bytes_received = recvmsg(client_fd, &recebe, 0);
+        ssize_t bytes_received = recvmsg(client_fd, &rcv_msg, 0);
         
         if (bytes_received <= 0) {
-            printf("ERRO--> bytes_received <= 0\n");
+            printf("BYTES RECEBIDOS: bytes_received <= 0\n");
             break;
         }
         
         //printf("Received: %s\n", buffer);
-        printf("Received: %s\n", (char *)recebe.msg_iov->iov_base);
+        char temp[200];
+        strcpy(temp, rcv_msg.msg_iov->iov_base);
+        //printf("Received: %s\n", (char *)rcv_msg.msg_iov->iov_base);
+        printf("Received: %s\n", temp);
+        memset( rcv_msg.msg_iov->iov_base, 0, sizeof(buffer));
+        memset( temp, 0, sizeof(temp));
         
-        char* message = "Message received by server\n";
-        msg.msg_iov->iov_base = (void *)"Message received by server\n";
+        char *message = "Message received by server\n";
+        send_msg.msg_iov->iov_base = message;
+        send_msg.msg_iov->iov_len  = sizeof(*message);
         //send(client_fd, message, strlen(message), 0);
-        int ret_sendmsg = sendmsg(client_fd, &msg, 0);
+        
+        int ret_sendmsg = sendmsg(client_fd, &send_msg, 0);
         if ( ret_sendmsg < 0 ){
             printf("Valor %d\n", ret_sendmsg);
             perror("Erro no sendmsg()");

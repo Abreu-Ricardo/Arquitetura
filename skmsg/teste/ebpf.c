@@ -2,6 +2,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
 #include <arpa/inet.h>
+#include <string.h>
 
 // Trocar isso
 #define LOCALHOST_IPV4 16777343 // 127.0.0.1 in network byte order
@@ -24,6 +25,26 @@ struct {
    // __uint(pinning, LIBBPF_PIN_BY_NAME);
 } temp SEC(".maps");
 
+/**************************************************************/
+
+void print_ip(uint32_t ip) {
+    
+    char temp[15];
+    // Extract octets using bit shifting and masking
+    char  octet1 = (char)(ip >> 24) & 0xFF;
+    char  octet2 = (char)(ip >> 16) & 0xFF;
+    char  octet3 = (char)(ip >> 8) & 0xFF;
+    char  octet4 = (char)(ip & 0xFF);
+
+    strcat(temp ,&octet1);    
+    strcat(temp ,&octet2);    
+    strcat(temp ,&octet3);    
+    strcat(temp ,&octet4);    
+
+    bpf_printk("%u.%u.%u.%u\n", octet1, octet2, octet3, octet4);
+    //return &temp;
+}
+/**************************************************************/
 
 // TODO
 // Fazer o cliente salvar o FD do socket dele na posicao 1 do mapa
@@ -41,8 +62,14 @@ int bpf_redir(struct sk_msg_md *msg){
     if (bpf_ntohl(msg->remote_ip4) == 168430082){
         
         retorno = bpf_msg_redirect_map(msg, &sock_ops_map, key, BPF_F_INGRESS);
-        bpf_printk("Deu trigger| ip remoto:%u | ip local:%u\n", bpf_ntohl(msg->remote_ip4),
-                                                                bpf_ntohl(msg->local_ip4));
+        
+        //bpf_printk("Deu trigger| ip remoto:%s | ip local:%s\n", bpf_ntohl(msg->remote_ip4),
+        //                                                        bpf_ntohl(msg->local_ip4));
+        
+        bpf_printk("ip local --> ");
+        print_ip(bpf_ntohl(msg->local_ip4 ));
+        bpf_printk("ip remote--> ");
+        print_ip(bpf_ntohl(msg->remote_ip4));
         
         if (retorno != SK_PASS)
             bpf_printk("Erro no bpf_msg_redirect_map\n");
