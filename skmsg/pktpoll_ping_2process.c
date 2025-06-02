@@ -161,7 +161,7 @@ struct xsk_socket_config xsk_cfg = {
     .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
     //.xdp_flags = XDP_FLAGS_SKB_MODE,
     .xdp_flags = XDP_FLAGS_DRV_MODE,
-    .bind_flags =  /*XDP_COPY |*/ XDP_USE_NEED_WAKEUP,
+    .bind_flags =  XDP_COPY | XDP_USE_NEED_WAKEUP,
     //.bind_flags =  XDP_COPY,
 };
 
@@ -232,7 +232,7 @@ static void capta_sinal(int signum){
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/skmsg_*");
  //       system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
 //        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
-        system("killall pktping_2proc");
+        system("killall pktpoll");
         
         lock = 0;
 	    exit(1);
@@ -610,40 +610,20 @@ void polling_RX(struct xsk_info_global *info_global ){
     server_addr.sin_family = AF_INET; 
     server_addr.sin_port = htons(SERVER_PORT);
     //server_addr.sin_addr.s_addr = INADDR_ANY;
-    //server_addr.sin_addr.s_addr = inet_addr("20.20.20.1");
-    server_addr.sin_addr.s_addr = inet_addr("20.20.20.2");
+    server_addr.sin_addr.s_addr = inet_addr("20.20.20.1");
     //inet_pton(AF_INET, "10.10.10.1", &(server_addr.sin_addr));
-    //if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-    //    perror("<PROC_FILHO>connection failed");
-    //    capta_sinal(SIGINT);
-    //}
-
-    if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("<PROC_PAI>Falha no Bind do Socket");
-        capta_sinal(SIGINT);
-        close(sockfd);
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
+        perror("<PROC_FILHO>connection failed");
+        exit(1);
     }
-
-    if ( listen(sockfd, 1) < 0 ){
-        perror("<PROC_PAI>Erro ao ouvir socket");
-        capta_sinal(SIGINT);
-    }
-
-    int clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &client_len);
-    if(clientfd < 0){
-        perror("<PROC_PAI>Erro no accept");
-        capta_sinal(SIGINT);
-    }
-
-
+    printf("<PROC_FILHO> conectado...\n");
+    
     int key = 1;
     int fd  = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/sock_ops_map");
-    if(bpf_map_update_elem(fd, &key, &clientfd, BPF_ANY) < 0){
-        printf("<PROC_FILHO> Erro ao atualizar o mapa com o FD do socket");
+    if(bpf_map_update_elem(fd, &key, &sockfd, BPF_ANY) < 0){
+        printf("<PROC_PAI> Erro ao atualizar o mapa com o FD do socket");
         capta_sinal(SIGINT);
     }
-
-    printf("\n<PROC_FILHO> esperando conexao...\n");
 
 
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
@@ -731,10 +711,10 @@ void polling_RX(struct xsk_info_global *info_global ){
                 //printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
                 //if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
-                if( recvmsg( sockfd, &rcv_msg, 0) < 0  ){
-                    printf("<PROC_FILHO> Erro ao receber Pkt do PAI...<--\n\n");
-                    capta_sinal(SIGINT);
-                }
+                //if( recvmsg( sockfd, &rcv_msg, 0) < 0  ){
+                //    printf("<PROC_FILHO> Erro ao receber Pkt do PAI...<--\n\n");
+                //    capta_sinal(SIGINT);
+                //}
 
             } 
         }
@@ -1024,9 +1004,32 @@ int main(int argc, char **argv) {
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
     // ############################## CRIANDO SOCKETS PARA ENVIO DE UDP #############################
-
+    int sockfd;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_len = sizeof(client_addr);
     
-
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd<0){
+        perror("Erro na criacao do socket");
+        capta_sinal(SIGINT);
+    }
+    
+    int optval = 1;
+    if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, 
+        sizeof(optval)) < 0){
+            perror("Erro no setsockopt");
+    } 
+ 
+    //if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    //    perror("FALHA ao criar Socket UDP");
+    //    exit(EXIT_FAILURE);
+    //}
+    
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = inet_addr("20.20.20.1");
+    //server_addr.sin_addr.s_addr = INADDR_ANY;
 
 
     //if (bind(fd_sock_server, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -1057,7 +1060,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/126012/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5353/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1095,7 +1098,6 @@ int main(int argc, char **argv) {
 
     // Processo pai
     else if ( pid > 0){
-        sleep(1);
         // Trocando o nome do processo para poolpingPAI
         strncpy(argv[0], "udp_PAI", strlen(argv[0]));
         
@@ -1109,66 +1111,31 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
-        int sockfd;
-        struct sockaddr_in server_addr, client_addr;
-        socklen_t client_len = sizeof(client_addr);
-
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0){
-            perror("Erro na criacao do socket");
-            capta_sinal(SIGINT);
-        }
-
-        int optval = 1;
-        if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, 
-                    sizeof(optval)) < 0){
-            perror("Erro no setsockopt");
-        } 
-
-        //if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        //    perror("FALHA ao criar Socket UDP");
-        //    exit(EXIT_FAILURE);
-        //}
-
-        memset(&server_addr, 0, sizeof(server_addr));
-        server_addr.sin_family      = AF_INET;
-        server_addr.sin_port        = htons(SERVER_PORT);
-        server_addr.sin_addr.s_addr = inet_addr("20.20.20.2");
-        //server_addr.sin_addr.s_addr = INADDR_ANY;
-
-
-        if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-            perror("<PROC_PAI> Erro no connect");
-            capta_sinal(SIGINT);
-        }
-
-
         //if( bind(fd_sock_server, (struct sockaddr*)&server_addr, sizeof(server_addr)) ){
         //    perror("Erro no BIND do PROC_PAI");
         //    capta_sinal( SIGINT );
         //}
 
-        //if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        //    perror("<PROC_PAI>Falha no Bind do Socket");
-        //    close(sockfd);
-        //    exit(EXIT_FAILURE);
-        //}
+        if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+            perror("<PROC_PAI>Falha no Bind do Socket");
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
 
-        //if ( listen(sockfd, 1) < 0 ){
-        //    perror("<PROC_PAI>Erro ao ouvir socket");
-        //    capta_sinal(SIGINT);
-        //}
+        if ( listen(sockfd, 1) < 0 ){
+            perror("<PROC_PAI>Erro ao ouvir socket");
+            capta_sinal(SIGINT);
+        }
 
-        //int clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &client_len);
-        //if(clientfd < 0){
-        //    perror("<PROC_PAI>Erro no accept");
-        //    capta_sinal(SIGINT);
-        //}
+        int clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &client_len);
+        if(clientfd < 0){
+            perror("<PROC_PAI>Erro no accept");
+            capta_sinal(SIGINT);
+        }
 
         int key = 0;
         int fd  = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/sock_ops_map");
-        //if(bpf_map_update_elem(fd, &key, &clientfd, BPF_ANY) < 0){
-        if(bpf_map_update_elem(fd, &key, &sockfd, BPF_ANY) < 0){
+        if(bpf_map_update_elem(fd, &key, &clientfd, BPF_ANY) < 0){
             printf("<PROC_PAI> Erro ao atualizar o mapa com o FD do socket");
             capta_sinal(SIGINT);
         }
@@ -1212,30 +1179,13 @@ int main(int argc, char **argv) {
         };  
 
         
+
         /*******************************************************/
         // Espera pelo sinal do proc filho
         while(1){
             //printf("PID do filho %d\n", fpid);
             //if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
-            //if ( recvmsg(clientfd, &rcv_msg, 0) < 0 ){
-            if ( recvfrom(xsk_socket__fd(xsk), NULL, 0, MSG_WAITALL, NULL, NULL) < 0 ){
-                //printf("Erro ao receber do socket xsk\n");
-                perror("<PROC_PAI>Erro ao receber pkt do filho...");
-                capta_sinal(SIGINT);
-            }
-
-            
-            //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
-            //if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
-            //if ( sendmsg(clientfd, &send_msg, 0) < 0  ){
-            if ( sendmsg(sockfd, &send_msg, 0) < 0  ){
-                perror("<PROC_PAI>Erro ao enviar pkt para filho...");
-                capta_sinal(SIGINT);
-            }
-
-            //if ( recvmsg(clientfd, &rcv_msg, 0) < 0 ){
-            if ( recvmsg(sockfd, &rcv_msg, 0) < 0 ){
-                //printf("Erro ao receber do socket xsk\n");
+            if ( recvmsg(clientfd, &rcv_msg, 0) < 0 ){
                 perror("<PROC_PAI>Erro ao receber pkt do filho...");
                 capta_sinal(SIGINT);
             }
@@ -1244,6 +1194,12 @@ int main(int argc, char **argv) {
             complete_tx(ptr_mem_info_global->umem_frame_addr, 
                             &ptr_mem_info_global->umem_frame_free, 
                             &ptr_mem_info_global->tx_restante);
+            
+            //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
+            //if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
+            //if ( sendmsg(clientfd, &send_msg, 0) < 0  ){
+            //    perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            //}
 
         }
     }

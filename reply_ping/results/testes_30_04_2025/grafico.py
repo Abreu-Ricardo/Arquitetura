@@ -19,6 +19,9 @@ udp = open( "udp.txt", 'r')
 udp_linhas = udp.readlines()
 #udp_linhas.sort()
 
+skmsg = open( "skmsgpoll_limpo.txt", 'r')
+skmsg_linhas = skmsg.readlines()
+
 
 rot = open( "roteamento.txt", 'r')
 rot_linhas = rot.readlines()
@@ -36,13 +39,15 @@ poll_linhas   = list(map(float, poll_linhas))
 signal_linhas = list(map(float, signal_linhas))
 udp_linhas    = list(map(float, udp_linhas))
 rot_linhas    = list(map(float, rot_linhas))
+skmsg_linhas  = list(map(float, skmsg_linhas))
 
 
 # Plot both lines
-plt.plot( x_values , poll_linhas   , 'r-'  , label="poll")  # 1
-plt.plot( x_values , signal_linhas , 'k-' , label="signal")  # 2
-plt.plot( x_values , udp_linhas    , 'b-'  , label="UDP") # 3
-plt.plot( x_values , rot_linhas    , 'y-'  , label="Roteamento") # 4
+plt.plot( x_values , poll_linhas   , 'r-'   , label="poll")  # 1
+plt.plot( x_values , signal_linhas , 'k-'   , label="signal")  # 2
+plt.plot( x_values , udp_linhas    , 'b-'   , label="UDP") # 3
+plt.plot( x_values , rot_linhas    , 'y-'   , label="Roteamento") # 4
+plt.plot( x_values , skmsg_linhas  , 'g-'   , label="sk_msg") # 5
 #plt.plot(x_values, y2_values, 'b-', label="y = -x + 5")  # Blue line
 
 #plt.ylim(auto=True)

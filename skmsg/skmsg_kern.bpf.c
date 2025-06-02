@@ -95,7 +95,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
 
-	bpf_printk("ENTROU NO PROGRAMA xdp");
+	//bpf_printk("ENTROU NO PROGRAMA xdp");
     // Redireciona o pacote para o socket XDP associado no mapa xsk_map
     //int index = ctx->rx_queue_index; //0; // index do socket
     int ret, key = 0; // indice 0 eh para o primeiro socket e 1 para o segundo socket
@@ -120,7 +120,7 @@ int xdp_prog(struct xdp_md *ctx){
         return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{
-        bpf_printk("XDP:Outro tipo de pkt sendo passado!");
+        //bpf_printk("XDP:Outro tipo de pkt sendo passado!");
         return XDP_PASS;
     }
 }
@@ -172,35 +172,37 @@ void print_ip(uint32_t ip) {
 /**************************************************************/
 SEC("sk_msg")
 int bpf_redir(struct sk_msg_md *msg){
-    bpf_printk("ENTROU NO PROGRAMA sk_msg");
+    //bpf_printk("ENTROU NO PROGRAMA sk_msg");
 
-    int key = 1, chave=0, retorno;
+    int chave_fil = 1, chave_pai=0, retorno;
     __u64 *ptr;
 
     //ptr = bpf_map_lookup_elem(&temp , &chave); 
+    //bpf_printk("ip local --> ");
+    //print_ip(bpf_ntohl(msg->local_ip4 ));
+    //bpf_printk("ip remote--> ");
+    //print_ip(bpf_ntohl(msg->remote_ip4));
+    // bpf_printk("<2>Deu trigger| ip remoto:%s | ip local:%s\n", bpf_ntohl(msg->remote_ip4),
+    //                                                        bpf_ntohl(msg->local_ip4));
 
     // 10.10.10.1 --> 168430081
     // 10.10.10.2 --> 168430082
-    if (bpf_ntohl(msg->remote_ip4) == 168430082){
-        
-        retorno = bpf_msg_redirect_map(msg, &sock_ops_map, chave, BPF_F_INGRESS);
-        
-        //bpf_printk("Deu trigger| ip remoto:%s | ip local:%s\n", bpf_ntohl(msg->remote_ip4),
-        //                                                        bpf_ntohl(msg->local_ip4));
-        
-        bpf_printk("ip local --> ");
-        print_ip(bpf_ntohl(msg->local_ip4 ));
-        bpf_printk("ip remote--> ");
-        print_ip(bpf_ntohl(msg->remote_ip4));
-        
-        if (retorno != SK_PASS)
-            bpf_printk("sk_msg:Erro no bpf_msg_redirect_map\n");
-        
-        return retorno;
-        //return SK_PASS;
+    // 20.20.20.1 --> 336860161
+    // 20.20.20.2 --> 336860162
+    if (bpf_ntohl(msg->remote_ip4) == 336860161){
+    //if (bpf_ntohl(msg->remote_ip4) == 168430081){
+        retorno = bpf_msg_redirect_map(msg, &sock_ops_map, chave_pai, BPF_F_INGRESS);
     }
-    
-    return SK_PASS;
+    else if (bpf_ntohl(msg->remote_ip4) == 336860162){
+        retorno = bpf_msg_redirect_map(msg, &sock_ops_map, chave_fil, BPF_F_INGRESS);
+    }
+        
+    if (retorno != SK_PASS){
+        bpf_printk("sk_msg:Erro no bpf_msg_redirect_map\n");   
+        return SK_DROP;
+    }
+
+    return retorno;
 }
 
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
