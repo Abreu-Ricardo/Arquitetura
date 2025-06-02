@@ -6,7 +6,7 @@ CL = clang
 
 # SOURCE codes
 SOURCE_BPF = skmsg_kern.bpf.c kern_teste_sk.bpf.c 
-SOURCE_C   = signal_ping_2process.c  teste_sk.c
+SOURCE_C   = pkt_ping_2process.c
 
 OBJETOS_BPF     = $(SOURCE_BPF:bpf.c=bpf.o)
 OBJETOS_C       = $(SOURCE_C:.c=)
@@ -44,10 +44,10 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: signalping_2proc teste 
+user: pktping_2proc teste 
 	@echo -e '$^ criados...'
 
-signalping_2proc: signal_ping_2process.c 
+pktping_2proc: pkt_ping_2process.c 
 	$(CC) -pg $< -o $@ $(C_FLAGS)
 
 teste: teste_sk.c
@@ -56,7 +56,7 @@ teste: teste_sk.c
 
 #.PHONY: clean
 clean:
-	@sudo rm $(OBJETOS_BPF)  signalping_2proc teste
+	@sudo rm $(OBJETOS_BPF)  pktping_2proc 
 	@sudo rm *.skel.h
 	@#sudo rm /sys/fs/bpf/signal_monitor
 	@#sudo bpftool prog show
