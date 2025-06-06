@@ -135,6 +135,7 @@ struct xsk_socket_config xsk_cfg = {
     .xdp_flags = XDP_FLAGS_DRV_MODE,
     //.bind_flags =  XDP_COPY | XDP_USE_NEED_WAKEUP,
     .bind_flags =  XDP_COPY,
+    //.bind_flags =  XDP_ZEROCOPY,
 };
 
 // socket XSK2 precisa da flag XDP_SHARED_UMEM para usar a UMEM ja criada

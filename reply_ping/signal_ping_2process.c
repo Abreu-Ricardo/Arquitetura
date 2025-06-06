@@ -105,7 +105,7 @@ struct xsk_umem_config umem_cfg = {
 // Estrutura de dados para configurar e usar a UMEM
 struct xsk_umem_info {
 	struct xsk_ring_prod fq; // fill ring da UMEM
-    struct xsk_ring_prod tx; // tx ring do socket
+	struct xsk_ring_prod tx; // tx ring do socket
 	struct xsk_ring_cons cq; // completition ring da UMEM
 	struct xsk_ring_cons rx; // rx ring do socket
 	struct xsk_umem *umem;
@@ -154,12 +154,12 @@ struct xsk_socket_config xsk_cfg = {
 
 // socket XSK2 precisa da flag XDP_SHARED_UMEM para usar a UMEM ja criada
 struct xsk_socket_config xsk_cfg2 = {
-    .rx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
-    .tx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
+    .rx_size	  = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
+    .tx_size 	  = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
     .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
-    //.xdp_flags = XDP_FLAGS_SKB_MODE,
-    .xdp_flags = XDP_FLAGS_DRV_MODE,
-    .bind_flags =  XDP_SHARED_UMEM,
+    //.xdp_flags	  = XDP_FLAGS_SKB_MODE,
+    .xdp_flags 	  = XDP_FLAGS_DRV_MODE,
+    .bind_flags   = XDP_SHARED_UMEM,
 };
 
 struct xsk_socket *xsk;
@@ -217,7 +217,7 @@ static void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm ../dados/xsk_*");
-        //system("killall signalping_2proc");
+        system("killall signalping_2proc");
         
         lock = 0;
 	    exit(0);
@@ -1014,7 +1014,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/15323/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/47615/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
