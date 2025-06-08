@@ -49,13 +49,10 @@
 #define INVALID_UMEM_FRAME UINT64_MAX
 #define NUM_FRAMES 4096
 #define FRAME_SIZE 2048
-
-#define SERVER_IP "20.20.20.1"  // Mudar IP se precisar
-#define CLIENT_IP "20.20.20.2"  // Mudar IP se precisar
-#define SERVER_PORT 8080
-
-
-#define PKT_LIMIT 100000
+#define PKT_LIMIT 10000
+//#define NUM_FRAMES 8192
+//#define NUM_FRAMES 2048
+//#define FRAME_SIZE 4096
 
 struct xsk_umem_info {
 	struct xsk_ring_prod fq; // fill ring da UMEM
@@ -120,17 +117,14 @@ extern struct bpf_object *bpf_obj;
 extern struct bpf_map *bpf_map;
 static int ifindex, lock = 1, cont_regiao = 0;
 
-//extern char *ptr_trava;      ;  //   
-extern int *ptr_trava;      ;  //   
+extern char *ptr_trava;      ;  //   
 extern char *nome_regiao     ;  // = "/memtest";
 extern char *nome_trava      ;  // = "/trava";
 extern char *nome_info_global;  // = "info_global";
-//extern char *MSG_UDP;
-
+ 
 static int fd_info_global, tam_info_global;
 static int sig_usr1  = 10, sig_rtmin = 35;
-//static pid_t fpid, ppid, pid_alvo;
-extern pid_t fpid, ppid, pid_alvo;
+static pid_t fpid, ppid, pid_alvo;
 static int long long start, end;
 
 extern sigset_t set;
@@ -142,17 +136,15 @@ extern struct xsk_umem_info   *umem_info;    // xsk  -- Processo
 extern struct xsk_umem_info   *umem_info2;   // xsk2 -- Processo
 extern struct xsk_info_global *ptr_mem_info_global;
 
-// Socket UDP do pai
+
 static int fd_sock_server;
 static struct sockaddr_in server_addr;
 static socklen_t server_len = sizeof(server_addr);
 
 // Socket UDP do filho
-extern int fd_sock_client;
-extern struct sockaddr_in  client_addr;
-extern socklen_t client_len; // = sizeof(client_addr);
-
-extern char nomeproc[30];
+static int fd_sock_client;
+static struct sockaddr_in server_addr_c, client_addr;
+static socklen_t client_len = sizeof(client_addr);
 
 
 /**************FUNCOES**********************/
@@ -173,7 +165,6 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len);
 void recebe_RX(struct xsk_info_global *info_global);
 void recebe_signal_RX(struct xsk_info_global *info_global );
 void recebe_pkt_RX(struct xsk_info_global *info_global );
-
 void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 
 /**********************************************/

@@ -1,43 +1,27 @@
+
+#include "xsk_kern.skel.h"
 #include "commons.h"
 
+static char MSG_UDP[30] = "PODE IR";
+int *ptr_udp_trava;
 
 
 
-/*************************************************************************/
-static __always_inline volatile long long RDTSC() {
-    
-    //register long long TSC asm("eax");
-    //asm volatile (".byte 15, 49" : : : "eax", "edx");
-    //return TSC;
-
-    unsigned int lo, hi;
-    
-    asm ("rdtsc" : "=a" (lo), "=d" (hi)); // Execute RDTSC and store results
-    return ((long long)hi << 32) | lo;            // Combine high and low parts
-}
-
-
-
-
-
-/*************************************************************************/
+/******************************************************************************/
 int main(int argc, char **argv) {
-    //if (argc < 2) {
-    //    fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
-    //    return 1;
-    //}
-    
-    //const char *iface = argv[1];
-    const char *iface = "veth2";
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
+        return 1;
+    }
+
+    const char *iface = argv[1];
    
     /***************Config da regiao de mem compart com shm*****************/
-    //char *caminho_prog = "xsk_kern.o";
-    char *caminho_prog = "xsk_kern.bpf.o";
+    char *caminho_prog = "xsk_kern.o";
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
     
-    signal(SIGINT  , capta_sinal);
-    signal(SIGUSR2 , capta_sinal);
+    signal(SIGINT, capta_sinal);
 
 
     int mapa_fd, map_fd_xsk,
@@ -96,11 +80,12 @@ int main(int argc, char **argv) {
 
     printf("Indice da interface %d\n",ifindex);
 	
+    //int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     // Pega o fd do mapa
 	mapa_fd = bpf_object__find_map_fd_by_name( skel->obj, "xsk_map"); 
 	if (mapa_fd < 0) {
 		printf("Erro ao tentar obter o fd do mapa pelo bpf_obj, retorno: %d\n", mapa_fd);
-        	bpf_object__close(bpf_obj);
+        bpf_object__close(bpf_obj);
 		return mapa_fd;
 	}
  
@@ -118,14 +103,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Pinnando os mapas do programa eBPF
-    //if ( bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ubuntu/Documents/Arquitetura/reply_ping/dados") < 0 ){
-    if ( bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados") < 0 ){
-	    perror("Erro ao pinnar os mapas no diretorio /dados");
-    }
-
+    bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    fd_mapa_fd = bpf_obj_get("../dados/mapa_fd"); 
+    fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
     bpf_map    = bpf_object__find_map_by_name(skel->obj, "xsk_map");
 
@@ -153,21 +133,25 @@ int main(int argc, char **argv) {
 
     /************************************************** Cria mem da trava ************************************************************/
 
+
     fd_trava = shm_open(nome_trava, O_CREAT | O_RDWR, 0777);
     if (fd_trava == -1){
         perror("Erro em shm_open\n");
         exit(1);
     }
     
+    tam_trava = sizeof(int);
     // Atribuindo tamanho para a regiao de mem. compart.
     int retorno_ftruncate = ftruncate(fd_trava, tam_trava);
     if ( ret_ftruncate == -1 ){
         perror("Erro em ftruncate na tam_trava\n");
         exit(1);
     }
-    //ptr_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
-    ptr_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
-    *ptr_trava = 0;
+    
+    //ptr_udp_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
+    //ptr_udp_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
+    ptr_udp_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
+    //*ptr_udp_trava = 0;
     
 
     /*###############################CRIAÇÃO DA REGIÃO DE MEM COMPART MEM_INFO_GLOBAL###################################################*/
@@ -204,7 +188,7 @@ int main(int argc, char **argv) {
     
     if(ret_look < 0 && ret_xskmap < 0){
         printf("DEU ERRADO OLHAR O MAPA: %d\n", ret_look);
-        //return -1;
+        return -1;
     }
 
     printf("\nValor do retorno do mapa: %s\n", ret_lookup);
@@ -231,16 +215,12 @@ int main(int argc, char **argv) {
     //printf("VALOR DO ret_reserve %d valor do idx:%d\n\n", ret_reserve, idx);
     if( ret_reserve !=  XSK_RING_PROD__DEFAULT_NUM_DESCS){
         printf("Erro ao reservar buffer FILL, ret_reserve != XSK_RING_PROD__DEFAULT_NUM_DESCS\n");
-        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
-        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
-        //xdp_program__close(xdp_prog);
         xsk_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
         xsk_umem__delete(umem_info->umem);
         free(buffer_do_pacote);
         return 1;
     }
-    
     
     info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
    
@@ -253,85 +233,157 @@ int main(int argc, char **argv) {
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
 
 
+    /*******************************************************************************************/
     // Carregando os buffers
     for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
     	//xsk_ring_prod__fill_addr() --> Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+
         //retorna o endereco do pacote
-        *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame( ptr_mem_info_global->umem_frame_addr , &ptr_mem_info_global->umem_frame_free );
+        *xsk_ring_prod__fill_addr(&umem_info->fq, idx++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
     }
 
     // xsk_ring_prod__submit() --> Submit the filled slots so the kernel can process them.
    	xsk_ring_prod__submit(&umem_info->fq, XSK_RING_PROD__DEFAULT_NUM_DESCS);
+    /*******************************************************************************************/
 
 
+    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+
+    //signal( SIGUSR1 , capta_sinal );
+    ppid = getpid();
+    // ############################## CRIANDO SOCKETS PARA ENVIO DE UDP #############################
+    
+    // Cria socket UDP
+    if ((fd_sock_server = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("FALHA ao criar Socket UDP");
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(SERVER_PORT);
+    //server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+
+    //if (bind(fd_sock_server, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    //    perror("Falha no Bind do Socket");
+    //    close(fd_sock_server);
+    //    exit(EXIT_FAILURE);
+    //}
+    
+    
+    // ############################## FIM SOCKETS PARA ENVIO DE UDP #############################
 
     pid = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
+    
+    strcpy(nomeproc, argv[0]);
+
     // Processo filho
     if( pid == 0){
-        
-        // Trocando o nome do processo para pollpingFIL
-        strncpy(argv[0], "pollFIL", strlen(argv[0]));
-        pid_t fpid = getpid();
+         // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "udp_FIL", strlen(argv[0]));       
+        strcpy(nomeproc, argv[0]);
+
+        fpid = getpid();
         char settar_cpuf[30];
-        
+
+        // Atribui o valor do PID do filho para que o proc pai consiga enviar o sinal
+        memcpy(ptr_udp_trava, &fpid, sizeof(fpid));
+
+
         printf("\n<PID DO FILHO %d>\n", fpid);
-        if( setsid() < 0 )
+        if( setsid() < 0 ){
             exit(-1);
+        }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/53149/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/14007/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
             perror("\n\nNao foi possivel mover o processo");
         }
-        
+
+        // Create UDP socket
+        if ( (fd_sock_client = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+            perror("Falha ao criar Socket UDP do PROC_FILHO");
+            exit(EXIT_FAILURE);
+        }
+
+        // Bind endereco e porta
+        memset(&client_addr, 0, sizeof(client_addr));
+        client_addr.sin_family = AF_INET;
+        //client_addr.sin_addr.s_addr = INADDR_ANY;
+        client_addr.sin_port = htons(SERVER_PORT);
+        if( inet_pton(AF_INET, SERVER_IP, &client_addr.sin_addr) < 0) {
+            perror("Erro no inet_pton");
+        }
+
+        //if( bind(fd_sock_client, (struct sockaddr*)&client_addr, sizeof(client_addr)) ){
+        //    perror("Erro no BIND do PROC_FILHO");
+        //    capta_sinal( 2 );
+        //}
+
+
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
-        
+
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
 
-        recebe_RX( ptr_mem_info_global );
+        //polling_RX( ptr_mem_info_global );
+        recebe_pkt_RX( ptr_mem_info_global );
     }
+
     // Processo pai
     else if ( pid > 0){
-        // Trocando o nome do processo para pollpingPAI
-        strncpy(argv[0], "pollPAI", strlen(argv[0]));
+        // Trocando o nome do processo para poolpingPAI
+        strncpy(argv[0], "udp_PAI", strlen(argv[0]));
         
-        pid_t ppid = getpid();
+        ppid = getpid();
         char settar_cpup[30]; 
-       
+
         sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
         system(settar_cpup);
 
-        //int temp=1;
+        fpid = *ptr_udp_trava;
+
+        if( bind(fd_sock_server, (struct sockaddr*)&server_addr, sizeof(server_addr)) ){
+            perror("Erro no BIND do PROC_PAI");
+            capta_sinal( SIGINT );
+        }
+
+        struct sockaddr_in teste;
+        socklen_t tam_teste = sizeof(teste);
+        int temp = 0;
+        // Espera pelo sinal do proc filho
         while(1){
-            if(*ptr_trava == 1){
-                // ler info_global da mem compart para aatualizar a info_global do pai
-                //ptr_mem_info_global   = ( struct xsk_info_global *) mmap(0, tam_info_global, PROT_WRITE, MAP_SHARED, fd_info_global, 0);
-                //printf("----valor do umem_free PROCESSO PAI %d ----\n", *ptr_mem_info_global->ret_ring);
-                //printf("Enviando pacote(%d)...\n", temp++);
-            
-                xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                complete_tx(ptr_mem_info_global->umem_frame_addr, 
+            //printf("PID do filho %d\n", fpid);
+            if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
+                perror("<PROC_PAI>Erro ao enviar pkt para filho...");
+            }
+            xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+            complete_tx(ptr_mem_info_global->umem_frame_addr, 
                             &ptr_mem_info_global->umem_frame_free, 
                             &ptr_mem_info_global->tx_restante);
-
-
-                *ptr_trava = 0;
+            //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
+            if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
+                perror("<PROC_PAI>Erro ao enviar pkt para filho...");
             }
+
         }
     }
     else{
         perror("+++ ERRO NO FORK +++");
         capta_sinal(2);
     }
-
     
     return 0;
 }

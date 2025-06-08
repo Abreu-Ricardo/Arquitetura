@@ -3,12 +3,10 @@
 
 struct xsk_kern_bpf    *skel;
 
-int *ptr_trava;
+char *ptr_trava;
 char *nome_regiao      = "/memtest";
 char *nome_trava       = "/trava";
 char *nome_info_global = "info_global";
-
-pid_t fpid, ppid, pid_alvo;
 
 struct xsk_socket *xsk;
 struct xsk_socket *xsk2;
@@ -24,12 +22,7 @@ struct xsk_umem_info   *umem_info2;   // xsk2 -- Processo
 struct xsk_info_global *ptr_mem_info_global;
 
 
-int fd_sock_client;
-struct sockaddr_in client_addr;
-socklen_t client_len = sizeof(client_addr);
 
-
-char nomeproc[30];
 /************************************************************************/
 void capta_sinal(int signum){
     //getchar();
@@ -72,11 +65,8 @@ void capta_sinal(int signum){
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_*");
-       
-        char cmdkill[50];
-        sprintf(cmdkill, "killall %s", nomeproc);
-        //system("killall pollping_ref");
-        system(cmdkill);
+        //system("killall pollping_2proc");
+        system("killall pollping_ref");
         //kill(fpid, SIGKILL);
         raise(SIGKILL);
         
@@ -532,7 +522,7 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
             if( !ret_ring ){
                 //raise( SIGUSR2 );
-                //printf("\n\n<PROC_FILHO> ret_ring deu zero\n");
+                printf("\n\n<PROC_FILHO> ret_ring deu zero\n");
                 //sigwait( &set , &sig );
                 continue;
             }
@@ -619,10 +609,7 @@ void recebe_pkt_RX(struct xsk_info_global *info_global ){
     uint32_t idx_rx = 0;
     uint32_t idx_fq = 0;
     uint64_t addr;
-    uint32_t len;
-
-
-
+    uint32_t len; 
    
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
 
@@ -708,7 +695,7 @@ void recebe_pkt_RX(struct xsk_info_global *info_global ){
                 //printf("<PROC_FILHO>Esperando pkt do pai...\n");
                 
                 if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
-                    //printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
+                    printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
                     continue;
                 }
 
@@ -716,50 +703,5 @@ void recebe_pkt_RX(struct xsk_info_global *info_global ){
         }
 }
 
-/*************************************************************************/
 
-//void signal_handler(int signum, siginfo_t *info, void *context) {
-//    if (signum == SIGUSR1) {
-//
-//        printf("CPU: %d | PID:<%d> Sinal recebido do PROC_FILHO: = %lld \n\n", sched_getcpu() , getpid(), info->si_int + (long long int) + 0 );
-// 
-//        //printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
-//        //capta_sinal(SIGINT);
-//    }
-//}
-
-
-/*************************************************************************/
-//void tempo_sinal(int sig, siginfo_t *info, void *context){
-//
-//    sinal_recebido.sival_int = sig_recebido = RDTSC(); // Pega o clock do recebimento
-//    if ( sigqueue(ppid, SIGUSR1, sinal_recebido) == -1 ) {                                         
-//        perror("Erro no sigqueue do PAI");                                                               
-//        capta_sinal(SIGINT);                                                               
-//    }  
-//    cont_sinal++;
-//    //memcpy(&antigo, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
-//    memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
-//    
-//    //info->_sifields._timer
-//    resul    = sig_recebido - inicio.tv_nsec;                  // Clock final - Clock inicial
-//    double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
-//                                                         // Pq para cada 1s 3.6 Bilhoes de insns sao executadas por segundo
-//                                                         // O resultado eh um tempo em nano segundos dividindo por 1000 temos
-//                                                         // microsegundos
-//
-//    // TODO
-//    // Travar o programa eBPF para que o RDTSC pegue o timestamp da CPU que foi travado sempre
-//    // para quando for calcular o tempo o timestamp seja sempre na mesma CPU
-//    // --> Travar na mesma CPU que o processo filho(CPU 5)
-//    
-//    //printf("(pkt:%d) Sinal recebido do kernel tempo: %lld - %lld = %f | %.2f us\n", cont_sinal, sinal_recebido , antigo, (sinal_recebido - antigo) / 3600000000.0 , r);
-//    //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
-//    //printf("-->PPID: %d\n", ppid);
-//
-//    printf("CPU: %d | <pkt:%d | PID:%d> Sinal recebido do kernel: %lld\n", sched_getcpu() , cont_sinal, getpid(), info->si_int + (long long int)0); 
-//    return;
-//}
-
-/*************************************************************************/
 /*************************************************************************/

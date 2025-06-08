@@ -45,6 +45,7 @@
 
 
 #include "xsk_kern.skel.h"
+//#include "commons.h"
 
 /******************************************************************************/
 #define _GNU_SOURCE
@@ -103,7 +104,7 @@ socklen_t client_len = sizeof(client_addr);
 static char MSG_UDP[30] = "PODE IR";
 
 
-//struct info_ebpf bpf;
+//static struct info_ebpf bpf;
 // Estrutura de dados para configurar a umem do socket
 struct xsk_umem_config umem_cfg = {
     .fill_size = NUM_FRAMES,
@@ -360,7 +361,7 @@ static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_
    
     frame = ptr_mem_info_global->umem_frame_addr[--ptr_mem_info_global->umem_frame_free ];
 
-    printf("(alloca_umem)#### frame: %lu\n", frame);
+    //printf("(alloca_umem)#### frame: %lu\n", frame);
     ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
 	
     //frame = vetor_frame[--*frame_free];
@@ -974,7 +975,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/15323/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/14707/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1008,6 +1009,7 @@ int main(int argc, char **argv) {
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
 
         polling_RX( ptr_mem_info_global );
+        //recebe_pkt_RX( ptr_mem_info_global );
     }
 
     // Processo pai

@@ -114,7 +114,7 @@ int xdp_prog(struct xdp_md *ctx){
 
 
     ret = verifica_ip(ctx);
-    //ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
+    ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
     //ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
 
     //if (ptr == NULL){
@@ -124,20 +124,20 @@ int xdp_prog(struct xdp_md *ctx){
 
     // Se for pacote UDP == 17
     //if( ret == 17){
-    if( /*ptr != NULL  &&*/ ret == 1 /*&& ptr_sig != NULL*/){
+    if( ptr != NULL  && ret == 1 /*&& ptr_sig != NULL*/){
     //if (ret == 17){
 
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
-        //ret_func = bpf_minha_func(*ptr, 10);
-        ////ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
-        //if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
-        //    bpf_printk("Erro ao enviar sinal para o pid");
-        //    return XDP_DROP;
-        //}
+        ret_func = bpf_minha_func(*ptr, 10);
+        //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
+        if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
+            bpf_printk("Erro ao enviar sinal para o pid");
+            return XDP_DROP;
+        }
 
         //bpf_map_update_elem(&tempo_sig , &pkt_global , &ret_func , BPF_ANY);
         //bpf_printk("Enviando sinal...(pid %d | cpu %d) %llu\n", *ptr, bpf_get_smp_processor_id(), ret_func);
-        bpf_printk("Entrou no IF do XDP! %d\n", ret_final);
+        //bpf_printk("Entrou no IF do XDP! %d\n", ret_final);
        
         //pkt_global++; 
         return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
