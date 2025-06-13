@@ -3,7 +3,7 @@ CC = gcc
 
 
 
-all: server client udp latencia
+all: server client udp latencia loop
 
 server: server.c 
 	$(CC) $^ -o $@
@@ -22,7 +22,9 @@ t_envia: t_envia.c
 t_recebe: t_recebe.c
 	$(CC) $^ -o $@ 
 
+loop: teste_loop.c
+	$(CC) $^ -o $@
 
 
 clean:
-	rm server client udp_receiver udp_sender t_envia t_recebe
+	rm server client udp_receiver udp_sender t_envia t_recebe loop

@@ -15,6 +15,7 @@
 #include <xdp/libxdp.h>
 #include <sys/resource.h>
 
+#include <poll.h>
 
 #define IFACE "veth2"
 #define NUM_SOCKS 1
@@ -42,8 +43,8 @@ struct xsk_umem_config umem_cfg = {
 struct xsk_socket_config cfg = {
     .rx_size = 2048,
     .tx_size = 2048,
-    .xdp_flags    = XDP_FLAGS_SKB_MODE /*XDP_FLAGS_DRV_MODE*/ ,
-    .bind_flags   = XDP_COPY,
+    .xdp_flags    = /*XDP_FLAGS_SKB_MODE*/ XDP_FLAGS_DRV_MODE ,
+    .bind_flags   = XDP_COPY /* XDP_USE_NEED_WAKEUP*/ ,
     .libbpf_flags = XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD,
 };
 
@@ -116,7 +117,7 @@ int setup_xsk_socket(struct xsk_socket_info *xsk, const char *iface, int queue_i
     }
 
     //ret = xsk_socket__create(&xsk->xsk, iface, queue_id, xsk->umem, &xsk->rx, NULL, &cfg);
-    ret = xsk_socket__create(&xsk->xsk, iface, 0, xsk->umem, &xsk->rx, &xsk->tx, &cfg);
+    ret = xsk_socket__create(&xsk->xsk, iface, 0, xsk->umem, &xsk->rx, &xsk->tx /*NULL*/, &cfg);
     if (ret < 0) {
         fprintf(stderr, "xsk_socket__create failed: %s\n", strerror(-ret));
         return 1;
@@ -165,25 +166,65 @@ int main(void) {
         }
     }
 
-    // Use recvfrom() on both sockets
     char buf[2048];
     struct sockaddr_xdp addr = {};
     socklen_t addrlen = sizeof(addr);
 
     printf("Waiting for packets...\n");
 
+
+    char buffer[1024];
+    struct iovec send_iov = {
+	    .iov_base = buffer,
+	    .iov_len  = sizeof(buffer)
+    };
+
+    struct msghdr msg = {
+	    .msg_name    = NULL,
+	    .msg_namelen = 0,
+	    .msg_iov     = &send_iov,
+	    .msg_iovlen  = 1,
+	    .msg_control = NULL,
+	    .msg_controllen = 0,
+	    .msg_flags   = 0
+    };
+
+    __u32 idx_rx = 0, cont_pkt = 0;
+    struct pollfd fds = { .fd = xsk_socket__fd(socks[0].xsk), .events = POLLIN };
+    
     while (1) {
-        for (int i = 0; i < NUM_SOCKS; i++) {
-            int fd  = xsk_socket__fd(socks[i].xsk);
-            int ret = recvfrom(fd, buf, sizeof(buf), 0,
-                               (struct sockaddr *)&addr, &addrlen);
+	    for (int i = 0; i < NUM_SOCKS; i++) {
+		    idx_rx = 0;
+
+		    int fd  = xsk_socket__fd(socks[i].xsk);
+		    //int ret = recvfrom(fd, buf, sizeof(buf), 0,(struct sockaddr *)&addr, &addrlen);
+		    //int ret = recvmsg(fd, &msg ,0);
+		    
+		    poll(&fds, 1, -1);  // Will block until packet arrives
+		    
+		    int ret = recvfrom(fd, NULL, 0, MSG_DONTWAIT, NULL, NULL);
+		    //int ret = recvfrom(fd, NULL, 0, MSG_DONTWAIT,NULL, NULL);
+		    //int ret = recvfrom(fd, NULL, 0, MSG_WAITALL , NULL, NULL);
+		    //int ret_peek = xsk_ring_cons__peek(&socks[0].rx, 64, &idx_rx); 
+		    int ret_peek = xsk_ring_prod__needs_wakeup(&socks[0].fq);
+		    if (ret_peek > 0){
+			    uint64_t addr = xsk_ring_cons__rx_desc(&socks[0].rx, idx_rx)->addr;
+			    uint32_t len  = xsk_ring_cons__rx_desc(&socks[0].rx, idx_rx++)->len;
+
+			    cont_pkt++;
+			    printf("Tamanho do pacote recebido %d | num pkt:%d\n", len, cont_pkt);
+			    addr = len = 0;
+			    //return 0;
+		    }
+            
+            //printf("ret: %d peek: %d\n", ret, ret_peek);
             if (ret > 0) {
                 printf("Queue %d: got %d bytes\n", i, ret);
-            } else if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                perror("recvfrom");
+            } else if (ret < 0 /*&& errno != EAGAIN && errno != EWOULDBLOCK*/) {
+                perror("Erro em recvfrom");
             }
         }
-        usleep(1000);
+        //usleep(1000);
     }
 
     return 0;

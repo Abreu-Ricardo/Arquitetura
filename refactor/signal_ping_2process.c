@@ -355,7 +355,7 @@ int main(int argc, char **argv) {
         //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-        //system(settar_cpup);
+        system(settar_cpup);
 
         fpid = *ptr_trava;
 
