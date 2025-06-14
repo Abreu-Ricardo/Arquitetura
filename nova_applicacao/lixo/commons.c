@@ -235,7 +235,7 @@ void cria_segundo_socket(const char *iface){
     uint64_t frame;
     //if(frame_free == 0)
     if( ptr_mem_info_global->umem_frame_free == 0 ){
-        printf("Erro em alloca_umem_frame() %d\n", ptr_mem_info_global->umem_frame_free);
+        printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
         return INVALID_UMEM_FRAME;
     }
 
@@ -256,10 +256,10 @@ void cria_segundo_socket(const char *iface){
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
 	
     assert( ptr_mem_info_global->umem_frame_free < NUM_FRAMES);
+    ptr_mem_info_global->umem_frame_addr[ ptr_mem_info_global->umem_frame_free++ ] = frame;
+
 
     //printf("(desaloca_umem)#### umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
-
-    ptr_mem_info_global->umem_frame_addr[ ptr_mem_info_global->umem_frame_free++ ] = frame;
 }
 
 
@@ -351,7 +351,7 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
 int cont = 0;
 void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
 //void complete_tx(/*uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante*/){
-    printf("\nENTROU NO complete_tx\n");
+    //printf("\nENTROU NO complete_tx\n");
     //printf("chamando complete_tx: %d\n", cont);
     //cont++;
     
@@ -371,36 +371,36 @@ void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_resta
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     //retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    //retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
     //printf("Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
-    if (retsend >= 0){
+    //if (retsend >= 0){
 
-        printf("ret sendto: %d\n", retsend);
+        //printf("ret sendto: %d\n", retsend);
         /* Collect/free completed TX buffers */
 
         // Tem hora que leva 40 ciclos outras 1000+
         completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
        
-        printf("(complete_tx) valor de completed: %d\n", completed);
+        //printf("(complete_tx) valor de completed: %d\n", completed);
         if (completed > 0) {
-            printf("-->Entrou no completed<--\n");
+            //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
-                printf("Desalocando %d\n", i);
+                //printf("Desalocando %d\n", i);
                 //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
                 desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
             xsk_ring_cons__release(&umem_info->cq, completed);
             //*tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
             ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
-            printf("Finalizou complete_tx()\n");
+            //printf("Finalizou complete_tx()\n");
         }
-    }
-    else{
-         printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
-         printf("*****************************\n\n");
-    }
+    //}
+    //else{
+    //     printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
+    //     printf("*****************************\n\n");
+    //}
 
     //end = RDTSC();
     
@@ -814,7 +814,7 @@ char *interface = "veth2";
 
 int responde_pacote(uint64_t addr, uint32_t len){
 
-    printf("<Entrou em responde pacote>\n");
+    //printf("<Entrou em responde pacote>\n");
 
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr); 
     uint32_t tx_idx = 0;
@@ -859,31 +859,28 @@ int responde_pacote(uint64_t addr, uint32_t len){
     //if (ntohs(udp->dest) != 12345) continue;
     //if (ntohs(udp->dest) != 12345) return false;
 
-    printf("\nReceived packet from %s:%d %s\n", inet_ntoa(*(struct in_addr *)&ip->saddr),
-                                           ntohs(udp->source),  inet_ntoa(*(struct in_addr *)&ip->saddr));
+    //printf("\nReceived packet from %s:%d %s\n", inet_ntoa(*(struct in_addr *)&ip->saddr),
+    //                                       ntohs(udp->source),  inet_ntoa(*(struct in_addr *)&ip->saddr));
 
-    // Simulate processing
-    busy_wait_cycles(SIMULATED_CYCLES);
-
-
-    printf("\nIP(recebido): %s(s) | %s(d)\n\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
+   
+    //printf("\nIP(recebido): %s(s) | %s(d)\n\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
 
 
-    printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-            eth->h_source[0],
-            eth->h_source[1],
-            eth->h_source[2],
-            eth->h_source[3],
-            eth->h_source[4],
-            eth->h_source[5]);
+    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    //        eth->h_source[0],
+    //        eth->h_source[1],
+    //        eth->h_source[2],
+    //        eth->h_source[3],
+    //        eth->h_source[4],
+    //        eth->h_source[5]);
 
-    printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-            eth->h_dest[0],
-            eth->h_dest[1],
-            eth->h_dest[2],
-            eth->h_dest[3],
-            eth->h_dest[4],
-            eth->h_dest[5]);
+    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    //        eth->h_dest[0],
+    //        eth->h_dest[1],
+    //        eth->h_dest[2],
+    //        eth->h_dest[3],
+    //        eth->h_dest[4],
+    //        eth->h_dest[5]);
 
     // Swap MAC addresses
     unsigned char tmp_mac[ETH_ALEN];
@@ -892,24 +889,24 @@ int responde_pacote(uint64_t addr, uint32_t len){
     memcpy(eth->h_source, eth->h_dest, ETH_ALEN);
     memcpy(eth->h_dest, tmp_mac, ETH_ALEN);
 
-    printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-            eth->h_source[0],
-            eth->h_source[1],
-            eth->h_source[2],
-            eth->h_source[3],
-            eth->h_source[4],
-            eth->h_source[5]);
+    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    //        eth->h_source[0],
+    //        eth->h_source[1],
+    //        eth->h_source[2],
+    //        eth->h_source[3],
+    //        eth->h_source[4],
+    //        eth->h_source[5]);
 
-    printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-            eth->h_dest[0],
-            eth->h_dest[1],
-            eth->h_dest[2],
-            eth->h_dest[3],
-            eth->h_dest[4],
-            eth->h_dest[5]);
+    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    //        eth->h_dest[0],
+    //        eth->h_dest[1],
+    //        eth->h_dest[2],
+    //        eth->h_dest[3],
+    //        eth->h_dest[4],
+    //        eth->h_dest[5]);
 
 
-    printf("AQUIIII portas recebidas:   %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
+    //printf("AQUIIII portas recebidas:   %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
 
     // Swap IPs
     //__u16 tmp_port;
@@ -931,10 +928,10 @@ int responde_pacote(uint64_t addr, uint32_t len){
     memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
     memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
 
-    printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
+    //printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
 
 
-    printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
+    //printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
     //printf("\nPacote a ser enviado para %s:%d | (origem)%s\n", inet_ntoa(*(struct in_addr *)&ip->daddr), ntohs(udp->dest), inet_ntoa(*(struct in_addr *)&ip->saddr));
     // Modify payload
     const char *response = "Processed (raw)";
@@ -959,13 +956,17 @@ int responde_pacote(uint64_t addr, uint32_t len){
     sa.sll_halen = ETH_ALEN;
     memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
 
-    printf("\n-->FIM responde_pkt()<--\n");
-    ssize_t sent_len = sendto(sockfd_udp, /*buffer*/ pkt , sizeof(struct ethhdr) + ntohs(ip->tot_len), 0,
-            (struct sockaddr *)&sa, sizeof(sa));
+    // Simular tempo de servico
+    busy_wait_cycles(SIMULATED_CYCLES);
+
+    //printf("\n-->FIM responde_pkt()<--\n");
+    // ENVIA PACOTE PELO SOCKET UDP
+    ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
+                              0, (struct sockaddr *)&sa, sizeof(sa));
     if (sent_len < 0) {
         perror("+++ sendto +++");
     } else {
-        printf("+++ Replied to client. +++\n");
+        //printf("+++ Replied to client. +++\n");
     }
     
 
@@ -995,7 +996,7 @@ int responde_pacote(uint64_t addr, uint32_t len){
 void recebe_teste_RX(struct xsk_info_global *info_global){
     //pid_t tid = pthread_self();
     //printf("<Entrou recebe_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
-    printf("<Entrou em recebe_RX>\n");
+    //printf("<Entrou em recebe_RX>\n");
     
     /**************************************************************/
     int i =0;
@@ -1040,7 +1041,7 @@ void recebe_teste_RX(struct xsk_info_global *info_global){
             //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
             if(stock_frames > 0){
-                printf("stock_frames OK ret_ring %d\n", ret_ring);
+                //printf("stock_frames OK ret_ring %d\n", ret_ring);
                 // Reserve one or more slots in a producer ring.
                 // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
                 int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
@@ -1067,31 +1068,33 @@ void recebe_teste_RX(struct xsk_info_global *info_global){
                 len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
 
                 //cont_pkt++;
-                printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
+                //printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
 
                 // CHAMA PROCESSA_PACOTE
                 //if (!processa_pacote(umem_info,  addr, len))
                 //if ( !processa_pacote( addr, len) )
                 if ( !responde_pacote( addr, len) ){
-                    printf("VOLTOU do responde_pacote\n");
+                    //printf("VOLTOU do responde_pacote\n");
                     //desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
                     desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
 
-                    printf("VOLTOU do desaloca_umem_frame\n");
+                    //printf("VOLTOU do desaloca_umem_frame\n");
                 }
 
 
             }
             //*ptr_trava = 1;
-            printf("\nSAIU do FOR\n");
+            //printf("\nSAIU do FOR\n");
 
-            printf("### %ln %d %d\n", ptr_mem_info_global->umem_frame_addr, ptr_mem_info_global->umem_frame_free, ptr_mem_info_global->tx_restante);
+            //printf("### %ln %d %d\n", ptr_mem_info_global->umem_frame_addr, ptr_mem_info_global->umem_frame_free, ptr_mem_info_global->tx_restante);
+            
+            xsk_ring_cons__release(&umem_info->rx, ptr_mem_info_global->ret_ring);
 
             complete_tx(ptr_mem_info_global->umem_frame_addr, 
                     &ptr_mem_info_global->umem_frame_free, 
                     &ptr_mem_info_global->tx_restante);
 
-            printf("VOLTOU DO complete_tx\n");
+            //printf("VOLTOU DO complete_tx\n");
             /*********************/
     }// laco do while
 }// laco da funcao recebe_teste_RX()

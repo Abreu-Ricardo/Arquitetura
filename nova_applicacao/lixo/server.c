@@ -15,8 +15,9 @@
 #include <time.h>
 
 #define BUF_SIZE 2048
-#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
-//#define SIMULATED_CYCLES 4800000 // Simulate ~3ms processing
+//#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
+//#define SIMULATED_CYCLES 90000000 // Simulate ~50ms processing
+#define SIMULATED_CYCLES   900000000 // Simulate ~500ms processing
 
 /*static __always_inline*/ void busy_wait_cycles(unsigned long long cycles){
     volatile unsigned long long i = 0;

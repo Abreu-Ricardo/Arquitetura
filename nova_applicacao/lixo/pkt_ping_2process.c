@@ -14,13 +14,18 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 5 %d", getpid());
+    system(settar_cpup);
+
+
     const char *iface = argv[1];
-   
+
     /***************Config da regiao de mem compart com shm*****************/
     char *caminho_prog = "xsk_kern.o";
     char *ptr_fim_regiao;
     uint64_t  *ptr_regiao;
-    
+
     signal(SIGINT, capta_sinal);
 
 

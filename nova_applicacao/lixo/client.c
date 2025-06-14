@@ -19,11 +19,25 @@ double time_diff_ms(struct timespec start, struct timespec end) {
            (end.tv_nsec - start.tv_nsec) / 1.0e6;
 }
 
+float media(float vetor[], int tam){
+    float result, soma = 0;
+
+    for(int i = 0; i < tam; i++)
+        soma += vetor[i];
+
+    result = soma / (float)tam;
+    return result;
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <server_ip> <num_packets>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+    
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 4 %d", getpid());
+    system(settar_cpup);
 
     const char *server_ip = argv[1];
     int num_packets = atoi(argv[2]);
@@ -62,6 +76,9 @@ int main(int argc, char *argv[]) {
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
 
+    float *latency_pkts = {0};
+    latency_pkts = (float *) malloc( sizeof(float) * num_packets );
+
     for (int i = 0; i < num_packets; i++) {
         struct timespec start, end;
 
@@ -80,12 +97,18 @@ int main(int argc, char *argv[]) {
         if (len > 0) {
             buffer[len] = '\0';
             double latency = time_diff_ms(start, end);
+            latency_pkts[i] = latency;
             printf("Reply %d: %s | Latency: %.3f ms\n", i + 1, buffer, latency);
+
         } else {
             perror("Timeout or receive error");
         }
+        //usleep(10000);
     }
 
+    float media_lat = media(latency_pkts, num_packets);
+    printf("Latency avg: %.3fms\n", media_lat);
+    
     close(sockfd);
     return 0;
 }
