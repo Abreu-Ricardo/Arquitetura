@@ -17,7 +17,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 
 ###################################################
-all: bpf skel udp server client
+all: bpf skel load server client
 
 bpf: $(SOURCE_BPF) *.bpf.c
 	$(CL) $(BPF_FLAGS) $^
@@ -26,7 +26,7 @@ skel: $(OBJETOS_BPF)
 	@$(foreach i, $^, $(GERA_SKEL) $i > $(i:.bpf.o=.skel.h);)
 	@echo -e 'Skeletons gerados...\n'
 
-udp: pkt_ping_2process.c commons.c
+load: simulate_load.c commons.c
 	$(CC) $^ -o $@ $(C_FLAGS)
 
 server: server.c
@@ -35,4 +35,4 @@ client: client.c
 	$(CC) $< -o $@
 
 clean: 
-	rm server client udp $(OBJETOS_BPF) 
+	rm server client load $(OBJETOS_BPF) 

@@ -64,7 +64,8 @@
 //#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
 //#define SIMULATED_CYCLES 75500000 // Simulate ~50ms processing
 //#define SIMULATED_CYCLES 90000000 // Simulate ~50ms processing
-#define SIMULATED_CYCLES   900000000 // Simulate ~500ms processing
+//#define SIMULATED_CYCLES 900000000 // Simulate ~500ms processing
+#define  SIMULATED_CYCLES 143300000 // 50ms isolado com 3.6GHz
 
 #define PKT_LIMIT 100000
 
@@ -174,32 +175,50 @@ void configura_umem();
 void configura_socket();
 void cria_segundo_socket();
 
-/*__always_inline*/ uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free);
+//static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free);
+static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
+    
+    uint64_t frame;
+    //if(frame_free == 0)
+    if( ptr_mem_info_global->umem_frame_free == 0 ){
+        printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+        return INVALID_UMEM_FRAME;
+    }
+
+   
+    //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
+    frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
+    ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
+
+    //printf("(alloca_umem)#### frame: %lu\n", frame);
+
+	//frame = vetor_frame[--*frame_free];
+	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
+
+    return frame;
+}
+
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame);
 
 static __always_inline __sum16 csum16_add(__sum16 csum, __be16 addend);
 static __always_inline __sum16 csum16_sub(__sum16 csum, __be16 addend);
 static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 novo);
-
 static __always_inline int processa_pacote(uint64_t addr, uint32_t len);
+static __always_inline volatile long long RDTSC();
 
 void recebe_RX(struct xsk_info_global *info_global);
 void recebe_signal_RX(struct xsk_info_global *info_global );
 void recebe_pkt_RX(struct xsk_info_global *info_global );
 
-
-int responde_pacote(uint64_t addr, uint32_t len);
+static __always_inline int responde_pacote(uint64_t addr, uint32_t len);
 void recebe_teste_RX(struct xsk_info_global *info_global);
 
-
 //void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
-void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 
 /******************NOVA_APLICACAO****************************/
-
-/*static __always_inline*/ void busy_wait_cycles(unsigned long long cycles);
-uint16_t checksum(uint16_t *buf, int len);
-
+static __always_inline void busy_wait_cycles(unsigned long long cycles);
+static __always_inline uint16_t checksum(uint16_t *buf, int len);
 /**********************************************/
 
 #endif

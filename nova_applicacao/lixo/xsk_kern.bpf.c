@@ -115,12 +115,12 @@ int xdp_prog(struct xdp_md *ctx){
 
     ret = verifica_ip(ctx);
     ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
-    //ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
+    ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
 
-    //if (ptr == NULL){
-	//    bpf_printk("Erro ao acessar o mapa_sinal");
-	//    return XDP_DROP;
-    //}
+    if (ptr == NULL){
+          bpf_printk("Erro ao acessar o mapa_sinal");
+          return XDP_DROP;
+    }
 
     // Se for pacote UDP == 17
     if( ret == 17){

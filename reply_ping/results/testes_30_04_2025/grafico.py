@@ -1,31 +1,27 @@
 #!/bin/python3
-
 import matplotlib.pyplot as plt
 
 
 poll = open( "poll.txt", 'r')
 poll_linhas = poll.readlines()
-#poll_linhas.sort()
-
 
 signal = open( "sinal_isolado.txt", 'r')
 #signal = open( "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/reply_ping/results/signal.txt", 'r')
 #signal = open( "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/reply_ping/results/signal_ping.txt", 'r')
 signal_linhas = signal.readlines()
-#signal_linhas.sort()
 
 udp = open( "udp.txt", 'r')
 #udp = open( "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/reply_ping/results/udp_ping.txt", 'r')
 udp_linhas = udp.readlines()
-#udp_linhas.sort()
 
 skmsg = open( "skmsgpoll_limpo.txt", 'r')
 skmsg_linhas = skmsg.readlines()
 
-
 rot = open( "roteamento.txt", 'r')
 rot_linhas = rot.readlines()
 
+skmsg_signal = open( "skmsg+signal.txt", 'r')
+sk_sig_linhas = skmsg_signal.readlines()
 
 # Define x values (from -10 to 10)
 #x_values = list(range(5, 11))
@@ -40,14 +36,16 @@ signal_linhas = list(map(float, signal_linhas))
 udp_linhas    = list(map(float, udp_linhas))
 rot_linhas    = list(map(float, rot_linhas))
 skmsg_linhas  = list(map(float, skmsg_linhas))
+sk_sig_linhas = list(map(float, sk_sig_linhas))
 
 
 # Plot both lines
-plt.plot( x_values , poll_linhas   , 'r-'   , label="poll")  # 1
-plt.plot( x_values , signal_linhas , 'k-'   , label="signal")  # 2
-plt.plot( x_values , udp_linhas    , 'b-'   , label="UDP") # 3
-plt.plot( x_values , rot_linhas    , 'y-'   , label="Roteamento") # 4
-plt.plot( x_values , skmsg_linhas  , 'g-'   , label="sk_msg") # 5
+plt.plot( x_values , poll_linhas   ,  'r-'   , label="Polling")  # 1
+plt.plot( x_values , signal_linhas ,  'k-'   , label="Signal")  # 2
+plt.plot( x_values , udp_linhas    ,  'b-'   , label="UDP + polling") # 3
+plt.plot( x_values , rot_linhas    ,  'y-'   , label="Roteamento") # 4
+plt.plot( x_values , skmsg_linhas  ,  'g-'   , label="sk_msg + polling") # 5
+plt.plot( x_values , sk_sig_linhas  , 'g--'   , label="skmsg + signal") # 6
 #plt.plot(x_values, y2_values, 'b-', label="y = -x + 5")  # Blue line
 
 #plt.ylim(auto=True)

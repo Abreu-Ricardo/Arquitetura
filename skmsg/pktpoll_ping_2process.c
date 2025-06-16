@@ -627,9 +627,16 @@ void polling_RX(struct xsk_info_global *info_global ){
 
 
     //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
+    sigset_t set;
+    struct sigaction act;
+    int sig_usr1  = 10;
 
+    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+    sigprocmask(SIG_BLOCK, &set, NULL); 
+    
     while( 1 ){
-        //while( sigwait(&set, &sig_usr1) == 0 ){
+    //while( sigwait(&set, &sig_usr1) == 0 ){
 
             //if(*ptr_trava == 0){ 
             //while (lock == 1) {
@@ -1060,7 +1067,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5353/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/5377/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -1085,6 +1092,14 @@ int main(int argc, char **argv) {
         //    perror("Erro no BIND do PROC_FILHO");
         //    capta_sinal( 2 );
         //}
+
+
+        int chave2 =  0;
+        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        if (ret_update2 < 0){
+            perror("+++ erro ao atualizar o mapa com o PID +++");
+            capta_sinal(SIGINT);
+        }
 
 
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);

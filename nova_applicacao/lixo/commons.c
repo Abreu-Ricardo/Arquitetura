@@ -31,6 +31,21 @@ socklen_t client_len = sizeof(client_addr);
 
 
 char nomeproc[30];
+
+
+/************************************************************************/
+static __always_inline volatile long long RDTSC(){
+
+    //register long long TSC asm("eax");
+    //asm volatile (".byte 15, 49" : : : "eax", "edx");
+    //return TSC;
+
+    unsigned int lo, hi;
+
+    asm ("rdtsc" : "=a" (lo), "=d" (hi)); // Execute RDTSC and store results
+    return ((long long)hi << 32) | lo;    // Combine high and low parts
+}  
+
 /************************************************************************/
 void capta_sinal(int signum){
     //getchar();
@@ -230,27 +245,27 @@ void cria_segundo_socket(const char *iface){
 
 
 /************************************************************************/
-/*__always_inline*/ uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
-    
-    uint64_t frame;
-    //if(frame_free == 0)
-    if( ptr_mem_info_global->umem_frame_free == 0 ){
-        printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
-        return INVALID_UMEM_FRAME;
-    }
-
-   
-    //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
-    frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
-    ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
-
-    //printf("(alloca_umem)#### frame: %lu\n", frame);
-
-	//frame = vetor_frame[--*frame_free];
-	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
-
-    return frame;
-}
+//static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
+//    
+//    uint64_t frame;
+//    //if(frame_free == 0)
+//    if( ptr_mem_info_global->umem_frame_free == 0 ){
+//        printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+//        return INVALID_UMEM_FRAME;
+//    }
+//
+//   
+//    //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
+//    frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
+//    ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
+//
+//    //printf("(alloca_umem)#### frame: %lu\n", frame);
+//
+//	//frame = vetor_frame[--*frame_free];
+//	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
+//
+//    return frame;
+//}
 
 /****************************************************************************/
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
@@ -349,7 +364,7 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
 
 /*************************************************************************/
 int cont = 0;
-void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
 //void complete_tx(/*uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante*/){
     //printf("\nENTROU NO complete_tx\n");
     //printf("chamando complete_tx: %d\n", cont);
@@ -787,14 +802,14 @@ void recebe_pkt_RX(struct xsk_info_global *info_global ){
 //}
 
 /*************************************************************************/
-/*static __always_inline*/ void busy_wait_cycles(unsigned long long cycles) {
+static __always_inline void busy_wait_cycles(unsigned long long cycles) {
     volatile unsigned long long i = 0;
-    //for (i = 0; i < cycles; i++) {}
-    while(i < SIMULATED_CYCLES){ i++; }
+    for (; i < SIMULATED_CYCLES; i++) {}
+    //while(i < SIMULATED_CYCLES){ i++; }
 }
 
 /*************************************************************************/
-uint16_t checksum(uint16_t *buf, int len) {
+static __always_inline uint16_t checksum(uint16_t *buf, int len) {
     uint32_t sum = 0;
     while (len > 1) {
         sum += *buf++;
@@ -812,7 +827,8 @@ int sockfd;
 unsigned char buffer[BUF_SIZE];
 char *interface = "veth2";
 
-int responde_pacote(uint64_t addr, uint32_t len){
+// Se colocar essa directiva para o compilador diminui em 20us
+static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
 
     //printf("<Entrou em responde pacote>\n");
 
@@ -824,21 +840,14 @@ int responde_pacote(uint64_t addr, uint32_t len){
     struct ifreq if_idx, if_mac;
     memset(&if_idx, 0, sizeof(struct ifreq));
     strncpy(if_idx.ifr_name, interface, IFNAMSIZ - 1);
-    //ioctl(sockfd, SIOCGIFINDEX, &if_idx);
     ioctl(sockfd_udp, SIOCGIFINDEX, &if_idx);
 
     // Get MAC address
     memset(&if_mac, 0, sizeof(struct ifreq));
     strncpy(if_mac.ifr_name, interface, IFNAMSIZ - 1);
-    //ioctl(sockfd, SIOCGIFHWADDR, &if_mac);
     ioctl(sockfd_udp, SIOCGIFHWADDR, &if_mac);
 
     /*************************************/
-
-   // struct ethhdr *eth = (struct ethhdr *)buffer;
-   // struct iphdr  *ip  = (struct iphdr  *)(buffer + sizeof(struct ethhdr));
-   // struct udphdr *udp = (struct udphdr *)(buffer + sizeof(struct ethhdr) + sizeof(struct iphdr));
-   // char *payload = (char *)(udp + 1);
 
     //struct ethhdr *eth = (struct ethhdr *)pkt;
     //struct iphdr  *ip  = (struct iphdr  *)(pkt + sizeof(struct ethhdr));
@@ -957,7 +966,7 @@ int responde_pacote(uint64_t addr, uint32_t len){
     memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
 
     // Simular tempo de servico
-    busy_wait_cycles(SIMULATED_CYCLES);
+    //busy_wait_cycles(SIMULATED_CYCLES);
 
     //printf("\n-->FIM responde_pkt()<--\n");
     // ENVIA PACOTE PELO SOCKET UDP
@@ -993,7 +1002,7 @@ int responde_pacote(uint64_t addr, uint32_t len){
 
 /*************************************************************************/
 
-void recebe_teste_RX(struct xsk_info_global *info_global){
+/*static __always_inline*/ void recebe_teste_RX(struct xsk_info_global *info_global){
     //pid_t tid = pthread_self();
     //printf("<Entrou recebe_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
     //printf("<Entrou em recebe_RX>\n");
@@ -1009,8 +1018,8 @@ void recebe_teste_RX(struct xsk_info_global *info_global){
     uint64_t addr;
     uint32_t len; 
     
-
-    while(1){
+     //while(1){
+     while( sigwait(&set, &sig_usr1) == 0 ){
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
@@ -1098,6 +1107,4 @@ void recebe_teste_RX(struct xsk_info_global *info_global){
             /*********************/
     }// laco do while
 }// laco da funcao recebe_teste_RX()
-
-
 

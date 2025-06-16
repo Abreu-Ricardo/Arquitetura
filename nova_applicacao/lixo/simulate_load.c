@@ -1,11 +1,8 @@
-
 #include "xsk_kern.skel.h"
 #include "commons.h"
 
 static char MSG_UDP[30] = "PODE IR";
 int *ptr_udp_trava;
-
-
 
 /******************************************************************************/
 int main(int argc, char **argv) {
@@ -15,7 +12,7 @@ int main(int argc, char **argv) {
     }
 
     char settar_cpup[30]; 
-    sprintf(settar_cpup, "taskset -cp 5 %d", getpid());
+    sprintf(settar_cpup, "taskset -cp 4 %d", getpid());
     system(settar_cpup);
 
 
@@ -258,27 +255,15 @@ int main(int argc, char **argv) {
 
     //signal( SIGUSR1 , capta_sinal );
     ppid = getpid();
+
+    int chave2 =  0;
+    int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &ppid, BPF_ANY );
+    if (ret_update2 < 0){
+        perror("+++ erro ao atualizar o mapa com o PID +++");
+        capta_sinal(SIGINT);
+    }
+
     // ############################## CRIANDO SOCKETS PARA ENVIO DE UDP #############################
-    
-    // Cria socket UDP
-    //if ((fd_sock_server = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    //if ((sockfd_udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    //    perror("FALHA ao criar Socket UDP");
-    //    exit(EXIT_FAILURE);
-    //}
-    //
-    //memset(&server_addr, 0, sizeof(server_addr));
-    //server_addr.sin_family      = AF_INET;
-    //server_addr.sin_port        = htons(SERVER_PORT);
-    ////server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-    //server_addr.sin_addr.s_addr = INADDR_ANY;
-
-
-    //if (bind(fd_sock_server, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-    //    perror("Falha no Bind do Socket");
-    //    close(fd_sock_server);
-    //    exit(EXIT_FAILURE);
-    //}
     
     
     // ############################## FIM SOCKETS PARA ENVIO DE UDP #############################
@@ -299,213 +284,11 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Get interface index
-    //struct ifreq if_idx, if_mac;
-    //memset(&if_idx, 0, sizeof(struct ifreq));
-    //strncpy(if_idx.ifr_name, interface, IFNAMSIZ - 1);
-    //ioctl(sockfd, SIOCGIFINDEX, &if_idx);
-
-    //// Get MAC address
-    //memset(&if_mac, 0, sizeof(struct ifreq));
-    //strncpy(if_mac.ifr_name, interface, IFNAMSIZ - 1);
-    //ioctl(sockfd, SIOCGIFHWADDR, &if_mac);
 
     printf("Listening on %s...\n", interface);
-
     recebe_teste_RX(ptr_mem_info_global);
 
-    //while (1) {
-    //    ssize_t len = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
-    //    if (len < sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr)) {
-    //        continue;
-    //    }
-
-    //    struct ethhdr *eth = (struct ethhdr *)buffer;
-    //    struct iphdr  *ip  = (struct iphdr  *)(buffer + sizeof(struct ethhdr));
-    //    struct udphdr *udp = (struct udphdr *)(buffer + sizeof(struct ethhdr) + sizeof(struct iphdr));
-    //    char *payload = (char *)(udp + 1);
-
-    //    if (ntohs(eth->h_proto) != ETH_P_IP || ip->protocol != IPPROTO_UDP) continue;
-
-    //    // Optional: filter by port
-    //    if (ntohs(udp->dest) != 12345) continue;
-
-    //    printf("Received packet from %s:%d\n",
-    //            inet_ntoa(*(struct in_addr *)&ip->saddr),
-    //            ntohs(udp->source));
-
-    //    // Simulate processing
-    //    busy_wait_cycles(SIMULATED_CYCLES);
-
-    //    // Swap MAC addresses
-    //    unsigned char tmp_mac[ETH_ALEN];
-    //    memcpy(tmp_mac, eth->h_source, ETH_ALEN);
-    //    memcpy(eth->h_source, if_mac.ifr_hwaddr.sa_data, ETH_ALEN);
-    //    memcpy(eth->h_dest, tmp_mac, ETH_ALEN);
-
-    //    // Swap IPs
-    //    uint32_t tmp_ip = ip->saddr;
-    //    ip->saddr = ip->daddr;
-    //    ip->daddr = tmp_ip;
-
-    //    // Swap ports
-    //    uint16_t tmp_port = udp->source;
-    //    udp->source = udp->dest;
-    //    udp->dest = tmp_port;
-
-    //    // Modify payload
-    //    const char *response = "Processed (raw)";
-    //    size_t response_len = strlen(response);
-    //    memcpy((char *)(udp + 1), response, response_len);
-
-    //    // Adjust lengths
-    //    udp->len = htons(sizeof(struct udphdr) + response_len);
-    //    ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + response_len);
-
-    //    // Recalculate checksums
-    //    ip->check = 0;
-    //    ip->check = checksum((uint16_t *)ip, sizeof(struct iphdr));
-    //    udp->check = 0; // UDP checksum optional (set to 0)
-
-    //    // Send packet
-    //    struct sockaddr_ll sa;
-    //    memset(&sa, 0, sizeof(struct sockaddr_ll));
-    //    sa.sll_ifindex = if_idx.ifr_ifindex;
-    //    sa.sll_halen = ETH_ALEN;
-    //    memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
-
-    //    ssize_t sent_len = sendto(sockfd, buffer, sizeof(struct ethhdr) + ntohs(ip->tot_len), 0,
-    //            (struct sockaddr *)&sa, sizeof(sa));
-    //    if (sent_len < 0) {
-    //        perror("sendto");
-    //    } else {
-    //        printf("Replied to client.\n");
-    //    }
-    //}
-
-    //close(sockfd);
     close(sockfd_udp);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ###########################################################################
-    // Processo filho
-    //if( pid == 0){
-    //     // Trocando o nome do processo para poolpingPAI
-    //    strncpy(argv[0], "udp_FIL", strlen(argv[0]));       
-    //    strcpy(nomeproc, argv[0]);
-
-    //    fpid = getpid();
-    //    char settar_cpuf[30];
-
-    //    // Atribui o valor do PID do filho para que o proc pai consiga enviar o sinal
-    //    memcpy(ptr_udp_trava, &fpid, sizeof(fpid));
-
-
-    //    printf("\n<PID DO FILHO %d>\n", fpid);
-    //    if( setsid() < 0 ){
-    //        exit(-1);
-    //    }
-
-    //    // PID do namespace pego com lsns --type=net dentro do container
-    //    fd_namespace = open( "/proc/32465/ns/net",  O_RDONLY );
-    //    ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
-    //    if (ret_sys < 0){
-    //        printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
-    //        perror("\n\nNao foi possivel mover o processo");
-    //    }
-
-    //    // Create UDP socket
-    //    if ( (fd_sock_client = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-    //        perror("Falha ao criar Socket UDP do PROC_FILHO");
-    //        exit(EXIT_FAILURE);
-    //    }
-
-    //    // Bind endereco e porta
-    //    memset(&client_addr, 0, sizeof(client_addr));
-    //    client_addr.sin_family = AF_INET;
-    //    //client_addr.sin_addr.s_addr = INADDR_ANY;
-    //    client_addr.sin_port = htons(SERVER_PORT);
-    //    if( inet_pton(AF_INET, SERVER_IP, &client_addr.sin_addr) < 0) {
-    //        perror("Erro no inet_pton");
-    //    }
-
-    //    //if( bind(fd_sock_client, (struct sockaddr*)&client_addr, sizeof(client_addr)) ){
-    //    //    perror("Erro no BIND do PROC_FILHO");
-    //    //    capta_sinal( 2 );
-    //    //}
-
-
-    //    sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
-    //    system(settar_cpuf);
-
-    //    printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
-    //    printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
-
-    //    //polling_RX( ptr_mem_info_global );
-    //    recebe_pkt_RX( ptr_mem_info_global );
-    //}
-
-    //// Processo pai
-    //else if ( pid > 0){
-    //    // Trocando o nome do processo para poolpingPAI
-    //    strncpy(argv[0], "udp_PAI", strlen(argv[0]));
-    //    
-    //    ppid = getpid();
-    //    char settar_cpup[30]; 
-
-    //    sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
-    //    printf("\n<PID DO PAI %d>\n", ppid);
-    //    printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-    //    system(settar_cpup);
-
-    //    fpid = *ptr_udp_trava;
-
-    //    if( bind(fd_sock_server, (struct sockaddr*)&server_addr, sizeof(server_addr)) ){
-    //        perror("Erro no BIND do PROC_PAI");
-    //        capta_sinal( SIGINT );
-    //    }
-
-    //    struct sockaddr_in teste;
-    //    socklen_t tam_teste = sizeof(teste);
-    //    int temp = 0;
-    //    // Espera pelo sinal do proc filho
-    //    while(1){
-    //        //printf("PID do filho %d\n", fpid);
-    //        if ( recvfrom(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0 , (struct sockaddr *)&server_addr, &server_len) < 0 ){
-    //            perror("<PROC_PAI>Erro ao enviar pkt para filho...");
-    //        }
-    //        xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-    //        complete_tx(ptr_mem_info_global->umem_frame_addr, 
-    //                        &ptr_mem_info_global->umem_frame_free, 
-    //                        &ptr_mem_info_global->tx_restante);
-    //        //printf("<PROC_PAI>Pai recebeu pkt do filho....\n");
-    //        if ( sendto(fd_sock_server, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&server_addr, server_len) < 0  ){
-    //            perror("<PROC_PAI>Erro ao enviar pkt para filho...");
-    //        }
-
-    //    }
-    //}
-    //else{
-    //    perror("+++ ERRO NO FORK +++");
-    //    capta_sinal(2);
-    //}
-    
     return 0;
 }
 

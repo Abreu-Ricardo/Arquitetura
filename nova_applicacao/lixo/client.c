@@ -9,16 +9,37 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <float.h>
 
 #define SERVER_PORT 12345
 #define CLIENT_PORT 54321  // Must match what server replies to
 #define BUF_SIZE 2048
 
-double time_diff_ms(struct timespec start, struct timespec end) {
-    return (end.tv_sec - start.tv_sec) * 1000.0 +
-           (end.tv_nsec - start.tv_nsec) / 1.0e6;
+//double time_diff_ms(struct timespec start, struct timespec end) {
+//    return (end.tv_sec - start.tv_sec) * 1000.0 +
+//           (end.tv_nsec - start.tv_nsec) / 1.0e6;
+//}
+
+static __always_inline volatile long long RDTSC(){
+
+    //register long long TSC asm("eax");
+    //asm volatile (".byte 15, 49" : : : "eax", "edx");
+    //return TSC;
+
+    unsigned int lo, hi;
+
+    asm ("rdtsc" : "=a" (lo), "=d" (hi)); // Execute RDTSC and store results
+    return ((long long)hi << 32) | lo;    // Combine high and low parts
 }
 
+/******************************************************/
+double time_diff_ms(long long int start, long long int end){
+    // 3600    --> para us
+    // 3600000 --> para ms
+    return (double)(end - start) / 3600000.0;
+}
+
+/******************************************************/
 float media(float vetor[], int tam){
     float result, soma = 0;
 
@@ -28,15 +49,17 @@ float media(float vetor[], int tam){
     result = soma / (float)tam;
     return result;
 }
-
+/******************************************************/
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "Usage: %s <server_ip> <num_packets>\n", argv[0]);
+        fprintf(stderr, "%s <server_ip> <num_packets>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    long long int inicio, fim;
     
     char settar_cpup[30]; 
-    sprintf(settar_cpup, "taskset -cp 4 %d", getpid());
+    sprintf(settar_cpup, "taskset -cp 3 %d", getpid());
     system(settar_cpup);
 
     const char *server_ip = argv[1];
@@ -76,14 +99,20 @@ int main(int argc, char *argv[]) {
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
 
+    // Var para usar nas metricas
+    float min=FLT_MAX, max=FLT_MIN;
     float *latency_pkts = {0};
     latency_pkts = (float *) malloc( sizeof(float) * num_packets );
 
+    const char *msg = "Request (raw)";
+    struct timespec start, end;
+    int len;
+    double latency;
+    
+    // Laco de envio dos pkts
     for (int i = 0; i < num_packets; i++) {
-        struct timespec start, end;
-
-        const char *msg = "Request (raw)";
-        clock_gettime(CLOCK_MONOTONIC, &start);
+        //clock_gettime(CLOCK_MONOTONIC, &start);
+        inicio = RDTSC();
 
         if (sendto(sockfd, msg, strlen(msg), 0,
                    (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -91,23 +120,34 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        int len = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
-        clock_gettime(CLOCK_MONOTONIC, &end);
+        //len = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
+        len = recvfrom(sockfd, buffer, BUF_SIZE, MSG_WAITALL, NULL, NULL);
+        //clock_gettime(CLOCK_MONOTONIC, &end);
+        fim = RDTSC();
 
         if (len > 0) {
             buffer[len] = '\0';
-            double latency = time_diff_ms(start, end);
+            //latency = time_diff_ms(start, end);
+            latency = time_diff_ms(inicio, fim);
+
+            if (latency > max)
+                max = latency;
+            else if(latency < min)
+                min = latency;
+
             latency_pkts[i] = latency;
             printf("Reply %d: %s | Latency: %.3f ms\n", i + 1, buffer, latency);
 
         } else {
             perror("Timeout or receive error");
+            close(sockfd);
+            exit(1);
         }
-        //usleep(10000);
+        usleep(120);
     }
 
     float media_lat = media(latency_pkts, num_packets);
-    printf("Latency avg: %.3fms\n", media_lat);
+    printf("Latency min/avg/max: %.3f/%.3f/%.3f ms\n", min, media_lat, max);
     
     close(sockfd);
     return 0;

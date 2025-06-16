@@ -44,7 +44,7 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: pktping_2proc  pktpoll
+user: pktping_2proc  pktpoll signal_skmsg
 	@echo -e '$^ criados...'
 
 pktping_2proc: pkt_ping_2process.c 
@@ -53,13 +53,16 @@ pktping_2proc: pkt_ping_2process.c
 pktpoll: pktpoll_ping_2process.c 
 	$(CC) -pg $< -o $@ $(C_FLAGS)
 
+signal_skmsg: signal_skmsg_ping.c 
+	$(CC) -pg $< -o $@ $(C_FLAGS)
+
 teste: teste_sk.c
 	$(CC) -pg $< -o $@ $(C_FLAGS)
 
 
 #.PHONY: clean
 clean:
-	@sudo rm $(OBJETOS_BPF)  pktping_2proc pktpoll
+	@sudo rm $(OBJETOS_BPF)  pktping_2proc pktpoll signal_skmsg
 	@sudo rm *.skel.h
 	@#sudo rm /sys/fs/bpf/signal_monitor
 	@#sudo bpftool prog show

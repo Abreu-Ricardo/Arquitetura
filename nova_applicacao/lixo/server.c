@@ -17,15 +17,17 @@
 #define BUF_SIZE 2048
 //#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
 //#define SIMULATED_CYCLES 90000000 // Simulate ~50ms processing
-#define SIMULATED_CYCLES   900000000 // Simulate ~500ms processing
+//#define SIMULATED_CYCLES   900000000 // Simulate ~500ms processing
+#define SIMULATED_CYCLES   143300000// Simulate ~500ms processing
 
+// colocar static __always_inline prejudica o desempenho, n sei pq
 /*static __always_inline*/ void busy_wait_cycles(unsigned long long cycles){
     volatile unsigned long long i = 0;
     //for (i = 0; i < cycles; i++) {}
     while(i < SIMULATED_CYCLES){ i++; }
 }
 
-uint16_t checksum(uint16_t *buf, int len) {
+static __always_inline uint16_t checksum(uint16_t *buf, int len) {
     uint32_t sum = 0;
     while (len > 1) {
         sum += *buf++;
@@ -42,6 +44,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: sudo %s <interface>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 4 %d", getpid());
+    system(settar_cpup);
 
     char *interface = argv[1];
     int sockfd;
@@ -81,12 +87,11 @@ int main(int argc, char *argv[]) {
         // Optional: filter by port
         if (ntohs(udp->dest) != 12345) continue;
 
-        printf("Received packet from %s:%d\n",
-               inet_ntoa(*(struct in_addr *)&ip->saddr),
-               ntohs(udp->source));
+        //printf("Received packet from %s:%d\n",inet_ntoa(*(struct in_addr *)&ip->saddr),
+        //ntohs(udp->source));
 
         // Simulate processing
-        busy_wait_cycles(SIMULATED_CYCLES);
+        //busy_wait_cycles(SIMULATED_CYCLES);
 
         // Swap MAC addresses
         unsigned char tmp_mac[ETH_ALEN];
@@ -130,7 +135,7 @@ int main(int argc, char *argv[]) {
         if (sent_len < 0) {
             perror("sendto");
         } else {
-            printf("Replied to client.\n");
+            //printf("Replied to client.\n");
         }
     }
 

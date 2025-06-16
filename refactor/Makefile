@@ -60,7 +60,7 @@ signal: signal_ping_2process.c commons.c
 #.PHONY: clean
 clean:
 	@sudo rm $(OBJETOS_BPF)  
-	@sudo rm *.skel.h
+	@sudo rm *.skel.h udp signal pollping_ref
 	@#sudo bpftool prog show
 	@#echo -e '\nProgramas removidos...'
 

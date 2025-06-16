@@ -108,20 +108,24 @@ int xdp_prog(struct xdp_md *ctx){
     //uint64_t pid_tgid = bpf_get_current_pid_tgid();
     //uint32_t pid = pid_tgid & 0xFFFFFFFF;
     //uint32_t tgid = pid_tgid >> 32;
-    
+
     ret = verifica_ip(ctx);
     ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
 
     //if( ret == 17){
     if( ptr != NULL  && ret == 1 /*&& ptr_sig != NULL*/){
-    //if (ret == 17){
+        //if (ret == 17){
 
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
+        if( bpf_minha_func(*ptr, 10) < 0) {
+            bpf_printk("Erro ao enviar sinal!");
+            return XDP_DROP;
+        }
         return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{
-        //bpf_printk("XDP:Outro tipo de pkt sendo passado!");
-        return XDP_PASS;
+    //bpf_printk("XDP:Outro tipo de pkt sendo passado!");
+    return XDP_PASS;
     }
 }
 
