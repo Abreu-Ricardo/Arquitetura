@@ -168,6 +168,7 @@ extern socklen_t client_len; // = sizeof(client_addr);
 
 extern char nomeproc[30];
 
+extern int flag_sockXDP;
 
 /**************FUNCOES**********************/
 void capta_sinal(int signum);
@@ -184,14 +185,12 @@ static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_
         printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
         return INVALID_UMEM_FRAME;
     }
-
    
     //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
     frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
     ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
 
     //printf("(alloca_umem)#### frame: %lu\n", frame);
-
 	//frame = vetor_frame[--*frame_free];
 	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
 
@@ -208,14 +207,16 @@ static __always_inline volatile long long RDTSC();
 
 void recebe_RX(struct xsk_info_global *info_global);
 void recebe_signal_RX(struct xsk_info_global *info_global );
+void recebe_signal_RX2(struct xsk_info_global *info_global );
 void recebe_pkt_RX(struct xsk_info_global *info_global );
 
 static __always_inline int responde_pacote(uint64_t addr, uint32_t len);
+static __always_inline int responde_pacote2(uint64_t addr, uint32_t len);
 void recebe_teste_RX(struct xsk_info_global *info_global);
 
 //void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
-
+/*static __always_inline*/ void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 /******************NOVA_APLICACAO****************************/
 static __always_inline void busy_wait_cycles(unsigned long long cycles);
 static __always_inline uint16_t checksum(uint16_t *buf, int len);

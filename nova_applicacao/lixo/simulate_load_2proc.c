@@ -4,21 +4,11 @@
 static char MSG_UDP[30] = "PODE IR";
 int *ptr_udp_trava;
 
-
 /******************************************************************************/
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        fprintf(stderr, "Usage: %s <network interface> <single/duo>\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
         return 1;
-    }
-
-    // single --> 1 socket  XDP
-    // duo    --> 2 sockets XDP
-    if ( strcmp(argv[2], "single") == 0){
-        flag_sockXDP = 1;
-    }
-    else if(  strcmp(argv[2], "duo") == 0 ){
-        flag_sockXDP = 2;
     }
 
     char settar_cpup[30]; 
@@ -190,11 +180,8 @@ int main(int argc, char **argv) {
     
     configura_umem();
     configura_socket( iface );
-    printf("Configurando primeiro socket...\n");
-    if (flag_sockXDP == 2){
-        cria_segundo_socket( iface );
-        printf("Configurando segundo socket...\n");
-    }
+    cria_segundo_socket( iface );
+    printf("\n### Atualizando mapa xsk com FD do socket 2 ###\n");
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
@@ -277,95 +264,70 @@ int main(int argc, char **argv) {
     
     // ############################## FIM SOCKETS PARA ENVIO DE UDP #############################
 
-    // 1 SOCKET XDP
-    if (flag_sockXDP == 1){
-        printf("Processo com um socket iniciado...\n");
+    strcpy(nomeproc, argv[0]);
+    
+    pid = fork();
 
-        // Atualiza mapa com pid do proc atual
-        int chave2 =  0;
-        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &ppid, BPF_ANY );
-        if (ret_update2 < 0){
-            perror("+++ erro ao atualizar o mapa com o PID +++");
-            capta_sinal(SIGINT);
-        }
+    // ############################## PROCESSAMENTO DOS PACOTE #############################
 
-        strcpy(nomeproc, argv[0]);
+
+    // Processo Filho
+    if(pid == 0){
+
+        fpid = getpid();
         char *interface = argv[1];
+        //int sockfd_udp;
         unsigned char buffer[BUF_SIZE];
 
         if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
             perror("Socket");
             exit(EXIT_FAILURE);
         }
-
+        
+        sprintf(settar_cpup, "taskset -cp 5 %d", fpid);
+        system(settar_cpup);
+        
+        printf("\n<PID DO FILHO %d>\n", ppid);
         printf("Listening on %s...\n", interface);
-        recebe_teste_RX(ptr_mem_info_global);
-    }
 
-    // 2 SOCKET XDP
-    else if(flag_sockXDP == 2){
-        pid = fork();
-
-        // Processo Filho
-        if(pid == 0){
-
-            fpid = getpid();
-            char *interface = argv[1];
-            //int sockfd_udp;
-            unsigned char buffer[BUF_SIZE];
-
-            if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
-                perror("Socket");
-                exit(EXIT_FAILURE);
-            }
-
-            sprintf(settar_cpup, "taskset -cp 5 %d", fpid);
-            system(settar_cpup);
-
-            printf("\n<PID DO FILHO %d>\n", ppid);
-            printf("Listening on %s...\n", interface);
-
-            int chave2 =  0;
-            int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
-            if (ret_update2 < 0){
-                perror("+++ erro ao atualizar o mapa com o PID +++");
-                capta_sinal(SIGINT);
-            }
-
-            //recebe_teste_RX(ptr_mem_info_global);
-            recebe_signal_RX2(ptr_mem_info_global);
+        int chave2 =  0;
+        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        if (ret_update2 < 0){
+            perror("+++ erro ao atualizar o mapa com o PID +++");
+            capta_sinal(SIGINT);
         }
 
-        // Processo Pai
-        else if(pid > 0){
-            strncpy(argv[0], "load2p_pai", strlen(argv[0]));
-
-            //ppid = getpid();
-            char settar_cpup[30]; 
-
-            sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
-            printf("\n<PID DO PAI %d>\n", ppid);
-            printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-            //system(settar_cpup);
-
-            //fpid = *ptr_trava;
-
-            while(1){
-                if( sigwait(&set, &sig_usr1) >= 0 ){
-                    //printf("<PAI> PID do filho %d\n", fpid);
-
-                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                    complete_tx2(ptr_mem_info_global->umem_frame_addr, 
-                            &ptr_mem_info_global->umem_frame_free, 
-                            &ptr_mem_info_global->tx_restante);
-                    //complete_tx();
-                }
-            } 
-        }
-
-
-
+        //recebe_teste_RX(ptr_mem_info_global);
+        recebe_signal_RX2(ptr_mem_info_global);
     }
+
+    // Processo Pai
+    else if(pid > 0){
+        strncpy(argv[0], "load2p_pai", strlen(argv[0]));
+
+        //ppid = getpid();
+        char settar_cpup[30]; 
+        
+        sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+        printf("\n<PID DO PAI %d>\n", ppid);
+        printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
+        //system(settar_cpup);
+
+        //fpid = *ptr_trava;
+
+        while(1){
+            if( sigwait(&set, &sig_usr1) >= 0 ){
+                //printf("<PAI> PID do filho %d\n", fpid);
+                
+                  xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+                  complete_tx2(ptr_mem_info_global->umem_frame_addr, 
+                              &ptr_mem_info_global->umem_frame_free, 
+                              &ptr_mem_info_global->tx_restante);
+                  //complete_tx();
+            }
+        } 
+    }
+
     close(sockfd_udp);
     return 0;
 }

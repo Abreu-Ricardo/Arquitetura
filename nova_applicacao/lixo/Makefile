@@ -17,7 +17,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 
 ###################################################
-all: bpf skel load server client
+all: bpf skel load load2p server client
 
 bpf: $(SOURCE_BPF) *.bpf.c
 	$(CL) $(BPF_FLAGS) $^
@@ -29,10 +29,13 @@ skel: $(OBJETOS_BPF)
 load: simulate_load.c commons.c
 	$(CC) $^ -o $@ $(C_FLAGS)
 
+load2p: simulate_load_2proc.c commons.c
+	$(CC) $^ -o $@ $(C_FLAGS)
+
 server: server.c
 	$(CC) $< -o $@
 client: client.c
 	$(CC) $< -o $@
 
 clean: 
-	rm server client load $(OBJETOS_BPF) 
+	rm server client load load2p $(OBJETOS_BPF) 

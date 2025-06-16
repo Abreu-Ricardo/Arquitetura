@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         //ntohs(udp->source));
 
         // Simulate processing
-        //busy_wait_cycles(SIMULATED_CYCLES);
+        busy_wait_cycles(SIMULATED_CYCLES);
 
         // Swap MAC addresses
         unsigned char tmp_mac[ETH_ALEN];

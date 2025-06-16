@@ -1,4 +1,3 @@
-// Compile with: gcc -o raw_client raw_client.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
