@@ -322,7 +322,18 @@ int main(int argc, char **argv) {
             sprintf(settar_cpup, "taskset -cp 5 %d", fpid);
             system(settar_cpup);
 
-            printf("\n<PID DO FILHO %d>\n", ppid);
+            if( setsid() < 0 )
+                exit(-1);
+
+            fd_namespace = open( "/proc/37458/ns/net",  O_RDONLY );
+            ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
+            if (ret_sys < 0){
+                printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
+                perror("\n\nNao foi possivel mover o processo");
+            }
+
+
+            printf("\n<PID DO FILHO %d>\n", fpid);
             printf("Listening on %s...\n", interface);
 
             int chave2 =  0;
@@ -338,12 +349,12 @@ int main(int argc, char **argv) {
 
         // Processo Pai
         else if(pid > 0){
-            strncpy(argv[0], "load2p_pai", strlen(argv[0]));
+            strncpy(argv[0], "loadp", strlen(argv[0]));
 
             //ppid = getpid();
             char settar_cpup[30]; 
 
-            sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
+            sprintf(settar_cpup, "taskset -cp 4 %d", ppid );
             printf("\n<PID DO PAI %d>\n", ppid);
             printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
             //system(settar_cpup);
@@ -353,18 +364,22 @@ int main(int argc, char **argv) {
             while(1){
                 if( sigwait(&set, &sig_usr1) >= 0 ){
                     //printf("<PAI> PID do filho %d\n", fpid);
-
+                    
+                    //ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
+                    //        0, (struct sockaddr *)&sa, sizeof(sa));
+                    //if (sent_len < 0) {
+                    //    perror("+++ sendto +++");
+                    //} else {
+                    //    //printf("+++ Replied to client. +++\n");
+                    //}
                     xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
                     complete_tx2(ptr_mem_info_global->umem_frame_addr, 
-                            &ptr_mem_info_global->umem_frame_free, 
-                            &ptr_mem_info_global->tx_restante);
+                                &ptr_mem_info_global->umem_frame_free, 
+                                &ptr_mem_info_global->tx_restante);
                     //complete_tx();
                 }
             } 
         }
-
-
-
     }
     close(sockfd_udp);
     return 0;

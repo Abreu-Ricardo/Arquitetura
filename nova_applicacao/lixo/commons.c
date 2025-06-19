@@ -90,7 +90,7 @@ void capta_sinal(int signum){
         system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_*");
        
         char cmdkill[50];
-        sprintf(cmdkill, "killall %s", nomeproc);
+        sprintf(cmdkill, "killall %s*", nomeproc);
         //system("killall pollping_ref");
         system(cmdkill);
         //kill(fpid, SIGKILL);
@@ -444,8 +444,8 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     //retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    //retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    //printf("Retorno do sendto: %d\n", retsend);
+    /*retsend = */sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    //printf("(complete_tx2:)Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
     //if (retsend >= 0){
@@ -1259,22 +1259,22 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     // Swap IPs
     //__u16 tmp_port;
     uint32_t tmp_ip;
-    //tmp_ip    = ip->saddr;
-    //ip->saddr = ip->daddr;
-    //ip->daddr = tmp_ip;
-    memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
-    memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
-    memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
+    tmp_ip    = ip->saddr;
+    ip->saddr = ip->daddr;
+    ip->daddr = tmp_ip;
+    //memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
+    //memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
+    //memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
 
     // Swap ports
     //uint16_t tmp_ip;
     uint16_t tmp_port;
-    //tmp_port    = udp->source;
-    //udp->source = udp->dest;
-    //udp->dest   = tmp_port;
-    memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
-    memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
-    memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
+    tmp_port    = udp->source;
+    udp->source = udp->dest;
+    udp->dest   = tmp_port;
+    //memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
+    //memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
+    //memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
 
     //printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
 
@@ -1282,15 +1282,20 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     //printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
     //printf("\nPacote a ser enviado para %s:%d | (origem)%s\n", inet_ntoa(*(struct in_addr *)&ip->daddr), ntohs(udp->dest), inet_ntoa(*(struct in_addr *)&ip->saddr));
     // Modify payload
-    const char *response = "Processed (raw)";
-    size_t response_len = strlen(response);
+    //const char *response = "Processed (raw)";
+    /*const*/ char response[20] = "Processado (cru)";
+    /*size_t*/ int response_len = strlen(response);
     memcpy((char *)(udp + 1), response, response_len);
 
 
 
     // Adjust lengths
-    udp->len = htons(sizeof(struct udphdr) + response_len);
+    udp->len = htons(sizeof(struct udphdr) + response_len );
+    //udp->len = htons(sizeof(struct udphdr) + response_len - 2);
+    //ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + response_len - 2);
     ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + response_len);
+
+    //printf("@@@@@@ --> %d %d %d\n", response_len, ntohs(ip->tot_len), ntohs(udp->len));
 
     // Recalculate checksums
     ip->check = 0;
@@ -1298,25 +1303,12 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     udp->check = 0; // UDP checksum optional (set to 0)
 
     // Send packet
-    struct sockaddr_ll sa;
-    memset(&sa, 0, sizeof(struct sockaddr_ll));
-    sa.sll_ifindex = if_idx.ifr_ifindex;
-    sa.sll_halen = ETH_ALEN;
-    memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
-
-    // Simular tempo de servico
-    busy_wait_cycles(SIMULATED_CYCLES);
-
-    //printf("\n-->FIM responde_pkt()<--\n");
-    // ENVIA PACOTE PELO SOCKET UDP
-    ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
-                              0, (struct sockaddr *)&sa, sizeof(sa));
-    if (sent_len < 0) {
-        perror("+++ sendto +++");
-    } else {
-        //printf("+++ Replied to client. +++\n");
-    }
-    
+    //struct sockaddr_ll sa;
+    //memset(&sa, 0, sizeof(struct sockaddr_ll));
+    //sa.sll_ifindex = if_idx.ifr_ifindex;
+    //sa.sll_halen = ETH_ALEN;
+    //memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
+    /************************************************************************/
 
     //int ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
     int ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
@@ -1335,6 +1327,20 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     //umem_info->tx_restante++;
     //info_global-> tx_restante++;
     ptr_mem_info_global->tx_restante++;
+    /************************************************************************/
+
+    // Simular tempo de servico
+    //busy_wait_cycles(SIMULATED_CYCLES);
+
+    //printf("\n-->FIM responde_pkt()<--\n");
+    // ENVIA PACOTE PELO SOCKET UDP
+    //ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
+    //                          0, (struct sockaddr *)&sa, sizeof(sa));
+    //if (sent_len < 0) {
+    //    perror("+++ sendto +++");
+    //} else {
+    //    //printf("+++ Replied to client. +++\n");
+    //}
 
     return false;
 }

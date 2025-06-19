@@ -103,7 +103,8 @@ int main(int argc, char *argv[]) {
     float *latency_pkts = {0};
     latency_pkts = (float *) malloc( sizeof(float) * num_packets );
 
-    const char *msg = "Request (raw)";
+    //const char *msg = "Request (raw)";
+    const char msg[20] = "Request (cru)";
     struct timespec start, end;
     int len;
     double latency;
@@ -113,7 +114,7 @@ int main(int argc, char *argv[]) {
         //clock_gettime(CLOCK_MONOTONIC, &start);
         inicio = RDTSC();
 
-        if (sendto(sockfd, msg, strlen(msg), 0,
+        if (sendto(sockfd, msg, /*strlen(msg)*/ sizeof(msg), 0,
                    (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
             perror("sendto failed");
             continue;
