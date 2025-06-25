@@ -16,9 +16,10 @@
 
 #define BUF_SIZE 2048
 //#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
+#define SIMULATED_CYCLES 1500000 // Simulate ~1ms processing
 //#define SIMULATED_CYCLES 90000000 // Simulate ~50ms processing
 //#define SIMULATED_CYCLES   900000000 // Simulate ~500ms processing
-#define SIMULATED_CYCLES   143300000// Simulate ~500ms processing
+//#define SIMULATED_CYCLES   143300000// Simulate ~500ms processing
 
 // colocar static __always_inline prejudica o desempenho, n sei pq
 /*static __always_inline*/ void busy_wait_cycles(unsigned long long cycles){

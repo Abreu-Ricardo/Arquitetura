@@ -1,5 +1,5 @@
 #include "xsk_kern.skel.h"
-#include "commons.h"
+#include "libt.h"
 
 
 /*************************************************************************/
@@ -15,6 +15,8 @@ static __always_inline volatile long long RDTSC() {
     return ((long long)hi << 32) | lo;            // Combine high and low parts
 } 
 
+
+char *mapas_path = "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados";
 
 /*************************************************************************/
 int main(int argc, char **argv) {
@@ -148,7 +150,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    //bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    bpf_object__pin_maps( skel->obj , mapas_path);
 
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
@@ -265,6 +268,10 @@ int main(int argc, char **argv) {
     // Apos o fork essa var(ptr_mem_info_global) fica compartilhada entre os dois processos
     memcpy(ptr_mem_info_global , info_global , sizeof(*info_global));
     printf("------------ umem_frame_addr[2]:%ld\n", ptr_mem_info_global->umem_frame_addr[2]);
+
+    //for (int i =0; i < NUM_FRAMES; i++){
+    //    printf("umem_frame_addr[%d]: %ld\n", i, ptr_mem_info_global->umem_frame_addr[i] );
+    //}
     
     // Carregando os buffers
     for (int i = 0; i < XSK_RING_PROD__DEFAULT_NUM_DESCS; i ++){
@@ -291,9 +298,8 @@ int main(int argc, char **argv) {
     //act.sa_sigaction = teste; //signal_handler;
     //sigemptyset(&act.sa_mask);
 
+    ppid = getpid();
 
-    //signal( SIGUSR1 , capta_sinal );
-    //ppid = getpid();
     pid  = fork();
     strcpy(nomeproc, argv[0]);
 
@@ -315,7 +321,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/8334/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/17517/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -335,13 +341,8 @@ int main(int argc, char **argv) {
         printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
         printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
 
-        //struct sigaction act;
-        //act.sa_flags = SA_SIGINFO | SA_NODEFER ;  // Permite recebimento de sinal com dados
-        //act.sa_sigaction = recebe_signal_RX;
-        //sigemptyset(&act.sa_mask);
-
-
-        recebe_signal_RX( ptr_mem_info_global );
+        //recebe_signal_RX( ptr_mem_info_global );
+        recebe_signal_RX2( ptr_mem_info_global );
     }
 
     // Processo pai
@@ -359,23 +360,6 @@ int main(int argc, char **argv) {
 
         fpid = *ptr_trava;
 
-    	//struct sigaction act;
-        //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
-        //act.sa_sigaction = signal_handler;
-        //sigemptyset(&act.sa_mask);
-
-
-        //// Registra um handler para SIGUSR1
-        //if (sigaction(SIGUSR1, &act, NULL) == -1) {
-        //    perror("sigaction");
-        //    capta_sinal(SIGINT);
-        //}
-
-        //union sigval valor;
-        //valor.sival_int = dado;  // Anexa dado ao sinal
-
-        // Espera pelo sinal do proc filho
-        // sigwait(&set, &sig);
         while(1){
             if( sigwait(&set, &sig_usr1) >= 0 ){
                 //printf("<PAI> PID do filho %d\n", fpid);

@@ -994,6 +994,7 @@ int main(int argc, char **argv) {
 
     //signal( SIGUSR1 , capta_sinal );
     //ppid = getpid();
+    strncpy(argv[0], "sig_ping", strlen(argv[0]));
     pid  = fork();
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
@@ -1014,7 +1015,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/10767/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/6203/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

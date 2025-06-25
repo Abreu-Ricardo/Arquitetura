@@ -33,6 +33,17 @@ socklen_t client_len = sizeof(client_addr);
 char nomeproc[30];
 int flag_sockXDP = -1;
 
+
+
+__u32 ret_ring=0, stock_frames=0;
+__uint64_t cont_pkt=0;
+
+uint32_t idx_rx = 0;
+uint32_t idx_fq = 0;
+uint64_t addr;
+uint32_t len; 
+
+
 /************************************************************************/
 static __always_inline volatile long long RDTSC(){
 
@@ -243,22 +254,28 @@ void cria_segundo_socket(const char *iface){
 
 
 /************************************************************************/
-//static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
+//uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
 //    
 //    uint64_t frame;
 //    //if(frame_free == 0)
 //    if( ptr_mem_info_global->umem_frame_free == 0 ){
-//        printf("Erro em alloca_umem_frame(). umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+//        //printf("\n(alloca_umem_frame)+++ umem_frame_free deu 0 em alloca_umem_frame() | umem_frame_free: %d +++\n", ptr_mem_info_global->umem_frame_free);
+//        //exit(-1);
 //        return INVALID_UMEM_FRAME;
 //    }
 //
 //   
+//    //printf("\n1(alloca_umem)#### umem_frame_free: %d | frame: %lu\n", ptr_mem_info_global->umem_frame_free, frame);
 //    //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
+//    //uint64_t temp = ptr_mem_info_global->umem_frame_free - 1;
+//    //ptr_mem_info_global->umem_frame_free -= 1;
+//    
 //    frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
 //    ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
 //
+//    //printf("2(alloca_umem)#### umem_frame_free: %d | frame: %lu | posi atual: %lu\n", ptr_mem_info_global->umem_frame_free, frame,
+//    //                                                                                ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free]);
 //    //printf("(alloca_umem)#### frame: %lu\n", frame);
-//
 //	//frame = vetor_frame[--*frame_free];
 //	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
 //
@@ -268,11 +285,15 @@ void cria_segundo_socket(const char *iface){
 /****************************************************************************/
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
 	
+    //printf("(1desaloca_umem)#### umem_frame_free: %d | frame: %ld\n", ptr_mem_info_global->umem_frame_free, frame);
     assert( ptr_mem_info_global->umem_frame_free < NUM_FRAMES);
+
+   
     ptr_mem_info_global->umem_frame_addr[ ptr_mem_info_global->umem_frame_free++ ] = frame;
 
-
-    //printf("(desaloca_umem)#### umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+    //ptr_mem_info_global->umem_frame_free += 1;
+   // printf("(2desaloca_umem)#### umem_frame_free: %d | frame: %ld\n", ptr_mem_info_global->umem_frame_free, frame);
+    //printf("(desaloca_umem)#### umem_frame_free: %ld | frame: %ld\n", ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free], frame);
 }
 
 
@@ -362,7 +383,7 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
 
 /*************************************************************************/
 int cont = 0;
-static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+/*static __always_inline */void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
 //void complete_tx(/*uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante*/){
     //printf("\nENTROU NO complete_tx\n");
     //printf("chamando complete_tx: %d\n", cont);
@@ -383,12 +404,12 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
-    //retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
     //retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
     //printf("Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
-    //if (retsend >= 0){
+    if (retsend >= 0){
 
         //printf("ret sendto: %d\n", retsend);
         /* Collect/free completed TX buffers */
@@ -400,7 +421,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
         if (completed > 0) {
             //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
-                //printf("Desalocando %d\n", i);
+                //printf("(complete_tx) chamando desaloca_umem_frame | umem_frame_free %d\n", ptr_mem_info_global->umem_frame_free);
                 //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
                 desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
             }
@@ -409,7 +430,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
             ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
             //printf("Finalizou complete_tx()\n");
         }
-    //}
+    }
     //else{
     //     printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
     //     printf("*****************************\n\n");
@@ -422,7 +443,8 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     return;
 }
 /*************************************************************************/
-/*static __always_inline*/ void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+///*static __always_inline*/ void complete_tx2(){
 //void complete_tx(/*uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante*/){
     //printf("\nENTROU NO complete_tx\n");
     //printf("chamando complete_tx: %d\n", cont);
@@ -444,7 +466,7 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     //retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    /*retsend = */sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
     //printf("(complete_tx2:)Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
@@ -455,21 +477,24 @@ static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_f
 
         // Tem hora que leva 40 ciclos outras 1000+
         completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
-       
-        //printf("(complete_tx) valor de completed: %d\n", completed);
+        uint64_t temp;       
+        //printf("(complete_tx2) valor de completed: %d\n", completed);
         if (completed > 0) {
             //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
                 //printf("Desalocando %d\n", i);
-                //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
-                desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+                //printf("(complete_tx2) chamando desaloca_umem_frame | umem_frame_free %d | addr: %lld\n", ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++));
+                ///*uint64_t*/ temp = *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++); 
+                desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free,  *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) /*temp*/ );
             }
+            //printf("(complete_tx2)Valor do umem_frame_free: %d | ret_comp_addr: %ld\n", ptr_mem_info_global->umem_frame_free, temp);
             xsk_ring_cons__release(&umem_info->cq, completed);
             //*tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
             ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
-            //printf("Finalizou complete_tx()\n");
-        }
-    //}
+
+            //printf("(complete_tx2)Valor do umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+        //}
+    }
     //else{
     //     printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
     //     printf("*****************************\n\n");
@@ -580,12 +605,12 @@ void recebe_RX(struct xsk_info_global *info_global){
 /*************************************************************************/
 
 int i =0;
-__u32 ret_ring=0, stock_frames=0;
-__uint64_t cont_pkt=0;
-uint32_t idx_rx = 0;
-uint32_t idx_fq = 0;
-uint64_t addr;
-uint32_t len; 
+//__u32       ret_ring=0, stock_frames=0;
+//__uint64_t  cont_pkt=0;
+//uint32_t    idx_rx = 0;
+//uint32_t    idx_fq = 0;
+//uint64_t    addr;
+//uint32_t    len; 
 
 union sigval valor_struct;
 sigset_t set;
@@ -603,17 +628,22 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
     //    perror("sigaction");
     //    capta_sinal(SIGINT);
     //}
-
+    ret_ring = 0, stock_frames=0;   
+    cont_pkt = 0;
+    idx_rx   = 0;
+    idx_fq   = 0;
+    addr     = 0;
+    len      = 0; 
     /**************************************************************/
 
     pid_alvo = ppid;
 
 
     //while(1){
-     while( sigwait(&set, &sig_usr1) == 0 ){
-    //while( pause()  ){
+    while( sigwait(&set, &sig_usr1) == 0 ){
+        //while( pause()  ){
         //if(*ptr_trava == 0){ 
-            //while (lock == 1) {
+        //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
@@ -883,9 +913,10 @@ static __always_inline uint16_t checksum(uint16_t *buf, int len) {
 /*************************************************************************/
 int sockfd;
 unsigned char buffer[BUF_SIZE];
-char *interface = "veth2";
 
 // Se colocar essa directiva para o compilador diminui em 20us
+// Essa funcao retorna true caso o pkt foi processado e false caso deu erro
+// Assim n volta para a funcao recebe_teste_RX n desaloca a umem
 static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
 
     //printf("<Entrou em responde pacote>\n");
@@ -894,6 +925,7 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     uint32_t tx_idx = 0;
     
 
+    char *interface = "veth2";
     // Get interface index
     struct ifreq if_idx, if_mac;
     memset(&if_idx, 0, sizeof(struct ifreq));
@@ -978,22 +1010,22 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     // Swap IPs
     //__u16 tmp_port;
     uint32_t tmp_ip;
-    //tmp_ip    = ip->saddr;
-    //ip->saddr = ip->daddr;
-    //ip->daddr = tmp_ip;
-    memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
-    memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
-    memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
+    tmp_ip    = ip->saddr;
+    ip->saddr = ip->daddr;
+    ip->daddr = tmp_ip;
+    //memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
+    //memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
+    //memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
 
     // Swap ports
     //uint16_t tmp_ip;
     uint16_t tmp_port;
-    //tmp_port    = udp->source;
-    //udp->source = udp->dest;
-    //udp->dest   = tmp_port;
-    memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
-    memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
-    memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
+    tmp_port    = udp->source;
+    udp->source = udp->dest;
+    udp->dest   = tmp_port;
+    //memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
+    //memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
+    //memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
 
     //printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
 
@@ -1001,11 +1033,9 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     //printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
     //printf("\nPacote a ser enviado para %s:%d | (origem)%s\n", inet_ntoa(*(struct in_addr *)&ip->daddr), ntohs(udp->dest), inet_ntoa(*(struct in_addr *)&ip->saddr));
     // Modify payload
-    const char *response = "Processed (raw)";
+    const char *response = "Processado (cru)";
     size_t response_len = strlen(response);
     memcpy((char *)(udp + 1), response, response_len);
-
-
 
     // Adjust lengths
     udp->len = htons(sizeof(struct udphdr) + response_len);
@@ -1017,24 +1047,24 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     udp->check = 0; // UDP checksum optional (set to 0)
 
     // Send packet
-    struct sockaddr_ll sa;
-    memset(&sa, 0, sizeof(struct sockaddr_ll));
-    sa.sll_ifindex = if_idx.ifr_ifindex;
-    sa.sll_halen = ETH_ALEN;
-    memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
+    //struct sockaddr_ll sa;
+    //memset(&sa, 0, sizeof(struct sockaddr_ll));
+    //sa.sll_ifindex = if_idx.ifr_ifindex;
+    //sa.sll_halen = ETH_ALEN;
+    //memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
 
     // Simular tempo de servico
-    busy_wait_cycles(SIMULATED_CYCLES);
+    //busy_wait_cycles(SIMULATED_CYCLES);
 
     //printf("\n-->FIM responde_pkt()<--\n");
     // ENVIA PACOTE PELO SOCKET UDP
-    ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
-                              0, (struct sockaddr *)&sa, sizeof(sa));
-    if (sent_len < 0) {
-        perror("+++ sendto +++");
-    } else {
-        //printf("+++ Replied to client. +++\n");
-    }
+    //ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
+    //                          0, (struct sockaddr *)&sa, sizeof(sa));
+    //if (sent_len < 0) {
+    //    perror("+++ sendto +++");
+    //} else {
+    //    //printf("+++ Replied to client. +++\n");
+    //}
     
 
     //int ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
@@ -1055,7 +1085,7 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     //info_global-> tx_restante++;
     ptr_mem_info_global->tx_restante++;
 
-    return false;
+    return true;
 }
 
 /*************************************************************************/
@@ -1070,12 +1100,18 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
 
     __u32 ret_ring=0, stock_frames=0;
     __uint64_t cont_pkt=0;
-   
     uint32_t idx_rx = 0;
     uint32_t idx_fq = 0;
     uint64_t addr;
     uint32_t len; 
-    
+
+    //ret_ring=0, stock_frames=0;
+    //cont_pkt=0;
+    //idx_rx = 0;
+    //idx_fq = 0;
+    //addr = 0;
+    //len  = 0; 
+
      //while(1){
      while( sigwait(&set, &sig_usr1) == 0 ){
             // esse laco pode ser o equivalente a funcao handle_receive_packets
@@ -1083,6 +1119,9 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
             idx_rx = 0;
             idx_fq = 0;
             i = 0;
+            //addr = 0;
+            //len  = 0; 
+            //ret_ring=0, stock_frames=0;
 
             // Verifica se há pacotes no ring buffer de recepção
             // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
@@ -1120,6 +1159,7 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
                 for (i = 0; i < stock_frames; i++){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
                     //*xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free);
+                    //printf("\n(recebe_teste_RX)--- Alocando mem ---\n");
                     *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
                 }
                 // Submit the filled slots so the kernel can process them
@@ -1141,7 +1181,7 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
                 //if (!processa_pacote(umem_info,  addr, len))
                 //if ( !processa_pacote( addr, len) )
                 if ( !responde_pacote( addr, len) ){
-                    //printf("VOLTOU do responde_pacote\n");
+                    printf("(recebe_teste_RX) chamando desaloca_umem_frame | umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
                     //desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
                     desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
 
@@ -1174,17 +1214,17 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr); 
     uint32_t tx_idx = 0;
     
-
+    //char *interface = "veth4";
     // Get interface index
-    struct ifreq if_idx, if_mac;
-    memset(&if_idx, 0, sizeof(struct ifreq));
-    strncpy(if_idx.ifr_name, interface, IFNAMSIZ - 1);
-    ioctl(sockfd_udp, SIOCGIFINDEX, &if_idx);
+    //struct ifreq if_idx, if_mac;
+    //memset(&if_idx, 0, sizeof(struct ifreq));
+    //strncpy(if_idx.ifr_name, interface, IFNAMSIZ - 1);
+    //ioctl(sockfd_udp, SIOCGIFINDEX, &if_idx);
 
-    // Get MAC address
-    memset(&if_mac, 0, sizeof(struct ifreq));
-    strncpy(if_mac.ifr_name, interface, IFNAMSIZ - 1);
-    ioctl(sockfd_udp, SIOCGIFHWADDR, &if_mac);
+    //// Get MAC address
+    //memset(&if_mac, 0, sizeof(struct ifreq));
+    //strncpy(if_mac.ifr_name, interface, IFNAMSIZ - 1);
+    //ioctl(sockfd_udp, SIOCGIFHWADDR, &if_mac);
 
     /*************************************/
 
@@ -1321,7 +1361,7 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     //xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
     //xsk_ring_prod__submit( &umem_info2->tx, 1);
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
-    xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
+    xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len  = len;
     xsk_ring_prod__submit( &umem_info2->tx, 1);
  
     //umem_info->tx_restante++;
@@ -1342,7 +1382,7 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     //    //printf("+++ Replied to client. +++\n");
     //}
 
-    return false;
+    return true;
 }
 
 
@@ -1362,7 +1402,23 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
 
     /**************************************************************/
 
-    pid_alvo = ppid;
+    //pid_alvo = ppid;
+
+    int i =0;
+
+    __u32 ret_ring=0, stock_frames=0;
+    __uint64_t cont_pkt=0;
+    uint32_t idx_rx = 0;
+    uint32_t idx_fq = 0;
+    uint64_t addr;
+    uint32_t len; 
+
+   //ret_ring= 0, stock_frames=0;
+   //cont_pkt= 0;
+   //idx_rx =  0;
+   //idx_fq =  0;
+   //addr = 0;
+   //len  = 0; 
 
 
     //while(1){
@@ -1393,23 +1449,29 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
 
             ptr_mem_info_global->ret_ring = ret_ring;
 
+            //printf("(recebe_signal_RX2) ret_ring: %d\n", ptr_mem_info_global->ret_ring);
             // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
             // retorna o endereco do pacote --> __u64 address of the packet.
-            stock_frames = xsk_prod_nb_free(&umem_info->fq,	ptr_mem_info_global->umem_frame_free);
+            int stock_frames = xsk_prod_nb_free(&umem_info->fq,	ptr_mem_info_global->umem_frame_free);
             //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
             if(stock_frames > 0){
-                //printf("stock_frames OK ret_ring %d\n", ret_ring);
+                //stock_frames += stock_frames == 2 ? -1 : 0;
+                //printf("\nstock_frames:%d | ret_ring %d\n", stock_frames, ret_ring);
                 // Reserve one or more slots in a producer ring.
                 // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
                 int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
 
                 /* This should not happen, but just in case */
-               //	while (ret_res != stock_frames)
-               //     ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
+               	//while (ret_res != stock_frames)
+                //    ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
 
                 for (i = 0; i < stock_frames; i++){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
+                    //uint64_t temp = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
+
+                    //printf("\n(recebe_signal_RX2)--- Alocando mem --- retorno aloca_umem: %ld\n", temp);
+
                     *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
                 }
                 // Submit the filled slots so the kernel can process them
@@ -1429,18 +1491,18 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
                 //if (!processa_pacote(umem_info,  addr, len)){
                 //if ( !processa_pacote( addr, len) ){
                 if ( !responde_pacote2( addr, len) ){
+                    //printf("*** Erro ao reservar pacote %ld***\n", addr);
                     desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
                 }
 
                 cont_pkt++;
              }
 
-            //union sigval valor;
-            //valor.sival_int = dado;  // Anexa dado ao sinal
+            //printf("(recebe_signal_RX2)Valor do umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
 
             // Enviando sinal e verificando se deu erro
-            //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
-            if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+            if ( kill(ppid, SIGUSR1) == -1 ) {
+            //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
             }
@@ -1451,7 +1513,7 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
             // gprof rodar sem problemas e salvar os dados de profiling
             if ( cont_pkt >= PKT_LIMIT ){
                 //kill(pid_alvo, SIGUSR1);
-                kill(pid_alvo, SIGUSR2);
+                kill(ppid, SIGUSR2);
                 capta_sinal(SIGINT);
             }
         }

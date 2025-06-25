@@ -61,13 +61,14 @@
 #define SERVER_PORT 8080
 
 #define BUF_SIZE 2048
+#define SIMULATED_CYCLES 1500000 // Simulate ~1ms processing
 //#define SIMULATED_CYCLES 1600000 // Simulate ~1ms processing
 //#define SIMULATED_CYCLES 75500000 // Simulate ~50ms processing
 //#define SIMULATED_CYCLES 90000000 // Simulate ~50ms processing
 //#define SIMULATED_CYCLES 900000000 // Simulate ~500ms processing
-#define  SIMULATED_CYCLES 143300000 // 50ms isolado com 3.6GHz
+//#define  SIMULATED_CYCLES 143300000 // 50ms isolado com 3.6GHz
 
-#define PKT_LIMIT 100000
+#define PKT_LIMIT 1000000
 
 struct xsk_umem_info {
 	struct xsk_ring_prod fq; // fill ring da UMEM
@@ -88,6 +89,7 @@ struct xsk_info_global {
     uint32_t tx_restante;
 
 };
+extern struct xsk_info_global *ptr_mem_info_global;
 
 static struct xsk_umem_config umem_cfg = {
     .fill_size = NUM_FRAMES,
@@ -176,7 +178,7 @@ void configura_umem();
 void configura_socket();
 void cria_segundo_socket();
 
-//static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free);
+///*static __always_inline*/ uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free);
 static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free){
     
     uint64_t frame;
@@ -186,11 +188,12 @@ static __always_inline uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_
         return INVALID_UMEM_FRAME;
     }
    
+    //printf("(alloca_umem)#### frame_free: %lu\n", *frame_free);
     //frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
     frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
     ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
 
-    //printf("(alloca_umem)#### frame: %lu\n", frame);
+    //printf("(alloca_umem)#### umem_frame_free: %d | frame: %lu\n", ptr_mem_info_global->umem_frame_free, frame);
 	//frame = vetor_frame[--*frame_free];
 	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;
 
@@ -215,8 +218,9 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len);
 void recebe_teste_RX(struct xsk_info_global *info_global);
 
 //void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
-static __always_inline void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
-/*static __always_inline*/ void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+/*static __always_inline*/ void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+///*static __always_inline*/ void complete_tx2();
 /******************NOVA_APLICACAO****************************/
 static __always_inline void busy_wait_cycles(unsigned long long cycles);
 static __always_inline uint16_t checksum(uint16_t *buf, int len);

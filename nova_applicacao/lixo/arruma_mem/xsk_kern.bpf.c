@@ -91,9 +91,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 	return protocol; 
 }
 /*****************************************************************************/
-//__u32 pkt_global = 0;
-
-//__u64 pidg = 0;
+__u32 pkt_global = 0;
 
 SEC("xdp")
 int xdp_prog(struct xdp_md *ctx){
@@ -116,33 +114,37 @@ int xdp_prog(struct xdp_md *ctx){
 
 
     ret = verifica_ip(ctx);
-    //if (pidg ==  0){
-        ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
-    //    //ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
+    ptr = bpf_map_lookup_elem(&mapa_sinal, &key);
+    //ptr_sig = bpf_map_lookup_elem(&tempo_sig, &pkt_global);
 
-    //    if (ptr == NULL){
-    //        bpf_printk("Erro ao acessar o mapa_sinal");
-    //        return XDP_DROP;
-    //    }
+    //if (ptr == NULL){
+	//    bpf_printk("Erro ao acessar o mapa_sinal");
+	//    return XDP_DROP;
     //}
-    //pidg = *ptr;
 
     // Se for pacote UDP == 17
-    //if( /*ret == 17 ||*/ ret == 1){
+    //if( ret == 17){
+    //if( ptr != NULL  && ret == 1 /*&& ptr_sig != NULL*/){
     if( ptr != NULL  && ret == 17 /*&& ptr_sig != NULL*/){
-	
+    //if (ret == 17){
+
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
-        ret_func = bpf_minha_func(*ptr, 10);
-        //ret_func = bpf_minha_func(pidg, 10);
+        //ret_func = bpf_minha_func(*ptr, 10);
         //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
-        if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
+        if (  bpf_minha_func(*ptr, 10) /*ret_func*/ < 0 ){
             bpf_printk("Erro ao enviar sinal para o pid");
             return XDP_DROP;
         }
-       return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+
+        //bpf_map_update_elem(&tempo_sig , &pkt_global , &ret_func , BPF_ANY);
+        //bpf_printk("Enviando sinal...(pid %d | cpu %d) %llu\n", *ptr, bpf_get_smp_processor_id(), ret_func);
+        //bpf_printk("Entrou no IF do XDP! %d\n", ret_final);
+       
+        //pkt_global++; 
+        return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
     else{
-        bpf_printk("Erro ao acessar o mapa_sinal ret: %d!!!\n", ret);
+        bpf_printk("Erro ao acessar o mapa_sinal | ret: %d!!!", ret);
         return XDP_DROP;
     }
 

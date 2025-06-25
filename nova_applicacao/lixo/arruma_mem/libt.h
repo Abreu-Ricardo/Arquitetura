@@ -1,5 +1,5 @@
-#ifndef COMMONS_H
-#define COMMONS_H
+#ifndef LIBT_H
+#define LIBT_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +38,12 @@
 #include <bpf/libbpf.h>
 #include <xdp/xsk.h>
 #include <xdp/libxdp.h>
+
+#include <netinet/udp.h>
+#include <net/ethernet.h>
+#include <netpacket/packet.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 
 
 #include "xsk_kern.skel.h"
@@ -110,18 +116,19 @@ static struct xsk_socket_config xsk_cfg2 = {
     .bind_flags =  XDP_SHARED_UMEM,
 };
 
-
+// Sockets XSK
 extern struct xsk_socket *xsk;
 extern struct xsk_socket *xsk2;
 extern void *buffer_do_pacote; // e usar o ptr da mem compart do shm()
 
+// Configs XDP
 extern struct xdp_program *xdp_prog;
 extern struct bpf_object *bpf_obj;
 extern struct bpf_map *bpf_map;
 static int ifindex, lock = 1, cont_regiao = 0;
 
 //extern char *ptr_trava;      ;  //   
-extern int *ptr_trava;      ;  //   
+extern int  *ptr_trava;      ;  //   
 extern char *nome_regiao     ;  // = "/memtest";
 extern char *nome_trava      ;  // = "/trava";
 extern char *nome_info_global;  // = "info_global";
@@ -133,10 +140,12 @@ static int sig_usr1  = 10, sig_rtmin = 35;
 extern pid_t fpid, ppid, pid_alvo;
 static int long long start, end;
 
+// Vars para sinais
 extern sigset_t set;
 extern struct sigaction act;
 extern union sigval valor;
 
+// Configs da umem 
 extern struct xsk_kern_bpf    *skel;
 extern struct xsk_umem_info   *umem_info;    // xsk  -- Processo
 extern struct xsk_umem_info   *umem_info2;   // xsk2 -- Processo
@@ -158,8 +167,8 @@ extern char nomeproc[30];
 /**************FUNCOES**********************/
 void capta_sinal(int signum);
 void configura_umem();
-void configura_socket();
-void cria_segundo_socket();
+void configura_socket(const char *iface);
+void cria_segundo_socket(const char *iface);
 
 /*__always_inline*/ uint64_t alloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free);
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame);
@@ -170,9 +179,14 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 novo)
 
 static __always_inline int processa_pacote(uint64_t addr, uint32_t len);
 
-void recebe_RX(struct xsk_info_global *info_global);
+
+//void recebe_RX(struct xsk_info_global *info_global);
 void recebe_signal_RX(struct xsk_info_global *info_global );
-void recebe_pkt_RX(struct xsk_info_global *info_global );
+//void recebe_pkt_RX(struct xsk_info_global *info_global );
+
+static __always_inline uint16_t checksum(uint16_t *buf, int len);
+static __always_inline int responde_pacote2(uint64_t addr, uint32_t len);
+void recebe_signal_RX2(struct xsk_info_global *info_global );
 
 void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
 

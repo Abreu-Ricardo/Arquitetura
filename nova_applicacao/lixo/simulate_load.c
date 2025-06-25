@@ -56,15 +56,12 @@ int main(int argc, char **argv) {
         ret_ring, 
         ret_sys;
 
-    
     unsigned int stock_frames;
-   
 
     struct xsk_info_global *info_global;
 
     // Trava para ver se ainda ha espaco para os consumir frames
     uint32_t umem_frame_free = NUM_FRAMES;
-
 
     __u32 idx;
     uint64_t umem_frame_addr[NUM_FRAMES];
@@ -176,7 +173,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    tam_info_global = sizeof(struct xsk_info_global) * 100;
+    tam_info_global = sizeof(struct xsk_info_global);// * 100;
 
     ret_ftruncate = ftruncate(fd_info_global, tam_regiao);
     if ( ret_ftruncate == -1 ){
@@ -239,6 +236,7 @@ int main(int argc, char **argv) {
     }
     
     info_global = (struct xsk_info_global *) malloc( sizeof(*info_global ) );
+    //info_global = (struct xsk_info_global *) malloc( sizeof(struct xsk_info_global ) );
    
     info_global->umem_frame_addr = umem_frame_addr;
     info_global->umem_frame_free = umem_frame_free;
@@ -293,12 +291,12 @@ int main(int argc, char **argv) {
         char *interface = argv[1];
         unsigned char buffer[BUF_SIZE];
 
-        if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
-            perror("Socket");
-            exit(EXIT_FAILURE);
-        }
+        //if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
+        //    perror("Socket");
+        //    exit(EXIT_FAILURE);
+        //}
 
-        printf("Listening on %s...\n", interface);
+        printf("Listening on %s | PKT_LIMIT: %d\n", interface, PKT_LIMIT);
         recebe_teste_RX(ptr_mem_info_global);
     }
 
@@ -309,15 +307,16 @@ int main(int argc, char **argv) {
         // Processo Filho
         if(pid == 0){
 
+            strncpy(argv[0], "loadF", strlen(argv[0]));
             fpid = getpid();
             char *interface = argv[1];
             //int sockfd_udp;
             unsigned char buffer[BUF_SIZE];
 
-            if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
-                perror("Socket");
-                exit(EXIT_FAILURE);
-            }
+            //if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
+            //    perror("Socket");
+            //    exit(EXIT_FAILURE);
+            //}
 
             sprintf(settar_cpup, "taskset -cp 5 %d", fpid);
             system(settar_cpup);
@@ -325,7 +324,7 @@ int main(int argc, char **argv) {
             if( setsid() < 0 )
                 exit(-1);
 
-            fd_namespace = open( "/proc/37458/ns/net",  O_RDONLY );
+            fd_namespace = open( "/proc/17517/ns/net",  O_RDONLY );
             ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
             if (ret_sys < 0){
                 printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -349,7 +348,8 @@ int main(int argc, char **argv) {
 
         // Processo Pai
         else if(pid > 0){
-            strncpy(argv[0], "loadp", strlen(argv[0]));
+            printf("Processo com 2 sockets iniciados | PKT_LIMIT: %d\n", PKT_LIMIT);
+            strncpy(argv[0], "loadP", strlen(argv[0]));
 
             //ppid = getpid();
             char settar_cpup[30]; 
@@ -357,7 +357,7 @@ int main(int argc, char **argv) {
             sprintf(settar_cpup, "taskset -cp 4 %d", ppid );
             printf("\n<PID DO PAI %d>\n", ppid);
             printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-            //system(settar_cpup);
+            system(settar_cpup);
 
             //fpid = *ptr_trava;
 
@@ -372,11 +372,17 @@ int main(int argc, char **argv) {
                     //} else {
                     //    //printf("+++ Replied to client. +++\n");
                     //}
+                    //printf("(PROC_PAI) %d\n", ptr_mem_info_global->ret_ring);
+                    
                     xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
                     complete_tx2(ptr_mem_info_global->umem_frame_addr, 
                                 &ptr_mem_info_global->umem_frame_free, 
                                 &ptr_mem_info_global->tx_restante);
-                    //complete_tx();
+
+                    //printf("(PROC_PAI)Valor do umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
+                    
+                    //printf("(PROC_PAI2) %d\n", ptr_mem_info_global->ret_ring);
+                    //complete_tx2();
                 }
             } 
         }

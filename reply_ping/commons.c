@@ -214,7 +214,7 @@ void cria_segundo_socket(const char *iface){
     frame = ptr_mem_info_global->umem_frame_addr[ --ptr_mem_info_global->umem_frame_free ];
     ptr_mem_info_global->umem_frame_addr[ptr_mem_info_global->umem_frame_free] = INVALID_UMEM_FRAME;
 
-    //printf("(alloca_umem)#### frame: %lu\n", frame);
+    printf("(alloca_umem)#### frame: %lu\n", frame);
 
 	//frame = vetor_frame[--*frame_free];
 	//vetor_frame[*frame_free] = INVALID_UMEM_FRAME;

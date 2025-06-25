@@ -5,13 +5,15 @@ import matplotlib.pyplot as plt
 um_socketXDP = open( "single-1cont_1K.txt", 'r')
 socketXDP = um_socketXDP.readlines()
 
-dois_socketXDP = open( "duo_1K.txt", 'r')
+#dois_socketXDP = open( "duo_1K.txt", 'r')
+dois_socketXDP = open( "xsk_duo.txt", 'r')
 socketsXDP     = dois_socketXDP.readlines()
 
 app_1cont = open( "server-1cont_1K.txt", 'r')
 app1c     = app_1cont.readlines()
 
-app_2cont = open( "server-2cont_1K.txt", 'r')
+#app_2cont = open( "server-2cont_1K.txt", 'r')
+app_2cont = open( "single_2.txt", 'r')
 app2c     = app_2cont.readlines()
 
 #rot = open( "roteamento.txt", 'r')

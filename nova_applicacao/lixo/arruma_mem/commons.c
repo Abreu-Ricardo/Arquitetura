@@ -594,11 +594,11 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
             // Se bateu o limite de pkts a serem processados
             // termina o processo de maneira graciosa para o
             // gprof rodar sem problemas e salvar os dados de profiling
-            if ( cont_pkt >= PKT_LIMIT ){
-                //kill(pid_alvo, SIGUSR1);
-                kill(pid_alvo, SIGUSR2);
-                capta_sinal(SIGINT);
-            }
+            //if ( cont_pkt >= PKT_LIMIT ){
+            //    //kill(pid_alvo, SIGUSR1);
+            //    kill(pid_alvo, SIGUSR2);
+            //    capta_sinal(SIGINT);
+            //}
         }
 }
 

@@ -108,11 +108,9 @@ int main(int argc, char *argv[]) {
     struct timespec start, end;
     int len;
     double latency;
-    int dropped = 0;
     
     // Laco de envio dos pkts
-    int i;
-    for (i = 0; i < num_packets; i++) {
+    for (int i = 0; i < num_packets; i++) {
         //clock_gettime(CLOCK_MONOTONIC, &start);
         inicio = RDTSC();
 
@@ -142,15 +140,14 @@ int main(int argc, char *argv[]) {
 
         } else {
             perror("Timeout or receive error");
-	    dropped++;
             //close(sockfd);
             //exit(1);
         }
-	//usleep(500);
+        usleep(120);
     }
 
     float media_lat = media(latency_pkts, num_packets);
-    printf("\nLatency min/avg/max: %.3f/%.3f/%.3f ms\nDropped: %d --> %.2f%% \n", min, media_lat, max, dropped, (double) (dropped * 100) / (i+dropped));
+    printf("Latency min/avg/max: %.3f/%.3f/%.3f ms\n", min, media_lat, max);
     
     close(sockfd);
     return 0;
