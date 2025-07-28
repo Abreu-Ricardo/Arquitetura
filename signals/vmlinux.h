@@ -87680,8 +87680,10 @@ struct pinctrl_desc {
 	bool link_consumers;
 };
 
+struct intel_community_context;
+
 struct intel_pinctrl_context {
-	struct intel_pad_context___3 *pads;
+	struct intel_pad_context *pads;
 	struct intel_community_context *communities;
 };
 
@@ -87718,10 +87720,8 @@ struct intel_pinctrl___2 {
 	int irq;
 };
 
-struct intel_community_context;
-
 struct intel_pinctrl_context___3 {
-	struct intel_pad_context *pads;
+	struct intel_pad_context___3 *pads;
 	struct intel_community_context *communities;
 };
 

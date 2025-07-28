@@ -58,9 +58,13 @@ int main() {
         exit(1);
     }
 
+    int cont = 0;
     for (int i = 0; i < 100; i++) {
+    //while(1){
         ssize_t len = recvfrom(sockfd, buffer, PACKET_SIZE, 0,
                                (struct sockaddr *)&recv_addr, &addr_len);
+
+        cont++;
         if (len >= sizeof(unsigned long long)) {
             unsigned long long send_ts, recv_ts;
             memcpy(&send_ts, buffer, sizeof(send_ts));
@@ -69,7 +73,7 @@ int main() {
             double latency_us = (double)latency_cycles / tsc_freq_mhz;
 
             printf("Packet %d: latency = %llu cycles (%.2f µs)\n",
-                   i, latency_cycles, latency_us);
+                   /*cont*/ i, latency_cycles, latency_us);
         }
     }
 

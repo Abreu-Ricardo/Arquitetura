@@ -1,43 +1,40 @@
 #include "commons.h"
 
-
 struct xsk_kern_bpf    *skel;
 int sockfd_udp;
 
-int *ptr_trava;
-char *nome_regiao      = "/memtest";
-char *nome_trava       = "/trava";
+int  *ptr_trava;
+char *nome_regiao      = "/xdp_umem";
+char *nome_trava       = "/sock_info";
+char *veth2            = "veth2";
+char *veth4            = "veth4";
 char *nome_info_global = "info_global";
 
+char  nomeproc[30];
+
 pid_t fpid, ppid, pid_alvo;
+int fd_sock_client, flag_sockXDP = -1;
 
-struct xsk_socket *xsk;
-struct xsk_socket *xsk2;
-void *buffer_do_pacote; // e usar o ptr da mem compart do shm()
+struct xsk_socket      *xsk;
+struct xsk_socket      *xsk2;
+struct xdp_program     *xdp_prog;
 
-struct xdp_program *xdp_prog;
-struct bpf_object *bpf_obj;
-struct bpf_map *bpf_map;
+struct bpf_object      *bpf_obj;
+struct bpf_map         *bpf_map;
 
 struct xsk_kern_bpf    *skel;
 struct xsk_umem_info   *umem_info;    // xsk  -- Processo
 struct xsk_umem_info   *umem_info2;   // xsk2 -- Processo
 struct xsk_info_global *ptr_mem_info_global;
+struct sock_info *sock_udp;
 
-
-int fd_sock_client;
 struct sockaddr_in client_addr;
 socklen_t client_len = sizeof(client_addr);
 
-
-char nomeproc[30];
-int flag_sockXDP = -1;
-
-
+void *buffer_do_pacote; // e usar o ptr da mem compart do shm()
 
 __u32 ret_ring=0, stock_frames=0;
 __uint64_t cont_pkt=0;
-
 uint32_t idx_rx = 0;
 uint32_t idx_fq = 0;
 uint64_t addr;
@@ -443,20 +440,15 @@ int cont = 0;
     return;
 }
 /*************************************************************************/
+int tcon = 0;
 void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
-///*static __always_inline*/ void complete_tx2(){
-//void complete_tx(/*uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante*/){
-    //printf("\nENTROU NO complete_tx\n");
-    //printf("chamando complete_tx: %d\n", cont);
-    //cont++;
+    //printf("chamando complete_tx2: %d | fd sockUDP: %d\n", tcon++, sock_udp->sockUDP);
     
     //start = RDTSC();
-
     int i, retsend; 
     unsigned int completed;
 	uint32_t idx_cq;
-	
-    //if (!*tx_restante){
+
     if (!ptr_mem_info_global->tx_restante){
 	    //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
         return;
@@ -466,8 +458,14 @@ void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_rest
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
     //retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    //printf("(complete_tx2:)Retorno do sendto: %d\n", retsend);
+    //sendto(sock, buffer, buflen, 0, (struct sockaddr*)dest, sizeof(*dest));
+
+    retsend = sendto(sock_udp->sockUDP, sock_udp->pkt, sock_udp->tam_pkt, 0, (struct sockaddr *)&sock_udp->sa, sizeof(sock_udp->sa));
+    
+    //printf("--> fd sock:%d tam_pkt:%ld sa:%u %d\n\n", sock_udp->sockUDP, sock_udp->tam_pkt , 
+    //        *sock_udp->sa.sll_addr, *sock_udp->pkt);
+    //printf("(complete_tx2:)Retorno do sendto: %d | tam_pkt: %ld\n", retsend, sock_udp->tam_pkt);
+    if(retsend < 0) perror("Retsend < 0");
 
     // Se retorno de sendto for < 0, houve erro 
     //if (retsend >= 0){
@@ -480,30 +478,15 @@ void complete_tx2(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_rest
         uint64_t temp;       
         //printf("(complete_tx2) valor de completed: %d\n", completed);
         if (completed > 0) {
-            //printf("-->Entrou no completed<--\n");
             for (i = 0; i < completed; i++){
-                //printf("Desalocando %d\n", i);
-                //printf("(complete_tx2) chamando desaloca_umem_frame | umem_frame_free %d | addr: %lld\n", ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++));
                 ///*uint64_t*/ temp = *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++); 
                 desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free,  *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) /*temp*/ );
             }
-            //printf("(complete_tx2)Valor do umem_frame_free: %d | ret_comp_addr: %ld\n", ptr_mem_info_global->umem_frame_free, temp);
             xsk_ring_cons__release(&umem_info->cq, completed);
-            //*tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
             ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
-
-            //printf("(complete_tx2)Valor do umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
         //}
     }
-    //else{
-    //     printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
-    //     printf("*****************************\n\n");
-    //}
-
     //end = RDTSC();
-    
-    //printf("tempo fil da func complete_tx() --> %f\n", (end - start) / 3.6 );
-    //printf("----- Terminou complete_tx() ------\n");
     return;
 }
 
@@ -524,7 +507,6 @@ void recebe_RX(struct xsk_info_global *info_global){
     uint32_t idx_fq = 0;
     uint64_t addr;
     uint32_t len; 
-    
 
     while(1){
         //if(*ptr_trava == 0){ 
@@ -909,7 +891,6 @@ static __always_inline uint16_t checksum(uint16_t *buf, int len) {
     return ~sum;
 }
 
-
 /*************************************************************************/
 int sockfd;
 unsigned char buffer[BUF_SIZE];
@@ -923,7 +904,6 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
 
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr); 
     uint32_t tx_idx = 0;
-    
 
     char *interface = "veth2";
     // Get interface index
@@ -938,48 +918,12 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     ioctl(sockfd_udp, SIOCGIFHWADDR, &if_mac);
 
     /*************************************/
-
-    //struct ethhdr *eth = (struct ethhdr *)pkt;
-    //struct iphdr  *ip  = (struct iphdr  *)(pkt + sizeof(struct ethhdr));
-    //struct udphdr *udp = (struct udphdr *)(pkt + sizeof(struct ethhdr) + sizeof(struct iphdr));
     
     struct ethhdr *eth = (struct ethhdr *)pkt;
     struct iphdr  *ip  = (struct iphdr  *)(eth + 1);
     struct udphdr *udp = (struct udphdr *)(ip + 1);
 
-
     char *payload = (char *)(udp + 1);
-
-
-    //if (ntohs(eth->h_proto) != ETH_P_IP || ip->protocol != IPPROTO_UDP) continue;
-    //if (ntohs(eth->h_proto) != ETH_P_IP || ip->protocol != IPPROTO_UDP) return false;
-
-    // Optional: filter by port
-    //if (ntohs(udp->dest) != 12345) continue;
-    //if (ntohs(udp->dest) != 12345) return false;
-
-    //printf("\nReceived packet from %s:%d %s\n", inet_ntoa(*(struct in_addr *)&ip->saddr),
-    //                                       ntohs(udp->source),  inet_ntoa(*(struct in_addr *)&ip->saddr));
-
-   
-    //printf("\nIP(recebido): %s(s) | %s(d)\n\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
-
-
-    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_source[0],
-    //        eth->h_source[1],
-    //        eth->h_source[2],
-    //        eth->h_source[3],
-    //        eth->h_source[4],
-    //        eth->h_source[5]);
-
-    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_dest[0],
-    //        eth->h_dest[1],
-    //        eth->h_dest[2],
-    //        eth->h_dest[3],
-    //        eth->h_dest[4],
-    //        eth->h_dest[5]);
 
     // Swap MAC addresses
     unsigned char tmp_mac[ETH_ALEN];
@@ -988,34 +932,12 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     memcpy(eth->h_source, eth->h_dest, ETH_ALEN);
     memcpy(eth->h_dest, tmp_mac, ETH_ALEN);
 
-    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_source[0],
-    //        eth->h_source[1],
-    //        eth->h_source[2],
-    //        eth->h_source[3],
-    //        eth->h_source[4],
-    //        eth->h_source[5]);
-
-    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_dest[0],
-    //        eth->h_dest[1],
-    //        eth->h_dest[2],
-    //        eth->h_dest[3],
-    //        eth->h_dest[4],
-    //        eth->h_dest[5]);
-
-
-    //printf("AQUIIII portas recebidas:   %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
-
     // Swap IPs
     //__u16 tmp_port;
     uint32_t tmp_ip;
     tmp_ip    = ip->saddr;
     ip->saddr = ip->daddr;
     ip->daddr = tmp_ip;
-    //memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
-    //memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
-    //memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
 
     // Swap ports
     //uint16_t tmp_ip;
@@ -1023,15 +945,7 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     tmp_port    = udp->source;
     udp->source = udp->dest;
     udp->dest   = tmp_port;
-    //memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
-    //memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
-    //memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
 
-    //printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
-
-
-    //printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
-    //printf("\nPacote a ser enviado para %s:%d | (origem)%s\n", inet_ntoa(*(struct in_addr *)&ip->daddr), ntohs(udp->dest), inet_ntoa(*(struct in_addr *)&ip->saddr));
     // Modify payload
     const char *response = "Processado (cru)";
     size_t response_len = strlen(response);
@@ -1074,17 +988,11 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
         return false;
     }
 
-    //xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
-    //xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
-    //xsk_ring_prod__submit( &umem_info2->tx, 1);
     xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
     xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
     xsk_ring_prod__submit( &umem_info->tx, 1);
- 
-    //umem_info->tx_restante++;
-    //info_global-> tx_restante++;
-    ptr_mem_info_global->tx_restante++;
 
+    ptr_mem_info_global->tx_restante++;
     return true;
 }
 
@@ -1207,19 +1115,29 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
 }// laco da funcao recebe_teste_RX()
 
 /*******************************************************************************************************/
+
+struct sockaddr_ll sa;
+struct ifreq if_idx, if_mac;
+uint8_t *pkt;
+
+int pkt_cont=0;
 static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
 
     //printf("<Entrou em responde_pacote2>\n");
 
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr); 
+    sock_udp->pkt = pkt; // Passa o endereco do pacote para a mem compart.
     uint32_t tx_idx = 0;
+
     
     //char *interface = "veth4";
     // Get interface index
-    //struct ifreq if_idx, if_mac;
-    //memset(&if_idx, 0, sizeof(struct ifreq));
+    struct ifreq if_idx, if_mac;
+    memset(&if_idx, 0, sizeof(struct ifreq));
     //strncpy(if_idx.ifr_name, interface, IFNAMSIZ - 1);
+    strncpy(if_idx.ifr_name, veth2, IFNAMSIZ - 1);
     //ioctl(sockfd_udp, SIOCGIFINDEX, &if_idx);
+    ioctl(sock_udp->sockUDP, SIOCGIFINDEX, &if_idx);
 
     //// Get MAC address
     //memset(&if_mac, 0, sizeof(struct ifreq));
@@ -1227,48 +1145,12 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     //ioctl(sockfd_udp, SIOCGIFHWADDR, &if_mac);
 
     /*************************************/
-
-    //struct ethhdr *eth = (struct ethhdr *)pkt;
-    //struct iphdr  *ip  = (struct iphdr  *)(pkt + sizeof(struct ethhdr));
-    //struct udphdr *udp = (struct udphdr *)(pkt + sizeof(struct ethhdr) + sizeof(struct iphdr));
     
     struct ethhdr *eth = (struct ethhdr *)pkt;
     struct iphdr  *ip  = (struct iphdr  *)(eth + 1);
     struct udphdr *udp = (struct udphdr *)(ip + 1);
 
-
     char *payload = (char *)(udp + 1);
-
-
-    //if (ntohs(eth->h_proto) != ETH_P_IP || ip->protocol != IPPROTO_UDP) continue;
-    //if (ntohs(eth->h_proto) != ETH_P_IP || ip->protocol != IPPROTO_UDP) return false;
-
-    // Optional: filter by port
-    //if (ntohs(udp->dest) != 12345) continue;
-    //if (ntohs(udp->dest) != 12345) return false;
-
-    //printf("\nReceived packet from %s:%d %s\n", inet_ntoa(*(struct in_addr *)&ip->saddr),
-    //                                       ntohs(udp->source),  inet_ntoa(*(struct in_addr *)&ip->saddr));
-
-   
-    //printf("\nIP(recebido): %s(s) | %s(d)\n\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
-
-
-    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_source[0],
-    //        eth->h_source[1],
-    //        eth->h_source[2],
-    //        eth->h_source[3],
-    //        eth->h_source[4],
-    //        eth->h_source[5]);
-
-    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_dest[0],
-    //        eth->h_dest[1],
-    //        eth->h_dest[2],
-    //        eth->h_dest[3],
-    //        eth->h_dest[4],
-    //        eth->h_dest[5]);
 
     // Swap MAC addresses
     unsigned char tmp_mac[ETH_ALEN];
@@ -1277,34 +1159,13 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     memcpy(eth->h_source, eth->h_dest, ETH_ALEN);
     memcpy(eth->h_dest, tmp_mac, ETH_ALEN);
 
-    //printf("Source MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_source[0],
-    //        eth->h_source[1],
-    //        eth->h_source[2],
-    //        eth->h_source[3],
-    //        eth->h_source[4],
-    //        eth->h_source[5]);
-
-    //printf("Dest   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-    //        eth->h_dest[0],
-    //        eth->h_dest[1],
-    //        eth->h_dest[2],
-    //        eth->h_dest[3],
-    //        eth->h_dest[4],
-    //        eth->h_dest[5]);
-
-
-    //printf("AQUIIII portas recebidas:   %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
-
     // Swap IPs
     //__u16 tmp_port;
     uint32_t tmp_ip;
     tmp_ip    = ip->saddr;
     ip->saddr = ip->daddr;
     ip->daddr = tmp_ip;
-    //memcpy(&tmp_ip   , &ip->saddr, sizeof(ip->saddr));
-    //memcpy(&ip->saddr, &ip->daddr, sizeof(ip->daddr));
-    //memcpy(&ip->daddr, &tmp_ip   , sizeof(tmp_ip));
+
 
     // Swap ports
     //uint16_t tmp_ip;
@@ -1312,30 +1173,16 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     tmp_port    = udp->source;
     udp->source = udp->dest;
     udp->dest   = tmp_port;
-    //memcpy(&tmp_port   , &udp->source, sizeof(udp->source));
-    //memcpy(&udp->source, &udp->dest  , sizeof(udp->dest));
-    //memcpy(&udp->dest  , &tmp_port   , sizeof(tmp_port));
 
-    //printf("AQUIIII portas para enviar:  %d(s) %d(d)\n", ntohs(udp->source), ntohs(udp->dest));
-
-
-    //printf("\nIP(enviado): %s(s) | %s(d)\n", inet_ntoa(*(struct in_addr *)&ip->saddr),  inet_ntoa(*(struct in_addr *)&ip->daddr));
-    //printf("\nPacote a ser enviado para %s:%d | (origem)%s\n", inet_ntoa(*(struct in_addr *)&ip->daddr), ntohs(udp->dest), inet_ntoa(*(struct in_addr *)&ip->saddr));
     // Modify payload
-    //const char *response = "Processed (raw)";
     /*const*/ char response[20] = "Processado (cru)";
     /*size_t*/ int response_len = strlen(response);
     memcpy((char *)(udp + 1), response, response_len);
 
-
-
     // Adjust lengths
     udp->len = htons(sizeof(struct udphdr) + response_len );
-    //udp->len = htons(sizeof(struct udphdr) + response_len - 2);
     //ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + response_len - 2);
     ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + response_len);
-
-    //printf("@@@@@@ --> %d %d %d\n", response_len, ntohs(ip->tot_len), ntohs(udp->len));
 
     // Recalculate checksums
     ip->check = 0;
@@ -1344,10 +1191,11 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
 
     // Send packet
     //struct sockaddr_ll sa;
-    //memset(&sa, 0, sizeof(struct sockaddr_ll));
-    //sa.sll_ifindex = if_idx.ifr_ifindex;
-    //sa.sll_halen = ETH_ALEN;
+    memset(&sock_udp->sa, 0, sizeof(struct sockaddr_ll));
+    sock_udp->sa.sll_ifindex = if_idx.ifr_ifindex;
+    sock_udp->sa.sll_halen = ETH_ALEN;
     //memcpy(sa.sll_addr, eth->h_dest, ETH_ALEN);
+    memcpy(sock_udp->sa.sll_addr, eth->h_dest, ETH_ALEN);
     /************************************************************************/
 
     //int ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
@@ -1357,9 +1205,6 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
         return false;
     }
 
-    //xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
-    //xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
-    //xsk_ring_prod__submit( &umem_info2->tx, 1);
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
     xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len  = len;
     xsk_ring_prod__submit( &umem_info2->tx, 1);
@@ -1372,17 +1217,19 @@ static __always_inline int responde_pacote2(uint64_t addr, uint32_t len){
     // Simular tempo de servico
     //busy_wait_cycles(SIMULATED_CYCLES);
 
-    //printf("\n-->FIM responde_pkt()<--\n");
     // ENVIA PACOTE PELO SOCKET UDP
-    //ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 
-    //                          0, (struct sockaddr *)&sa, sizeof(sa));
+    //printf("Enviando pacote(%d) ...\n", ++pkt_cont);
+    //sock_udp->tam_pkt = tam_pkt = sizeof(struct ethhdr) + ntohs(ip->tot_len);
+    sock_udp->tam_pkt = sizeof(struct ethhdr) + htons(ip->tot_len);
+
+    //ssize_t sent_len = sendto(sockfd_udp, pkt, sizeof(struct ethhdr) + ntohs(ip->tot_len), 0, (struct sockaddr *)&sa, sizeof(sa));
     //if (sent_len < 0) {
     //    perror("+++ sendto +++");
     //} else {
-    //    //printf("+++ Replied to client. +++\n");
+    //    printf("+++ Replied to client. +++\n");
     //}
 
-    return true;
+    return false;
 }
 
 
@@ -1406,26 +1253,22 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
 
     int i =0;
 
-    __u32 ret_ring=0, stock_frames=0;
-    __uint64_t cont_pkt=0;
-    uint32_t idx_rx = 0;
-    uint32_t idx_fq = 0;
-    uint64_t addr;
-    uint32_t len; 
+    //__u32 ret_ring=0, stock_frames=0;
+    //__uint64_t cont_pkt=0;
+    //uint32_t idx_rx = 0;
+    //uint32_t idx_fq = 0;
+    //uint64_t addr;
+    //uint32_t len; 
 
-   //ret_ring= 0, stock_frames=0;
-   //cont_pkt= 0;
-   //idx_rx =  0;
-   //idx_fq =  0;
-   //addr = 0;
-   //len  = 0; 
+   ret_ring= 0, stock_frames=0;
+   cont_pkt= 0;
+   idx_rx =  0;
+   idx_fq =  0;
+   addr = 0;
+   len  = 0; 
 
 
-    //while(1){
      while( sigwait(&set, &sig_usr1) == 0 ){
-    //while( pause()  ){
-        //if(*ptr_trava == 0){ 
-            //while (lock == 1) {
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
@@ -1456,8 +1299,6 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
             //printf("******************VALOR DO stock_frames %d\n", stock_frames);
 
             if(stock_frames > 0){
-                //stock_frames += stock_frames == 2 ? -1 : 0;
-                //printf("\nstock_frames:%d | ret_ring %d\n", stock_frames, ret_ring);
                 // Reserve one or more slots in a producer ring.
                 // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
                 int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
@@ -1470,14 +1311,11 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
                     //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
                     //uint64_t temp = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
 
-                    //printf("\n(recebe_signal_RX2)--- Alocando mem --- retorno aloca_umem: %ld\n", temp);
-
                     *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
                 }
                 // Submit the filled slots so the kernel can process them
                 xsk_ring_prod__submit(&umem_info->fq, stock_frames);
             }
-
 
             /* Process received packets */
             for (i = 0; i < ret_ring; i++) {
@@ -1485,20 +1323,12 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
                 addr = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx)->addr;
                 len  = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx++)->len;
 
-                //printf("Tamanho do pacote recebido %d | num pkt:%ld\n", len, cont_pkt);
-
                 // CHAMA PROCESSA_PACOTE
-                //if (!processa_pacote(umem_info,  addr, len)){
-                //if ( !processa_pacote( addr, len) ){
                 if ( !responde_pacote2( addr, len) ){
-                    //printf("*** Erro ao reservar pacote %ld***\n", addr);
                     desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
                 }
-
                 cont_pkt++;
              }
-
-            //printf("(recebe_signal_RX2)Valor do umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
 
             // Enviando sinal e verificando se deu erro
             if ( kill(ppid, SIGUSR1) == -1 ) {
@@ -1507,7 +1337,6 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
                 capta_sinal(SIGINT);
             }
             
-            //printf("\n\npkt = %lu\n\n", cont_pkt );
             // Se bateu o limite de pkts a serem processados
             // termina o processo de maneira graciosa para o
             // gprof rodar sem problemas e salvar os dados de profiling

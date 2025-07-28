@@ -43,9 +43,9 @@ sk_sig_linhas = list(map(float, sk_sig_linhas))
 plt.plot( x_values , poll_linhas   ,  'r-'   , label="Polling")  # 1
 plt.plot( x_values , signal_linhas ,  'k-'   , label="Signal")  # 2
 plt.plot( x_values , udp_linhas    ,  'b-'   , label="UDP + polling") # 3
-plt.plot( x_values , rot_linhas    ,  'y-'   , label="Roteamento") # 4
+plt.plot( x_values , rot_linhas    ,  'y-'   , label="Routing") # 4
 plt.plot( x_values , skmsg_linhas  ,  'g-'   , label="sk_msg + polling") # 5
-plt.plot( x_values , sk_sig_linhas  , 'g--'   , label="skmsg + signal") # 6
+plt.plot( x_values , sk_sig_linhas ,  'g--'  , label="skmsg + signal") # 6
 #plt.plot(x_values, y2_values, 'b-', label="y = -x + 5")  # Blue line
 
 #plt.ylim(auto=True)
@@ -54,9 +54,14 @@ plt.plot( x_values , sk_sig_linhas  , 'g--'   , label="skmsg + signal") # 6
 
 
 # Customize plot
-plt.xlabel("Número-pkts")
-plt.ylabel("Latência-ms")
-plt.title("Latência dos pkts(1000) entre versões")
+plt.xlabel("Packets", fontsize=20)
+plt.ylabel("Latency-ms", fontsize=20)
+
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=19)
+
+plt.locator_params(axis='x', nbins=5)
+#plt.title("Latência dos pkts(1000) entre versões")
 #plt.axhline(0, color='black', linewidth=0.5)  # X-axis
 #plt.axvline(0, color='black', linewidth=0.5)  # Y-axis
 plt.grid(True, linestyle='--', linewidth=0.4)

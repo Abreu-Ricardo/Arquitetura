@@ -146,11 +146,12 @@ int main(int argc, char *argv[]) {
             //close(sockfd);
             //exit(1);
         }
-	//usleep(500);
+	//usleep(200);
+	usleep(10000);
     }
 
     float media_lat = media(latency_pkts, num_packets);
-    printf("\nLatency min/avg/max: %.3f/%.3f/%.3f ms\nDropped: %d --> %.2f%% \n", min, media_lat, max, dropped, (double) (dropped * 100) / (i+dropped));
+    printf("\nLatency min/avg/max: %.3f/%.3f/%.3f ms\nDropped: %d --> %.2f%% \n", min, media_lat, max, dropped, (double) (dropped * 100) / /*(i+dropped)*/num_packets);
     
     close(sockfd);
     return 0;

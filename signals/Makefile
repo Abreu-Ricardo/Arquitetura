@@ -42,7 +42,7 @@ skel: $(OBJETOS_BPF)
 	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
 
 
-user: signal_monitor meu_loader envia_sinal capta_sinal
+user: signal_monitor meu_loader envia_sinal capta_sinal udp
 	@echo -e 'signal_monitor, meu_loader, envia_sinal e capta_sinal criado...'
 signal_monitor: signal_monitor.c 
 	$(CC) $< -o $@ $(C_FLAGS)

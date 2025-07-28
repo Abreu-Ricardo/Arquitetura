@@ -2,7 +2,8 @@
 #include "commons.h"
 
 static char MSG_UDP[30] = "PODE IR";
-int *ptr_udp_trava;
+//int *ptr_udp_trava;
+//int *ptr_udp_trava;
 
 
 /******************************************************************************/
@@ -149,7 +150,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
     
-    tam_trava = sizeof(int);
+    //tam_trava = sizeof(int);
+    tam_trava = sizeof(struct sock_info);
     // Atribuindo tamanho para a regiao de mem. compart.
     int retorno_ftruncate = ftruncate(fd_trava, tam_trava);
     if ( ret_ftruncate == -1 ){
@@ -159,7 +161,7 @@ int main(int argc, char **argv) {
     
     //ptr_udp_trava = (char *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
     //ptr_udp_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
-    ptr_udp_trava = (int *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
+    sock_udp = (struct sock_info *) mmap(0, tam_trava, PROT_WRITE, MAP_SHARED, fd_trava, 0);
     //*ptr_udp_trava = 0;
     
 
@@ -271,8 +273,13 @@ int main(int argc, char **argv) {
 
 
     // ############################## CRIANDO SOCKETS PARA ENVIO DE UDP #############################
-    
-    
+    if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
+    //if ((sockfd_udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+        perror("Erro na criacao do socket UDP");
+        exit(EXIT_FAILURE);
+    }
+    sock_udp->sockUDP = sockfd_udp;
+
     // ############################## FIM SOCKETS PARA ENVIO DE UDP #############################
 
     // 1 SOCKET XDP
@@ -313,10 +320,7 @@ int main(int argc, char **argv) {
             //int sockfd_udp;
             unsigned char buffer[BUF_SIZE];
 
-            //if ((sockfd_udp = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0){
-            //    perror("Socket");
-            //    exit(EXIT_FAILURE);
-            //}
+
 
             sprintf(settar_cpup, "taskset -cp 5 %d", fpid);
             system(settar_cpup);
@@ -324,7 +328,7 @@ int main(int argc, char **argv) {
             if( setsid() < 0 )
                 exit(-1);
 
-            fd_namespace = open( "/proc/17517/ns/net",  O_RDONLY );
+            fd_namespace = open( "/proc/69192/ns/net",  O_RDONLY );
             ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
             if (ret_sys < 0){
                 printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -359,7 +363,7 @@ int main(int argc, char **argv) {
             printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
             system(settar_cpup);
 
-            //fpid = *ptr_trava;
+            //fptcon++ptr_trava;
 
             while(1){
                 if( sigwait(&set, &sig_usr1) >= 0 ){

@@ -5,7 +5,8 @@
 #include <arpa/inet.h>
 
 //#define SERVER_IP "127.0.0.1"
-#define SERVER_IP "20.20.20.1"
+//#define SERVER_IP "20.20.20.1"
+#define SERVER_IP "10.10.10.1"
 //#define SERVER_IP "20.20.20.1"
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 1024

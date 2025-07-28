@@ -8,7 +8,6 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <assert.h>
@@ -22,7 +21,10 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/prctl.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
+#include <linux/if_packet.h>
 #include <linux/if_xdp.h>
 #include <linux/if_link.h>
 #include <linux/if_ether.h>
@@ -39,12 +41,12 @@
 #include <xdp/xsk.h>
 #include <xdp/libxdp.h>
 
-#include <arpa/inet.h>
 #include <netinet/udp.h>
 #include <net/ethernet.h>
-#include <netpacket/packet.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
+//#include <netpacket/packet.h>
+#include <netinet/in.h>
+
+#include <arpa/inet.h>
 
 #include "xsk_kern.skel.h"
 
@@ -70,6 +72,7 @@
 
 #define PKT_LIMIT 1000000
 
+/**********************************************/
 struct xsk_umem_info {
 	struct xsk_ring_prod fq; // fill ring da UMEM
     struct xsk_ring_prod tx; // tx ring do socket
@@ -80,7 +83,7 @@ struct xsk_umem_info {
     uint32_t tx_restante;
 	void *buffer; // Substituir o buffer_do_pacote por esse, para ficar mais organizado
 };
-
+/**********************************************/
 struct xsk_info_global {
     //struct xsk_umem_info *umem_info;
     uint64_t *umem_frame_addr;
@@ -91,6 +94,16 @@ struct xsk_info_global {
 };
 extern struct xsk_info_global *ptr_mem_info_global;
 
+/**********************************************/
+struct sock_info{
+    int sockUDP;
+    struct sockaddr_ll sa;
+    size_t tam_pkt;
+    uint8_t *pkt;
+};
+extern struct sock_info *sock_udp;
+
+/**********************************************/
 static struct xsk_umem_config umem_cfg = {
     .fill_size = NUM_FRAMES,
     .comp_size = NUM_FRAMES,
@@ -100,6 +113,7 @@ static struct xsk_umem_config umem_cfg = {
     //.frame_headroom = 0,
 };
 
+/**********************************************/
 static struct xsk_socket_config xsk_cfg = {
     .rx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
     .tx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
@@ -114,6 +128,7 @@ static struct xsk_socket_config xsk_cfg = {
     //.bind_flags =  XDP_ZEROCOPY,
 };
 
+/**********************************************/
 // socket XSK2 precisa da flag XDP_SHARED_UMEM para usar a UMEM ja criada
 static struct xsk_socket_config xsk_cfg2 = {
     .rx_size = XSK_RING_CONS__DEFAULT_NUM_DESCS, //NUM_FRAMES,
@@ -123,6 +138,7 @@ static struct xsk_socket_config xsk_cfg2 = {
     .xdp_flags = XDP_FLAGS_DRV_MODE,
     .bind_flags =  XDP_SHARED_UMEM,
 };
+/**********************************************/
 
 
 extern struct xsk_socket *xsk;
@@ -171,6 +187,11 @@ extern socklen_t client_len; // = sizeof(client_addr);
 extern char nomeproc[30];
 
 extern int flag_sockXDP;
+
+extern struct sockaddr_ll sa;
+extern uint8_t *pkt;
+extern struct ifreq if_idx, if_mac;
+
 
 /**************FUNCOES**********************/
 void capta_sinal(int signum);
