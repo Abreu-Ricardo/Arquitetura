@@ -28,23 +28,24 @@ socklen_t client_len = sizeof(client_addr);
 char nomeproc[30];
 char *path;
 pid_t fpid, ppid, pid_alvo;
+
 /************************************************************************/
 void capta_sinal(int signum){
     //getchar();
 
     if (signum == 2){
-
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");  
+        bpf_object__unpin_maps( skel->obj , path);
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");  
         
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
         
         //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
         
         //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_bss")    , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_bss");
         
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "tempo_sig")       , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/tempo_sig");
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "tempo_sig")       , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/tempo_sig");
         
-        bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
+        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
 
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
         //xdp_program__detach(xdp_prog, 2, XDP_MODE_NATIVE, 0);
@@ -69,7 +70,7 @@ void capta_sinal(int signum){
        
         system("xdp-loader unload veth2 --all");
         system("xdp-loader status");
-        system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_*");
+        //system("rm /home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_*");
        
         char cmdkill[50];
         sprintf(cmdkill, "killall %s", nomeproc);
@@ -510,7 +511,8 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
 
     //while(1){
-     while( sigwait(&set, &sig_usr1) == 0 ){
+     //while( sigwait(&set, &sig_usr1) == 0 ){
+     while( sigwait(&set, &sigrtmin1) == 0 ){
     //while( pause()  ){
         //if(*ptr_trava == 0){ 
             //while (lock == 1) {
@@ -583,7 +585,8 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
             // Enviando sinal e verificando se deu erro
             //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
-            if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+            //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+            if ( sigqueue(pid_alvo, SIGRTMIN+1, valor_struct) == -1 ) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
             }

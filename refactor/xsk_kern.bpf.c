@@ -130,7 +130,7 @@ int xdp_prog(struct xdp_md *ctx){
         ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
         //ret_func = bpf_minha_func(*ptr, 10);
         //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
-        if (  bpf_minha_func(*ptr, 10) /*ret_func*/ < 0 ){
+        if (  bpf_minha_func(*ptr, 35) /*ret_func*/ < 0 ){
             bpf_printk("Erro ao enviar sinal para o pid");
             return XDP_DROP;
         }

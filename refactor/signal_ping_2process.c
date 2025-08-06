@@ -2,7 +2,6 @@
 #include "commons.h"
 
 /*************************************************************************/
-
 static __always_inline volatile long long RDTSC() {
     
     //register long long TSC asm("eax");
@@ -25,9 +24,11 @@ int main(int argc, char **argv) {
 
     const char *iface = argv[1];
     path = (char *) malloc(sizeof(char) * 256); // alocando tam max
-    const char *dir = getenv("SIGSHARED");
-    
-    //strncpy( path, dir, sizeof(*dir));
+    char *dir_temp = getenv("SIGSHARED");
+   
+    strcpy( path, dir_temp);
+    strcat( path, "/dados");
+    printf("-----------------------> %s\n%s\n", path, dir_temp);
     //const char *iface = "veth2";
 
     // Atribuindo PROC_PAI a CPU 4 logo cedo
@@ -152,10 +153,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    //bpf_object__pin_maps( skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    bpf_object__pin_maps( skel->obj , path);
 
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
+    //fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
+    fd_mapa_fd = bpf_obj_get(path); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
     bpf_map    = bpf_object__find_map_by_name(skel->obj, "xsk_map");
 
@@ -288,7 +291,8 @@ int main(int argc, char **argv) {
 
     /* Bloqueia o sinal para nao executar o mecanismo padrao */
    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-   sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+   //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+   sigaddset(&set, SIGRTMIN+1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
    sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
@@ -319,7 +323,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/41879/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/24441/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -359,7 +363,6 @@ int main(int argc, char **argv) {
         //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
-        printf("---- Diretorio do projeto: %s ----\n", dir);
         system(settar_cpup);
 
         fpid = *ptr_trava;
@@ -382,7 +385,8 @@ int main(int argc, char **argv) {
         // Espera pelo sinal do proc filho
         // sigwait(&set, &sig);
         while(1){
-            if( sigwait(&set, &sig_usr1) >= 0 ){
+            //if( sigwait(&set, &sig_usr1) >= 0 ){
+            if( sigwait(&set, &sigrtmin1) >= 0 ){
                 //printf("<PAI> PID do filho %d\n", fpid);
                 
                    xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);

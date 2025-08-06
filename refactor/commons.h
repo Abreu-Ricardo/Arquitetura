@@ -126,7 +126,7 @@ extern char *nome_info_global;  // = "info_global";
 //extern char *MSG_UDP;
 
 static int fd_info_global, tam_info_global;
-static int sig_usr1  = 10, sig_rtmin = 35;
+static int sig_usr1  = 10, sigrtmin1 = 35;
 //static pid_t fpid, ppid, pid_alvo;
 extern pid_t fpid, ppid, pid_alvo;
 static int long long start, end;

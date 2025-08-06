@@ -29,6 +29,13 @@ int main(int argc, char **argv) {
     
     //const char *iface = argv[1];
     const char *iface = "veth2";
+
+    path = (char *) malloc(sizeof(char) * 256); // alocando tam max
+    char *dir_temp = getenv("SIGSHARED");
+   
+    strcpy( path, dir_temp);
+    strcat( path, "/dados");
+    printf("-----------------------> %s\n%s\n", path, dir_temp);
    
     /***************Config da regiao de mem compart com shm*****************/
     //char *caminho_prog = "xsk_kern.o";
@@ -281,7 +288,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5377/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/24441/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

@@ -15,6 +15,12 @@ int main(int argc, char **argv) {
     }
 
     const char *iface = argv[1];
+    path = (char *) malloc(sizeof(char) * 256); // alocando tam max
+    char *dir_temp = getenv("SIGSHARED");
+   
+    strcpy( path, dir_temp);
+    strcat( path, "/dados");
+    printf("-----------------------> %s\n%s\n", path, dir_temp);
    
     /***************Config da regiao de mem compart com shm*****************/
     char *caminho_prog = "xsk_kern.o";
@@ -103,9 +109,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    //bpf_object__pin_maps( /*bpf_obj*/ skel->obj , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados");
+    bpf_object__pin_maps( skel->obj , path);
     //int fd_mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
-    fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd"); 
+    //fd_mapa_fd = bpf_obj_get("/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");
+    char mapa_fd_path[256];
+    strcpy(mapa_fd_path, path);
+    strcat(mapa_fd_path, "/mapa_fd");
+
+    fd_mapa_fd = bpf_obj_get(mapa_fd_path); 
     retorno    = bpf_map_update_elem(fd_mapa_fd, &chave, &nome_regiao, BPF_ANY );
     bpf_map    = bpf_object__find_map_by_name(skel->obj, "xsk_map");
 
@@ -248,7 +260,8 @@ int main(int argc, char **argv) {
 
 
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    sigaddset(&set, SIGRTMIN+1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
     sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //signal( SIGUSR1 , capta_sinal );
@@ -302,7 +315,7 @@ int main(int argc, char **argv) {
         }
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/5377/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/24441/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

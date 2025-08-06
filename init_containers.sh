@@ -156,7 +156,7 @@ if [ "$string" = "up" ]; then
     echo "N3--> sudo ip netns exec c3 bash";
     echo "N4--> sudo ip netns exec c4 bash";
 
-    echo -e "\n Use: source init_containers.sh"
+    echo -e "\n +++ Use dentro de cada container antes de entrar nos dirs: < source init_containers.sh > +++"
 
     echo -e "\n\n(garantir que bpf fs esteja montado)--> mount -t bpf bpffs /sys/fs/bpf"
     echo -e "mount -t debugfs none /sys/kernel/debug --> Para rodar programas eBPF que usam vmlinux.h"
