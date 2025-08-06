@@ -1,14 +1,12 @@
 #include "commons.h"
 
-
 struct xsk_kern_bpf    *skel;
+
 
 int *ptr_trava;
 char *nome_regiao      = "/memtest";
 char *nome_trava       = "/trava";
 char *nome_info_global = "info_global";
-
-pid_t fpid, ppid, pid_alvo;
 
 struct xsk_socket *xsk;
 struct xsk_socket *xsk2;
@@ -23,13 +21,13 @@ struct xsk_umem_info   *umem_info;    // xsk  -- Processo
 struct xsk_umem_info   *umem_info2;   // xsk2 -- Processo
 struct xsk_info_global *ptr_mem_info_global;
 
-
 int fd_sock_client;
 struct sockaddr_in client_addr;
 socklen_t client_len = sizeof(client_addr);
 
-
 char nomeproc[30];
+char *path;
+pid_t fpid, ppid, pid_alvo;
 /************************************************************************/
 void capta_sinal(int signum){
     //getchar();

@@ -1,8 +1,8 @@
 #include "xsk_kern.skel.h"
 #include "commons.h"
 
-
 /*************************************************************************/
+
 static __always_inline volatile long long RDTSC() {
     
     //register long long TSC asm("eax");
@@ -13,17 +13,21 @@ static __always_inline volatile long long RDTSC() {
     
     asm ("rdtsc" : "=a" (lo), "=d" (hi)); // Execute RDTSC and store results
     return ((long long)hi << 32) | lo;            // Combine high and low parts
-} 
-
-
+}
 /*************************************************************************/
+
 int main(int argc, char **argv) {
-    if (argc < 2) {
+    
+    if(argc < 2){
         fprintf(stderr, "Usage: %s <network interface>\n", argv[0]);
         return 1;
     }
 
     const char *iface = argv[1];
+    path = (char *) malloc(sizeof(char) * 256); // alocando tam max
+    const char *dir = getenv("SIGSHARED");
+    
+    //strncpy( path, dir, sizeof(*dir));
     //const char *iface = "veth2";
 
     // Atribuindo PROC_PAI a CPU 4 logo cedo
@@ -315,7 +319,7 @@ int main(int argc, char **argv) {
             exit(-1);
 
         // PID do namespace pego com lsns --type=net dentro do container
-        fd_namespace = open( "/proc/8334/ns/net",  O_RDONLY );
+        fd_namespace = open( "/proc/41879/ns/net",  O_RDONLY );
         ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
         if (ret_sys < 0){
             printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");
@@ -355,6 +359,7 @@ int main(int argc, char **argv) {
         //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
         printf("\n<PID DO PAI %d>\n", ppid);
         printf("%s\nPROCESSO PAI COMECOU O WHILE E NA CPU 4\n", settar_cpup);
+        printf("---- Diretorio do projeto: %s ----\n", dir);
         system(settar_cpup);
 
         fpid = *ptr_trava;

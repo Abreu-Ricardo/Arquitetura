@@ -72,6 +72,7 @@ int main(int argc, char **argv){
     sprintf(settar_cpuf, "taskset -cp 3 %d", pid);
     system(settar_cpuf);
 
+    int num_signals = atoi(argv[2]);
 
     struct rlimit r = {RLIM_INFINITY, RLIM_INFINITY};
     setrlimit(RLIMIT_MEMLOCK, &r);
@@ -92,19 +93,15 @@ int main(int argc, char **argv){
     /***********************************************************/
     
     pid_t proc_alvo = atoi(argv[1]);
-    int num_signals = atoi(argv[2]);
 
     int i = 0; 
     //long long int total_ciclos[num_signals], ciclos;
     long long int *total_ciclos, ciclos;
     total_ciclos = (long long int *) malloc( sizeof(long long int) * num_signals);
 
-    struct timespec remaining, request = { 0,1 };
-    union sigval sig_struct;
-    sig_struct.sival_ptr = (void *)1234567890;
 
-    int j = 0;
-    start = RDTSC();
+    union sigval sig_struct;
+
     for(i=0; i < num_signals/*100*/ ; i++){
         //printf("Enviando(%d)...\n", i);
         //kill(proc_alvo, 10);
@@ -114,35 +111,23 @@ int main(int argc, char **argv){
         //    exit(1);
         //}
 
-        //start = RDTSC();
+        start = RDTSC();
         if ( sigqueue(proc_alvo, SIGRTMIN+1, sig_struct) < 0 ){
             printf("# Erro ao enviar sinal #\n");
             exit(1);
         }
-        //end = RDTSC();
+        end = RDTSC();
 
-        // 10000 --> 5us
-        //start = RDTSC();
-        for(j = 0; j < 5000; j++){}
-        //end = RDTSC();
-
-        //cont_sinal++;        
-        //ciclos = end - start;
-        //total_ciclos[i] = ciclos;
-        //start = RDTSC();
-        //printf("\n###\n");
-        //end = RDTSC();
-        //ciclos = end - start;
-        //printf("\n### Ciclos gastos pelo sinal(%d): %lf ###\n", i, (double)ciclos/3600 );
-        //usleep(1);
+        cont_sinal++;        
+        ciclos = end - start;
+        total_ciclos[i] = ciclos;
+        printf("\n### Ciclos gastos pelo sinal(%d): %lld ###\n", i, ciclos);
+        //usleep(50);
         //nanosleep(&request, &remaining);
     }
-    end = RDTSC();
-    ciclos = end - start;
 
-    printf("Tempo de envio dos sinais em us: %lf\n", (double)ciclos/360000);
     printf("\n### Sinais enviados(%lld) ###\n", cont_sinal);
-    //printf("Media dos ciclos gastos pelos sinais: %f\n", media(total_ciclos, num_signals));
+    printf("Media dos ciclos gastos pelos sinais: %f\n", media(total_ciclos, num_signals));
 
 cleanup:
     //clean(skel);

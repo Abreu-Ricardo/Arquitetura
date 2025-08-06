@@ -15,21 +15,7 @@ loaders: teste_bib.o loader.o gerenciador
 	$(CC) ./bib/teste_bib.o ./loaders/loader_ebpf.o -lbpf -lxdp -o loader_ebpf
 	@echo -e 'Make do loader_ebpf concluído...\n'
 
-#loader_xdp: teste_bib.o
-#	$(CC) ./loaders/loader_xdp.c  -lbpf -lxdp -o loader_xdp
-#	@echo -e 'Make do loader_xdp concluído...\n'
-#
-#loader_ebpf: teste_bib.o loader.o gerenciador 
-#	$(CC) ./bib/teste_bib.o ./loaders/loader_ebpf.o -lbpf -lxdp -o loader_ebpf
-#	@echo -e 'Make do loader_ebpf concluído...\n'
 
-loader.o: #teste_bib.o
-	make -C ./loaders/
-	@echo -e 'Make do diretório loaders concluído...\n'
-
-teste_bib.o: 
-	make -C ./bib/
-	@echo -e 'Make do diretório bib concluído...\n'
 
 gerenciador:
 	make -C ./gerenciador_mem/

@@ -264,7 +264,8 @@ int main(int argc, char **argv) {
 
 
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
-    sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
+    sigaddset(&set, SIGRTMIN+1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q ode "ouvir"
     sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //signal( SIGUSR1 , capta_sinal );
@@ -328,7 +329,7 @@ int main(int argc, char **argv) {
             if( setsid() < 0 )
                 exit(-1);
 
-            fd_namespace = open( "/proc/69192/ns/net",  O_RDONLY );
+            fd_namespace = open( "/proc/17758/ns/net",  O_RDONLY );
             ret_sys = syscall( __NR_setns, fd_namespace ,  CLONE_NEWNET /*0*/ );
             if (ret_sys < 0){
                 printf("+++ Verificar se o processo do container esta correto. Checar com 'lsns --type=net +++'\n");

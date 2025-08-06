@@ -41,8 +41,6 @@
 
 
 #include "xsk_kern.skel.h"
-
-
 /****************************************************/
 #define _GNU_SOURCE
 #define O_PATH		010000000
@@ -153,7 +151,7 @@ extern struct sockaddr_in  client_addr;
 extern socklen_t client_len; // = sizeof(client_addr);
 
 extern char nomeproc[30];
-
+extern char *path;
 
 /**************FUNCOES**********************/
 void capta_sinal(int signum);

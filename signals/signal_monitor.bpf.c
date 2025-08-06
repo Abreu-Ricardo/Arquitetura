@@ -1,10 +1,8 @@
 #include "vmlinux.h"
 
-
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
-#include <string.h>
 
 
 __u32 cont=0;
@@ -51,11 +49,11 @@ int trace_signal_generate(struct trace_event_raw_signal_generate *ctx) {
                                                         cont++);
         */
 
-        bpf_printk("Sinal %d enviado para o PID:%d |group: %d |code %d| resul %d", event->sig, 
-                                                                                   event->pid, 
-                                                                                   ctx->group,
-                                                                                   ctx->code,
-                                                                                   ctx->result);
+        //bpf_printk("Sinal %d enviado para o PID:%d |group: %d |code %d| resul %d", event->sig, 
+        //                                                                           event->pid, 
+        //                                                                           ctx->group,
+        //                                                                           ctx->code,
+        //                                                                           ctx->result);
 
 
         // Submit event to the ring buffer

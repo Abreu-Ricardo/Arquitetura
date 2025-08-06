@@ -2,7 +2,7 @@
 CC=gcc
 CL=clang
 
-all: bpf client server
+all: bpf client ciclos-client server
 	@echo "\n +++ compilacao feita +++"
 
 bpf: ebpf.c
@@ -10,6 +10,9 @@ bpf: ebpf.c
 	sudo bpftool gen skeleton ebpf.o > ebpf.skel.h 
 
 client: client.c packet.h
+	$(CC) $< -o $@ -lbpf
+
+ciclos-client: ciclos-client.c packet.h
 	$(CC) $< -o $@ -lbpf
 
 server: server.c packet.h

@@ -9,6 +9,7 @@
 #include <linux/udp.h>
 #include <bpf/bpf_endian.h> // bpf_ntohs()
 #include <linux/icmp.h>
+#include <signal.h>
 
 #include <time.h>
 
@@ -91,7 +92,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 	return protocol; 
 }
 /*****************************************************************************/
-//__u32 pkt_global = 0;
+__u32 pkt_global = 0;
 
 //__u64 pidg = 0;
 
@@ -130,21 +131,22 @@ int xdp_prog(struct xdp_md *ctx){
     // Se for pacote UDP == 17
     //if( /*ret == 17 ||*/ ret == 1){
     if( ptr != NULL  && ret == 17 /*&& ptr_sig != NULL*/){
-	
-        ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
-        ret_func = bpf_minha_func(*ptr, 10);
-        //ret_func = bpf_minha_func(pidg, 10);
-        //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
-        if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
-            bpf_printk("Erro ao enviar sinal para o pid");
-            return XDP_DROP;
-        }
-       return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
+	//
+    //    ret_final = bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_DROP);
+        ret_func = bpf_minha_func(*ptr, /*SIGRTMIN+1*/ 35);
+        bpf_printk("Enviando  sinal 35 para %d...(%d)\n", *ptr, pkt_global++);
+    //    //ret_func = bpf_minha_func(pidg, 10);
+    //    //ret_func = bpf_minha_func(*ptr, 10, &tempo_sig, &pkt_global);
+    //    if (  /*bpf_minha_func(*ptr, 10)*/ ret_func < 0 ){
+    //        bpf_printk("Erro ao enviar sinal para o pid");
+    //        return XDP_DROP;
+    //    }
+    //   return ret_final; //bpf_redirect_map(&xsk_map, key, /*Codigo de retorno caso de errado o redirect*/ XDP_PASS);
     }
-    else{
-        bpf_printk("Erro ao acessar o mapa_sinal ret: %d!!!\n", ret);
-        return XDP_DROP;
-    }
+    //else{
+    //    bpf_printk("Erro ao acessar o mapa_sinal ret: %d!!!\n", ret);
+    //    return XDP_DROP;
+    //}
 
     //bpf_printk("Pkt n foi redirecionado! %d\n", ret);
     return XDP_PASS;

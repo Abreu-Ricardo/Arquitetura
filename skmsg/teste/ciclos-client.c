@@ -16,10 +16,28 @@ static __always_inline volatile long long RDTSC() {
     asm ("rdtsc" : "=a" (lo), "=d" (hi)); // Execute RDTSC and store results
     return ((long long)hi << 32) | lo;            // Combine high and low parts
 } 
+
 /*************************************************************************/
+int media(long long unsigned int vetor[], int tam){
 
-int main() {
+	long long int soma = 0;
+	for(int i = 0; i < tam; i++){
+		soma+=vetor[i];
+	}
 
+	soma = soma / tam;
+	return soma;
+}
+
+/*************************************************************************/
+int main(int argc, char **argv){
+
+    if(argc < 2){
+    	printf("<Passe o numero de pacotes para enviar> %s <num_pkts>\n", argv[0]);
+	exit(1);
+    }
+
+    int NUM_PKTS = atoi(argv[1]);
     skel = ebpf__open();
 
     /***********************************************/
@@ -99,16 +117,23 @@ int main() {
     };
     /***********************************************/
     
-    long long unsigned start,  end, ciclos_vetor[100];
-    while (1) {
+    long long unsigned start,  end, *ciclos_vetor;
+    ciclos_vetor = (long long unsigned *) malloc(sizeof(long long unsigned) * NUM_PKTS );
+    //rcv.msg_iov->iov_base = 
+    //rcv.msg_iov->iov_len = strlen(rcv.msg_iov->iov_base);
+
+    //while (1){
+    for(int i=0; i < NUM_PKTS; i++){
         // Get message from user
         printf("Enter message (or 'quit' to exit): ");
         //fgets(msg.data, BUFFER_SIZE, stdin);
-        fgets((char *)rcv.msg_iov->iov_base, BUFFER_SIZE, stdin);
-        rcv.msg_iov->iov_len = strlen(rcv.msg_iov->iov_base);
+        //fgets((char *)rcv.msg_iov->iov_base, BUFFER_SIZE, stdin);
+        //rcv.msg_iov->iov_len = strlen(rcv.msg_iov->iov_base);
         
         //if (strcmp(msg.data, "quit\n") == 0) {
-        if (strcmp((char *)rcv.msg_iov->iov_base, "quit\n") == 0) {
+        //if (strcmp((char *)rcv.msg_iov->iov_base, "quit\n") == 0) {
+        if ( i == NUM_PKTS - 1) {
+            strcmp((char *)rcv.msg_iov->iov_base, "quit\n");
             break;
         }
 
@@ -119,7 +144,8 @@ int main() {
             perror("Erro no sendmsg()");
         }
         end = RDTSC();
-
+	
+	ciclos_vetor[i] = end - start;
         //printf("Tempo gasto em us: %.2f\n", ((float)(end - start)) / 3600);
         printf("Tempo gasto em ciclos: %lld\n", (end - start));
         
@@ -141,6 +167,8 @@ int main() {
         //memset( rcv.msg_iov->iov_base , 0, sizeof(buffer));
         memset( temp, 0, sizeof(temp));
     }
+
+    printf("Tempo medio dos ciclos gasto em sendmsg: %d \n", media( ciclos_vetor, NUM_PKTS));
 
     close(sockfd);
     return 0;

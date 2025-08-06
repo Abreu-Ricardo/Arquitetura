@@ -622,7 +622,8 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
 
     //while(1){
-    while( sigwait(&set, &sig_usr1) == 0 ){
+    //while( sigwait(&set, &sig_usr1) == 0 ){
+    while( sigwait(&set, &sigrtmin1) == 0 ){
         //while( pause()  ){
         //if(*ptr_trava == 0){ 
         //while (lock == 1) {
@@ -695,7 +696,8 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
             // Enviando sinal e verificando se deu erro
             //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
-            if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+            //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
+            if ( sigqueue(pid_alvo, SIGRTMIN+1, valor_struct) == -1 ) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
             }
@@ -706,7 +708,8 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
             // gprof rodar sem problemas e salvar os dados de profiling
             if ( cont_pkt >= PKT_LIMIT ){
                 //kill(pid_alvo, SIGUSR1);
-                kill(pid_alvo, SIGUSR2);
+                //kill(pid_alvo, SIGUSR2);
+                kill(pid_alvo, SIGRTMIN+1);
                 capta_sinal(SIGINT);
             }
         }
@@ -1021,7 +1024,9 @@ static __always_inline int responde_pacote(uint64_t addr, uint32_t len){
     //len  = 0; 
 
      //while(1){
-     while( sigwait(&set, &sig_usr1) == 0 ){
+     int sigrtmin1 = SIGRTMIN+1;
+     //while( sigwait(&set, &sig_usr1) == 0 ){
+     while( sigwait(&set, &sigrtmin1) == 0 ){
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
@@ -1268,7 +1273,8 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
    len  = 0; 
 
 
-     while( sigwait(&set, &sig_usr1) == 0 ){
+     //while( sigwait(&set, &sig_usr1) == 0 ){
+     while( sigwait(&set, &sigrtmin1) == 0 ){
             // esse laco pode ser o equivalente a funcao handle_receive_packets
             // do advanced03-AF-XDP
             idx_rx = 0;
@@ -1331,7 +1337,8 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
              }
 
             // Enviando sinal e verificando se deu erro
-            if ( kill(ppid, SIGUSR1) == -1 ) {
+            //if ( kill(ppid, SIGUSR1) == -1 ) {
+            if ( kill(ppid, SIGRTMIN+1) == -1 ) {
             //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
                 perror("Erro no sigqueue do filho");
                 capta_sinal(SIGINT);
@@ -1342,7 +1349,8 @@ void recebe_signal_RX2(struct xsk_info_global *info_global ){
             // gprof rodar sem problemas e salvar os dados de profiling
             if ( cont_pkt >= PKT_LIMIT ){
                 //kill(pid_alvo, SIGUSR1);
-                kill(ppid, SIGUSR2);
+                //kill(ppid, SIGUSR2);
+                kill(ppid, SIGRTMIN+1);
                 capta_sinal(SIGINT);
             }
         }

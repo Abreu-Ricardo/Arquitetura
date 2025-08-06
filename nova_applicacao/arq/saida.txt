@@ -1,0 +1,1999 @@
+          client-21762   [003] ..s2.  8008.132210: bpf_trace_printk: Redirecionando...0
+
+          client-21762   [003] ..s2.  8008.142422: bpf_trace_printk: Redirecionando...1
+
+          client-21762   [003] ..s2.  8008.152604: bpf_trace_printk: Redirecionando...2
+
+          client-21762   [003] ..s2.  8008.162761: bpf_trace_printk: Redirecionando...3
+
+          client-21762   [003] ..s2.  8008.172909: bpf_trace_printk: Redirecionando...4
+
+          client-21762   [003] ..s2.  8008.183074: bpf_trace_printk: Redirecionando...5
+
+          client-21762   [003] ..s2.  8008.193209: bpf_trace_printk: Redirecionando...6
+
+          client-21762   [003] ..s2.  8008.203346: bpf_trace_printk: Redirecionando...7
+
+          client-21762   [003] ..s2.  8008.213526: bpf_trace_printk: Redirecionando...8
+
+          client-21762   [003] ..s2.  8008.223663: bpf_trace_printk: Redirecionando...9
+
+          client-21762   [003] ..s2.  8008.233799: bpf_trace_printk: Redirecionando...10
+
+          client-21762   [003] ..s2.  8008.243952: bpf_trace_printk: Redirecionando...11
+
+          client-21762   [003] ..s2.  8008.254519: bpf_trace_printk: Redirecionando...12
+
+          client-21762   [003] ..s2.  8008.264760: bpf_trace_printk: Redirecionando...13
+
+          client-21762   [003] ..s2.  8008.274920: bpf_trace_printk: Redirecionando...14
+
+          client-21762   [003] ..s2.  8008.285071: bpf_trace_printk: Redirecionando...15
+
+          client-21762   [003] ..s2.  8008.295217: bpf_trace_printk: Redirecionando...16
+
+          client-21762   [003] ..s2.  8008.305398: bpf_trace_printk: Redirecionando...17
+
+          client-21762   [003] ..s2.  8008.315788: bpf_trace_printk: Redirecionando...18
+
+          client-21762   [003] ..s2.  8008.325939: bpf_trace_printk: Redirecionando...19
+
+          client-21762   [003] ..s2.  8008.336090: bpf_trace_printk: Redirecionando...20
+
+          client-21762   [003] ..s2.  8008.346238: bpf_trace_printk: Redirecionando...21
+
+          client-21762   [003] ..s2.  8008.356404: bpf_trace_printk: Redirecionando...22
+
+          client-21762   [003] ..s2.  8008.366548: bpf_trace_printk: Redirecionando...23
+
+          client-21762   [003] ..s2.  8008.376680: bpf_trace_printk: Redirecionando...24
+
+          client-21762   [003] ..s2.  8008.386832: bpf_trace_printk: Redirecionando...25
+
+          client-21762   [003] ..s2.  8008.396962: bpf_trace_printk: Redirecionando...26
+
+          client-21762   [003] ..s2.  8008.407128: bpf_trace_printk: Redirecionando...27
+
+          client-21762   [003] ..s2.  8008.417276: bpf_trace_printk: Redirecionando...28
+
+          client-21762   [003] ..s2.  8008.427422: bpf_trace_printk: Redirecionando...29
+
+          client-21762   [003] ..s2.  8008.437881: bpf_trace_printk: Redirecionando...30
+
+          client-21762   [003] ..s2.  8008.448251: bpf_trace_printk: Redirecionando...31
+
+          client-21762   [003] ..s2.  8008.458391: bpf_trace_printk: Redirecionando...32
+
+          client-21762   [003] ..s2.  8008.468539: bpf_trace_printk: Redirecionando...33
+
+          client-21762   [003] ..s2.  8008.478678: bpf_trace_printk: Redirecionando...34
+
+          client-21762   [003] ..s2.  8008.488845: bpf_trace_printk: Redirecionando...35
+
+          client-21762   [003] ..s2.  8008.499005: bpf_trace_printk: Redirecionando...36
+
+          client-21762   [003] ..s2.  8008.509145: bpf_trace_printk: Redirecionando...37
+
+          client-21762   [003] ..s2.  8008.519288: bpf_trace_printk: Redirecionando...38
+
+          client-21762   [003] ..s2.  8008.529426: bpf_trace_printk: Redirecionando...39
+
+          client-21762   [003] ..s2.  8008.539565: bpf_trace_printk: Redirecionando...40
+
+          client-21762   [003] ..s2.  8008.549694: bpf_trace_printk: Redirecionando...41
+
+          client-21762   [003] ..s2.  8008.559813: bpf_trace_printk: Redirecionando...42
+
+          client-21762   [003] ..s2.  8008.569943: bpf_trace_printk: Redirecionando...43
+
+          client-21762   [003] ..s2.  8008.580062: bpf_trace_printk: Redirecionando...44
+
+          client-21762   [003] ..s2.  8008.590184: bpf_trace_printk: Redirecionando...45
+
+          client-21762   [003] ..s2.  8008.600308: bpf_trace_printk: Redirecionando...46
+
+          client-21762   [003] ..s2.  8008.610425: bpf_trace_printk: Redirecionando...47
+
+          client-21762   [003] ..s2.  8008.620543: bpf_trace_printk: Redirecionando...48
+
+          client-21762   [003] ..s2.  8008.630691: bpf_trace_printk: Redirecionando...49
+
+          client-21762   [003] ..s2.  8008.640818: bpf_trace_printk: Redirecionando...50
+
+          client-21762   [003] ..s2.  8008.650945: bpf_trace_printk: Redirecionando...51
+
+          client-21762   [003] ..s2.  8008.661062: bpf_trace_printk: Redirecionando...52
+
+          client-21762   [003] ..s2.  8008.671349: bpf_trace_printk: Redirecionando...53
+
+          client-21762   [003] ..s2.  8008.681514: bpf_trace_printk: Redirecionando...54
+
+          client-21762   [003] ..s2.  8008.691649: bpf_trace_printk: Redirecionando...55
+
+          client-21762   [003] ..s2.  8008.701781: bpf_trace_printk: Redirecionando...56
+
+          client-21762   [003] ..s2.  8008.711930: bpf_trace_printk: Redirecionando...57
+
+          client-21762   [003] ..s2.  8008.722066: bpf_trace_printk: Redirecionando...58
+
+          client-21762   [003] ..s2.  8008.732190: bpf_trace_printk: Redirecionando...59
+
+          client-21762   [003] ..s2.  8008.742310: bpf_trace_printk: Redirecionando...60
+
+          client-21762   [003] ..s2.  8008.752430: bpf_trace_printk: Redirecionando...61
+
+          client-21762   [003] ..s2.  8008.762541: bpf_trace_printk: Redirecionando...62
+
+          client-21762   [003] ..s2.  8008.772665: bpf_trace_printk: Redirecionando...63
+
+          client-21762   [003] ..s2.  8008.782788: bpf_trace_printk: Redirecionando...64
+
+          client-21762   [003] ..s2.  8008.792921: bpf_trace_printk: Redirecionando...65
+
+          client-21762   [003] ..s2.  8008.803037: bpf_trace_printk: Redirecionando...66
+
+          client-21762   [003] ..s2.  8008.813145: bpf_trace_printk: Redirecionando...67
+
+          client-21762   [003] ..s2.  8008.823270: bpf_trace_printk: Redirecionando...68
+
+          client-21762   [003] ..s2.  8008.833384: bpf_trace_printk: Redirecionando...69
+
+          client-21762   [003] ..s2.  8008.843505: bpf_trace_printk: Redirecionando...70
+
+          client-21762   [003] ..s2.  8008.853629: bpf_trace_printk: Redirecionando...71
+
+          client-21762   [003] ..s2.  8008.863743: bpf_trace_printk: Redirecionando...72
+
+          client-21762   [003] ..s2.  8008.873883: bpf_trace_printk: Redirecionando...73
+
+          client-21762   [003] ..s2.  8008.884012: bpf_trace_printk: Redirecionando...74
+
+          client-21762   [003] ..s2.  8008.894130: bpf_trace_printk: Redirecionando...75
+
+          client-21762   [003] ..s2.  8008.904252: bpf_trace_printk: Redirecionando...76
+
+          client-21762   [003] ..s2.  8008.914638: bpf_trace_printk: Redirecionando...77
+
+          client-21762   [003] ..s2.  8008.924762: bpf_trace_printk: Redirecionando...78
+
+          client-21762   [003] ..s2.  8008.934968: bpf_trace_printk: Redirecionando...79
+
+          client-21762   [003] ..s2.  8008.945102: bpf_trace_printk: Redirecionando...80
+
+          client-21762   [003] ..s2.  8008.955275: bpf_trace_printk: Redirecionando...81
+
+          client-21762   [003] ..s2.  8008.965432: bpf_trace_printk: Redirecionando...82
+
+          client-21762   [003] ..s2.  8008.975580: bpf_trace_printk: Redirecionando...83
+
+          client-21762   [003] ..s2.  8008.985729: bpf_trace_printk: Redirecionando...84
+
+          client-21762   [003] ..s2.  8008.995884: bpf_trace_printk: Redirecionando...85
+
+          client-21762   [003] ..s2.  8009.006020: bpf_trace_printk: Redirecionando...86
+
+          client-21762   [003] ..s2.  8009.016167: bpf_trace_printk: Redirecionando...87
+
+          client-21762   [003] ..s2.  8009.026297: bpf_trace_printk: Redirecionando...88
+
+          client-21762   [003] ..s2.  8009.036436: bpf_trace_printk: Redirecionando...89
+
+          client-21762   [003] ..s2.  8009.046571: bpf_trace_printk: Redirecionando...90
+
+          client-21762   [003] ..s2.  8009.056726: bpf_trace_printk: Redirecionando...91
+
+          client-21762   [003] ..s2.  8009.066895: bpf_trace_printk: Redirecionando...92
+
+          client-21762   [003] ..s2.  8009.077024: bpf_trace_printk: Redirecionando...93
+
+          client-21762   [003] ..s2.  8009.087166: bpf_trace_printk: Redirecionando...94
+
+          client-21762   [003] ..s2.  8009.097325: bpf_trace_printk: Redirecionando...95
+
+          client-21762   [003] ..s2.  8009.107486: bpf_trace_printk: Redirecionando...96
+
+          client-21762   [003] ..s2.  8009.117650: bpf_trace_printk: Redirecionando...97
+
+          client-21762   [003] ..s2.  8009.127824: bpf_trace_printk: Redirecionando...98
+
+          client-21762   [003] ..s2.  8009.137988: bpf_trace_printk: Redirecionando...99
+
+          client-21762   [003] ..s2.  8009.148180: bpf_trace_printk: Redirecionando...100
+
+          client-21762   [003] ..s2.  8009.158326: bpf_trace_printk: Redirecionando...101
+
+          client-21762   [003] ..s2.  8009.168472: bpf_trace_printk: Redirecionando...102
+
+          client-21762   [003] ..s2.  8009.178608: bpf_trace_printk: Redirecionando...103
+
+          client-21762   [003] ..s2.  8009.188777: bpf_trace_printk: Redirecionando...104
+
+          client-21762   [003] ..s2.  8009.198925: bpf_trace_printk: Redirecionando...105
+
+          client-21762   [003] ..s2.  8009.209062: bpf_trace_printk: Redirecionando...106
+
+          client-21762   [003] ..s2.  8009.219225: bpf_trace_printk: Redirecionando...107
+
+          client-21762   [003] ..s2.  8009.229378: bpf_trace_printk: Redirecionando...108
+
+          client-21762   [003] ..s2.  8009.239530: bpf_trace_printk: Redirecionando...109
+
+          client-21762   [003] ..s2.  8009.249720: bpf_trace_printk: Redirecionando...110
+
+          client-21762   [003] ..s2.  8009.259821: bpf_trace_printk: Redirecionando...111
+
+          client-21762   [003] ..s2.  8009.269966: bpf_trace_printk: Redirecionando...112
+
+          client-21762   [003] ..s2.  8009.280094: bpf_trace_printk: Redirecionando...113
+
+          client-21762   [003] ..s2.  8009.290249: bpf_trace_printk: Redirecionando...114
+
+          client-21762   [003] ..s2.  8009.300398: bpf_trace_printk: Redirecionando...115
+
+          client-21762   [003] ..s2.  8009.310528: bpf_trace_printk: Redirecionando...116
+
+          client-21762   [003] ..s2.  8009.320686: bpf_trace_printk: Redirecionando...117
+
+          client-21762   [003] ..s2.  8009.331225: bpf_trace_printk: Redirecionando...118
+
+          client-21762   [003] ..s2.  8009.341408: bpf_trace_printk: Redirecionando...119
+
+          client-21762   [003] ..s2.  8009.351566: bpf_trace_printk: Redirecionando...120
+
+          client-21762   [003] ..s2.  8009.361749: bpf_trace_printk: Redirecionando...121
+
+          client-21762   [003] ..s2.  8009.371977: bpf_trace_printk: Redirecionando...122
+
+          client-21762   [003] ..s2.  8009.382173: bpf_trace_printk: Redirecionando...123
+
+          client-21762   [003] ..s2.  8009.392314: bpf_trace_printk: Redirecionando...124
+
+          client-21762   [003] ..s2.  8009.402464: bpf_trace_printk: Redirecionando...125
+
+          client-21762   [003] ..s2.  8009.412715: bpf_trace_printk: Redirecionando...126
+
+          client-21762   [003] ..s2.  8009.422897: bpf_trace_printk: Redirecionando...127
+
+          client-21762   [003] ..s2.  8009.433052: bpf_trace_printk: Redirecionando...128
+
+          client-21762   [003] ..s2.  8009.443198: bpf_trace_printk: Redirecionando...129
+
+          client-21762   [003] ..s2.  8009.453349: bpf_trace_printk: Redirecionando...130
+
+          client-21762   [003] ..s2.  8009.463487: bpf_trace_printk: Redirecionando...131
+
+          client-21762   [003] ..s2.  8009.473658: bpf_trace_printk: Redirecionando...132
+
+          client-21762   [003] ..s2.  8009.483814: bpf_trace_printk: Redirecionando...133
+
+          client-21762   [003] ..s2.  8009.493954: bpf_trace_printk: Redirecionando...134
+
+          client-21762   [003] ..s2.  8009.504153: bpf_trace_printk: Redirecionando...135
+
+          client-21762   [003] ..s2.  8010.548907: bpf_trace_printk: Redirecionando...136
+
+          client-21762   [003] ..s2.  8010.559795: bpf_trace_printk: Redirecionando...137
+
+          client-21762   [003] ..s2.  8010.569927: bpf_trace_printk: Redirecionando...138
+
+          client-21762   [003] ..s2.  8010.580068: bpf_trace_printk: Redirecionando...139
+
+          client-21762   [003] ..s2.  8010.590257: bpf_trace_printk: Redirecionando...140
+
+          client-21762   [003] ..s2.  8010.600424: bpf_trace_printk: Redirecionando...141
+
+          client-21762   [003] ..s2.  8010.610562: bpf_trace_printk: Redirecionando...142
+
+          client-21762   [003] ..s2.  8010.620719: bpf_trace_printk: Redirecionando...143
+
+          client-21762   [003] ..s2.  8010.630943: bpf_trace_printk: Redirecionando...144
+
+          client-21762   [003] ..s2.  8010.641086: bpf_trace_printk: Redirecionando...145
+
+          client-21762   [003] ..s2.  8010.651253: bpf_trace_printk: Redirecionando...146
+
+          client-21762   [003] ..s2.  8010.661416: bpf_trace_printk: Redirecionando...147
+
+          client-21762   [003] ..s2.  8010.671595: bpf_trace_printk: Redirecionando...148
+
+          client-21762   [003] ..s2.  8010.681793: bpf_trace_printk: Redirecionando...149
+
+          client-21762   [003] ..s2.  8010.691919: bpf_trace_printk: Redirecionando...150
+
+          client-21762   [003] ..s2.  8010.702125: bpf_trace_printk: Redirecionando...151
+
+          client-21762   [003] ..s2.  8010.712294: bpf_trace_printk: Redirecionando...152
+
+          client-21762   [003] ..s2.  8010.722466: bpf_trace_printk: Redirecionando...153
+
+          client-21762   [003] ..s2.  8010.732616: bpf_trace_printk: Redirecionando...154
+
+          client-21762   [003] ..s2.  8010.742750: bpf_trace_printk: Redirecionando...155
+
+          client-21762   [003] ..s2.  8010.752925: bpf_trace_printk: Redirecionando...156
+
+          client-21762   [003] ..s2.  8010.763050: bpf_trace_printk: Redirecionando...157
+
+          client-21762   [003] ..s2.  8010.773195: bpf_trace_printk: Redirecionando...158
+
+          client-21762   [003] ..s2.  8010.783323: bpf_trace_printk: Redirecionando...159
+
+          client-21762   [003] ..s2.  8010.793437: bpf_trace_printk: Redirecionando...160
+
+          client-21762   [003] ..s2.  8010.803569: bpf_trace_printk: Redirecionando...161
+
+          client-21762   [003] ..s2.  8010.813693: bpf_trace_printk: Redirecionando...162
+
+          client-21762   [003] ..s2.  8010.823848: bpf_trace_printk: Redirecionando...163
+
+          client-21762   [003] ..s2.  8010.833982: bpf_trace_printk: Redirecionando...164
+
+          client-21762   [003] ..s2.  8010.844109: bpf_trace_printk: Redirecionando...165
+
+          client-21762   [003] ..s2.  8010.854252: bpf_trace_printk: Redirecionando...166
+
+          client-21762   [003] ..s2.  8010.864511: bpf_trace_printk: Redirecionando...167
+
+          client-21762   [003] ..s2.  8010.874658: bpf_trace_printk: Redirecionando...168
+
+          client-21762   [003] ..s2.  8010.884794: bpf_trace_printk: Redirecionando...169
+
+          client-21762   [003] ..s2.  8010.894921: bpf_trace_printk: Redirecionando...170
+
+          client-21762   [003] ..s2.  8010.905092: bpf_trace_printk: Redirecionando...171
+
+          client-21762   [003] ..s2.  8010.915277: bpf_trace_printk: Redirecionando...172
+
+          client-21762   [003] ..s2.  8010.925427: bpf_trace_printk: Redirecionando...173
+
+          client-21762   [003] ..s2.  8010.935552: bpf_trace_printk: Redirecionando...174
+
+          client-21762   [003] ..s2.  8010.945675: bpf_trace_printk: Redirecionando...175
+
+          client-21762   [003] ..s2.  8010.955785: bpf_trace_printk: Redirecionando...176
+
+          client-21762   [003] ..s2.  8010.965954: bpf_trace_printk: Redirecionando...177
+
+          client-21762   [003] ..s2.  8010.976111: bpf_trace_printk: Redirecionando...178
+
+          client-21762   [003] ..s2.  8010.986270: bpf_trace_printk: Redirecionando...179
+
+          client-21762   [003] ..s2.  8010.996403: bpf_trace_printk: Redirecionando...180
+
+          client-21762   [003] ..s2.  8011.006557: bpf_trace_printk: Redirecionando...181
+
+          client-21762   [003] ..s2.  8011.016702: bpf_trace_printk: Redirecionando...182
+
+          client-21762   [003] ..s2.  8011.026829: bpf_trace_printk: Redirecionando...183
+
+          client-21762   [003] ..s2.  8011.036979: bpf_trace_printk: Redirecionando...184
+
+          client-21762   [003] ..s2.  8011.047140: bpf_trace_printk: Redirecionando...185
+
+          client-21762   [003] ..s2.  8011.057313: bpf_trace_printk: Redirecionando...186
+
+          client-21762   [003] ..s2.  8011.067470: bpf_trace_printk: Redirecionando...187
+
+          client-21762   [003] ..s2.  8011.077611: bpf_trace_printk: Redirecionando...188
+
+          client-21762   [003] ..s2.  8011.087821: bpf_trace_printk: Redirecionando...189
+
+          client-21762   [003] ..s2.  8011.098020: bpf_trace_printk: Redirecionando...190
+
+          client-21762   [003] ..s2.  8011.108200: bpf_trace_printk: Redirecionando...191
+
+          client-21762   [003] ..s2.  8011.118366: bpf_trace_printk: Redirecionando...192
+
+          client-21762   [003] ..s2.  8011.128510: bpf_trace_printk: Redirecionando...193
+
+          client-21762   [003] ..s2.  8011.138793: bpf_trace_printk: Redirecionando...194
+
+          client-21762   [003] ..s2.  8011.149030: bpf_trace_printk: Redirecionando...195
+
+          client-21762   [003] ..s2.  8011.159169: bpf_trace_printk: Redirecionando...196
+
+          client-21762   [003] ..s2.  8011.169385: bpf_trace_printk: Redirecionando...197
+
+          client-21762   [003] ..s2.  8011.179522: bpf_trace_printk: Redirecionando...198
+
+          client-21762   [003] ..s2.  8011.189687: bpf_trace_printk: Redirecionando...199
+
+          client-21762   [003] ..s2.  8011.199843: bpf_trace_printk: Redirecionando...200
+
+          client-21762   [003] ..s2.  8011.209983: bpf_trace_printk: Redirecionando...201
+
+          client-21762   [003] ..s2.  8011.220128: bpf_trace_printk: Redirecionando...202
+
+          client-21762   [003] ..s2.  8011.230266: bpf_trace_printk: Redirecionando...203
+
+          client-21762   [003] ..s2.  8011.240511: bpf_trace_printk: Redirecionando...204
+
+          client-21762   [003] ..s2.  8011.250656: bpf_trace_printk: Redirecionando...205
+
+          client-21762   [003] ..s2.  8011.260787: bpf_trace_printk: Redirecionando...206
+
+          client-21762   [003] ..s2.  8011.271049: bpf_trace_printk: Redirecionando...207
+
+          client-21762   [003] ..s2.  8011.281269: bpf_trace_printk: Redirecionando...208
+
+          client-21762   [003] ..s2.  8011.291419: bpf_trace_printk: Redirecionando...209
+
+          client-21762   [003] ..s2.  8011.301565: bpf_trace_printk: Redirecionando...210
+
+          client-21762   [003] ..s2.  8011.311701: bpf_trace_printk: Redirecionando...211
+
+          client-21762   [003] ..s2.  8011.321941: bpf_trace_printk: Redirecionando...212
+
+          client-21762   [003] ..s2.  8011.332133: bpf_trace_printk: Redirecionando...213
+
+          client-21762   [003] ..s2.  8011.342271: bpf_trace_printk: Redirecionando...214
+
+          client-21762   [003] ..s2.  8011.352407: bpf_trace_printk: Redirecionando...215
+
+          client-21762   [003] ..s2.  8011.362540: bpf_trace_printk: Redirecionando...216
+
+          client-21762   [003] ..s2.  8011.372691: bpf_trace_printk: Redirecionando...217
+
+          client-21762   [003] ..s2.  8011.382831: bpf_trace_printk: Redirecionando...218
+
+          client-21762   [003] ..s2.  8011.392974: bpf_trace_printk: Redirecionando...219
+
+          client-21762   [003] ..s2.  8011.403124: bpf_trace_printk: Redirecionando...220
+
+          client-21762   [003] ..s2.  8011.413261: bpf_trace_printk: Redirecionando...221
+
+          client-21762   [003] ..s2.  8011.423981: bpf_trace_printk: Redirecionando...222
+
+          client-21762   [003] ..s2.  8011.434146: bpf_trace_printk: Redirecionando...223
+
+          client-21762   [003] ..s2.  8011.444293: bpf_trace_printk: Redirecionando...224
+
+          client-21762   [003] ..s2.  8011.454478: bpf_trace_printk: Redirecionando...225
+
+          client-21762   [003] ..s2.  8011.464850: bpf_trace_printk: Redirecionando...226
+
+          client-21762   [003] ..s2.  8011.475012: bpf_trace_printk: Redirecionando...227
+
+          client-21762   [003] ..s2.  8011.485163: bpf_trace_printk: Redirecionando...228
+
+          client-21762   [003] ..s2.  8011.495320: bpf_trace_printk: Redirecionando...229
+
+          client-21762   [003] ..s2.  8011.505567: bpf_trace_printk: Redirecionando...230
+
+          client-21762   [003] ..s2.  8011.515759: bpf_trace_printk: Redirecionando...231
+
+          client-21762   [003] ..s2.  8011.525899: bpf_trace_printk: Redirecionando...232
+
+          client-21762   [003] ..s2.  8011.536045: bpf_trace_printk: Redirecionando...233
+
+          client-21762   [003] ..s2.  8011.546207: bpf_trace_printk: Redirecionando...234
+
+          client-21762   [003] ..s2.  8011.556380: bpf_trace_printk: Redirecionando...235
+
+          client-21762   [003] ..s2.  8011.566541: bpf_trace_printk: Redirecionando...236
+
+          client-21762   [003] ..s2.  8011.576669: bpf_trace_printk: Redirecionando...237
+
+          client-21762   [003] ..s2.  8011.586837: bpf_trace_printk: Redirecionando...238
+
+          client-21762   [003] ..s2.  8011.596944: bpf_trace_printk: Redirecionando...239
+
+          client-21762   [003] ..s2.  8011.607067: bpf_trace_printk: Redirecionando...240
+
+          client-21762   [003] ..s2.  8011.617183: bpf_trace_printk: Redirecionando...241
+
+          client-21762   [003] ..s2.  8011.627300: bpf_trace_printk: Redirecionando...242
+
+          client-21762   [003] ..s2.  8011.637600: bpf_trace_printk: Redirecionando...243
+
+          client-21762   [003] ..s2.  8011.647779: bpf_trace_printk: Redirecionando...244
+
+          client-21762   [003] ..s2.  8011.657931: bpf_trace_printk: Redirecionando...245
+
+          client-21762   [003] ..s2.  8011.668228: bpf_trace_printk: Redirecionando...246
+
+          client-21762   [003] ..s2.  8011.678360: bpf_trace_printk: Redirecionando...247
+
+          client-21762   [003] ..s2.  8011.688548: bpf_trace_printk: Redirecionando...248
+
+          client-21762   [003] ..s2.  8011.698723: bpf_trace_printk: Redirecionando...249
+
+          client-21762   [003] ..s2.  8011.708853: bpf_trace_printk: Redirecionando...250
+
+          client-21762   [003] ..s2.  8011.718975: bpf_trace_printk: Redirecionando...251
+
+          client-21762   [003] ..s2.  8011.729087: bpf_trace_printk: Redirecionando...252
+
+          client-21762   [003] ..s2.  8011.739238: bpf_trace_printk: Redirecionando...253
+
+          client-21762   [003] ..s2.  8011.749386: bpf_trace_printk: Redirecionando...254
+
+          client-21762   [003] ..s2.  8011.759518: bpf_trace_printk: Redirecionando...255
+
+          client-21762   [003] ..s2.  8011.769662: bpf_trace_printk: Redirecionando...256
+
+          client-21762   [003] ..s2.  8011.779776: bpf_trace_printk: Redirecionando...257
+
+          client-21762   [003] ..s2.  8011.789948: bpf_trace_printk: Redirecionando...258
+
+          client-21762   [003] ..s2.  8011.800097: bpf_trace_printk: Redirecionando...259
+
+          client-21762   [003] ..s2.  8011.810234: bpf_trace_printk: Redirecionando...260
+
+          client-21762   [003] ..s2.  8011.820383: bpf_trace_printk: Redirecionando...261
+
+          client-21762   [003] ..s2.  8011.830564: bpf_trace_printk: Redirecionando...262
+
+          client-21762   [003] ..s2.  8011.840739: bpf_trace_printk: Redirecionando...263
+
+          client-21762   [003] ..s2.  8011.850886: bpf_trace_printk: Redirecionando...264
+
+          client-21762   [003] ..s2.  8011.861020: bpf_trace_printk: Redirecionando...265
+
+          client-21762   [003] ..s2.  8011.871191: bpf_trace_printk: Redirecionando...266
+
+          client-21762   [003] ..s2.  8011.881532: bpf_trace_printk: Redirecionando...267
+
+          client-21762   [003] ..s2.  8011.891714: bpf_trace_printk: Redirecionando...268
+
+          client-21762   [003] ..s2.  8011.901907: bpf_trace_printk: Redirecionando...269
+
+          client-21762   [003] ..s2.  8011.912047: bpf_trace_printk: Redirecionando...270
+
+          client-21762   [003] ..s2.  8011.922704: bpf_trace_printk: Redirecionando...271
+
+          client-21762   [003] ..s2.  8011.932897: bpf_trace_printk: Redirecionando...272
+
+          client-21762   [003] ..s2.  8011.943055: bpf_trace_printk: Redirecionando...273
+
+          client-21762   [003] ..s2.  8011.953220: bpf_trace_printk: Redirecionando...274
+
+          client-21762   [003] ..s2.  8011.963389: bpf_trace_printk: Redirecionando...275
+
+          client-21762   [003] ..s2.  8011.973587: bpf_trace_printk: Redirecionando...276
+
+          client-21762   [003] ..s2.  8011.983750: bpf_trace_printk: Redirecionando...277
+
+          client-21762   [003] ..s2.  8011.993882: bpf_trace_printk: Redirecionando...278
+
+          client-21762   [003] ..s2.  8012.004298: bpf_trace_printk: Redirecionando...279
+
+          client-21762   [003] ..s2.  8012.014927: bpf_trace_printk: Redirecionando...280
+
+          client-21762   [003] ..s2.  8012.025076: bpf_trace_printk: Redirecionando...281
+
+          client-21762   [003] ..s2.  8012.035242: bpf_trace_printk: Redirecionando...282
+
+          client-21762   [003] ..s2.  8012.045395: bpf_trace_printk: Redirecionando...283
+
+          client-21762   [003] ..s2.  8012.055577: bpf_trace_printk: Redirecionando...284
+
+          client-21762   [003] ..s2.  8012.065738: bpf_trace_printk: Redirecionando...285
+
+          client-21762   [003] ..s2.  8013.107846: bpf_trace_printk: Redirecionando...286
+
+          client-21762   [003] ..s2.  8013.118025: bpf_trace_printk: Redirecionando...287
+
+          client-21762   [003] ..s2.  8013.128183: bpf_trace_printk: Redirecionando...288
+
+          client-21762   [003] ..s2.  8013.138379: bpf_trace_printk: Redirecionando...289
+
+          client-21762   [003] ..s2.  8013.148618: bpf_trace_printk: Redirecionando...290
+
+          client-21762   [003] ..s2.  8013.158757: bpf_trace_printk: Redirecionando...291
+
+          client-21762   [003] ..s2.  8013.168890: bpf_trace_printk: Redirecionando...292
+
+          client-21762   [003] ..s2.  8013.179006: bpf_trace_printk: Redirecionando...293
+
+          client-21762   [003] ..s2.  8013.189140: bpf_trace_printk: Redirecionando...294
+
+          client-21762   [003] ..s2.  8013.199274: bpf_trace_printk: Redirecionando...295
+
+          client-21762   [003] ..s2.  8013.209421: bpf_trace_printk: Redirecionando...296
+
+          client-21762   [003] ..s2.  8013.219614: bpf_trace_printk: Redirecionando...297
+
+          client-21762   [003] ..s2.  8013.229736: bpf_trace_printk: Redirecionando...298
+
+          client-21762   [003] ..s2.  8013.239887: bpf_trace_printk: Redirecionando...299
+
+          client-21762   [003] ..s2.  8013.250033: bpf_trace_printk: Redirecionando...300
+
+          client-21762   [003] ..s2.  8013.260176: bpf_trace_printk: Redirecionando...301
+
+          client-21762   [003] ..s2.  8013.270321: bpf_trace_printk: Redirecionando...302
+
+          client-21762   [003] ..s2.  8013.280548: bpf_trace_printk: Redirecionando...303
+
+          client-21762   [003] ..s2.  8013.290697: bpf_trace_printk: Redirecionando...304
+
+          client-21762   [003] ..s2.  8013.300845: bpf_trace_printk: Redirecionando...305
+
+          client-21762   [003] ..s2.  8013.310980: bpf_trace_printk: Redirecionando...306
+
+          client-21762   [003] ..s2.  8013.321232: bpf_trace_printk: Redirecionando...307
+
+          client-21762   [003] ..s2.  8013.331537: bpf_trace_printk: Redirecionando...308
+
+          client-21762   [003] ..s2.  8013.341714: bpf_trace_printk: Redirecionando...309
+
+          client-21762   [003] ..s2.  8013.351863: bpf_trace_printk: Redirecionando...310
+
+          client-21762   [003] ..s2.  8013.361998: bpf_trace_printk: Redirecionando...311
+
+          client-21762   [003] ..s2.  8013.372173: bpf_trace_printk: Redirecionando...312
+
+          client-21762   [003] ..s2.  8013.382321: bpf_trace_printk: Redirecionando...313
+
+          client-21762   [003] ..s2.  8013.392514: bpf_trace_printk: Redirecionando...314
+
+          client-21762   [003] ..s2.  8013.405916: bpf_trace_printk: Redirecionando...315
+
+          client-21762   [003] ..s2.  8013.416167: bpf_trace_printk: Redirecionando...316
+
+          client-21762   [003] ..s2.  8013.426560: bpf_trace_printk: Redirecionando...317
+
+          client-21762   [003] ..s2.  8013.436994: bpf_trace_printk: Redirecionando...318
+
+          client-21762   [003] ..s2.  8013.447214: bpf_trace_printk: Redirecionando...319
+
+          client-21762   [003] ..s2.  8013.457388: bpf_trace_printk: Redirecionando...320
+
+          client-21762   [003] ..s2.  8013.467542: bpf_trace_printk: Redirecionando...321
+
+          client-21762   [003] ..s2.  8013.477658: bpf_trace_printk: Redirecionando...322
+
+          client-21762   [003] ..s2.  8013.487826: bpf_trace_printk: Redirecionando...323
+
+          client-21762   [003] ..s2.  8013.497976: bpf_trace_printk: Redirecionando...324
+
+          client-21762   [003] ..s2.  8013.508121: bpf_trace_printk: Redirecionando...325
+
+          client-21762   [003] ..s2.  8013.518266: bpf_trace_printk: Redirecionando...326
+
+          client-21762   [003] ..s2.  8013.528403: bpf_trace_printk: Redirecionando...327
+
+          client-21762   [003] ..s2.  8013.538574: bpf_trace_printk: Redirecionando...328
+
+          client-21762   [003] ..s2.  8013.548946: bpf_trace_printk: Redirecionando...329
+
+          client-21762   [003] ..s2.  8013.559104: bpf_trace_printk: Redirecionando...330
+
+          client-21762   [003] ..s2.  8013.569281: bpf_trace_printk: Redirecionando...331
+
+          client-21762   [003] ..s2.  8013.579415: bpf_trace_printk: Redirecionando...332
+
+          client-21762   [003] ..s2.  8013.589542: bpf_trace_printk: Redirecionando...333
+
+          client-21762   [003] ..s2.  8013.599672: bpf_trace_printk: Redirecionando...334
+
+          client-21762   [003] ..s2.  8013.609801: bpf_trace_printk: Redirecionando...335
+
+          client-21762   [003] ..s2.  8013.619921: bpf_trace_printk: Redirecionando...336
+
+          client-21762   [003] ..s2.  8013.630035: bpf_trace_printk: Redirecionando...337
+
+          client-21762   [003] ..s2.  8013.640169: bpf_trace_printk: Redirecionando...338
+
+          client-21762   [003] ..s2.  8013.650295: bpf_trace_printk: Redirecionando...339
+
+          client-21762   [003] ..s2.  8013.660435: bpf_trace_printk: Redirecionando...340
+
+          client-21762   [003] ..s2.  8013.670583: bpf_trace_printk: Redirecionando...341
+
+          client-21762   [003] ..s2.  8013.680942: bpf_trace_printk: Redirecionando...342
+
+          client-21762   [003] ..s2.  8013.691074: bpf_trace_printk: Redirecionando...343
+
+          client-21762   [003] ..s2.  8013.701198: bpf_trace_printk: Redirecionando...344
+
+          client-21762   [003] ..s2.  8013.712727: bpf_trace_printk: Redirecionando...345
+
+          client-21762   [003] ..s2.  8013.722879: bpf_trace_printk: Redirecionando...346
+
+          client-21762   [003] ..s2.  8013.733012: bpf_trace_printk: Redirecionando...347
+
+          client-21762   [003] ..s2.  8013.743130: bpf_trace_printk: Redirecionando...348
+
+          client-21762   [003] ..s2.  8013.753254: bpf_trace_printk: Redirecionando...349
+
+          client-21762   [003] ..s2.  8013.763367: bpf_trace_printk: Redirecionando...350
+
+          client-21762   [003] ..s2.  8013.773494: bpf_trace_printk: Redirecionando...351
+
+          client-21762   [003] ..s2.  8013.783620: bpf_trace_printk: Redirecionando...352
+
+          client-21762   [003] ..s2.  8013.793773: bpf_trace_printk: Redirecionando...353
+
+          client-21762   [003] ..s2.  8013.803935: bpf_trace_printk: Redirecionando...354
+
+          client-21762   [003] ..s2.  8013.814355: bpf_trace_printk: Redirecionando...355
+
+          client-21762   [003] ..s2.  8013.824514: bpf_trace_printk: Redirecionando...356
+
+          client-21762   [003] ..s2.  8013.834650: bpf_trace_printk: Redirecionando...357
+
+          client-21762   [003] ..s2.  8013.844778: bpf_trace_printk: Redirecionando...358
+
+          client-21762   [003] ..s2.  8013.854935: bpf_trace_printk: Redirecionando...359
+
+          client-21762   [003] ..s2.  8013.865100: bpf_trace_printk: Redirecionando...360
+
+          client-21762   [003] ..s2.  8013.875245: bpf_trace_printk: Redirecionando...361
+
+          client-21762   [003] ..s2.  8013.885388: bpf_trace_printk: Redirecionando...362
+
+          client-21762   [003] ..s2.  8013.895529: bpf_trace_printk: Redirecionando...363
+
+          client-21762   [003] ..s2.  8013.905722: bpf_trace_printk: Redirecionando...364
+
+          client-21762   [003] ..s2.  8013.915881: bpf_trace_printk: Redirecionando...365
+
+          client-21762   [003] ..s2.  8013.926023: bpf_trace_printk: Redirecionando...366
+
+          client-21762   [003] ..s2.  8013.936175: bpf_trace_printk: Redirecionando...367
+
+          client-21762   [003] ..s2.  8013.946313: bpf_trace_printk: Redirecionando...368
+
+          client-21762   [003] ..s2.  8013.956481: bpf_trace_printk: Redirecionando...369
+
+          client-21762   [003] ..s2.  8013.966630: bpf_trace_printk: Redirecionando...370
+
+          client-21762   [003] ..s2.  8013.976736: bpf_trace_printk: Redirecionando...371
+
+          client-21762   [003] ..s2.  8013.986885: bpf_trace_printk: Redirecionando...372
+
+          client-21762   [003] ..s2.  8013.997020: bpf_trace_printk: Redirecionando...373
+
+          client-21762   [003] ..s2.  8014.007193: bpf_trace_printk: Redirecionando...374
+
+          client-21762   [003] ..s2.  8014.017353: bpf_trace_printk: Redirecionando...375
+
+          client-21762   [003] ..s2.  8014.027496: bpf_trace_printk: Redirecionando...376
+
+          client-21762   [003] ..s2.  8014.037661: bpf_trace_printk: Redirecionando...377
+
+          client-21762   [003] ..s2.  8014.047843: bpf_trace_printk: Redirecionando...378
+
+          client-21762   [003] ..s2.  8014.057998: bpf_trace_printk: Redirecionando...379
+
+          client-21762   [003] ..s2.  8014.068160: bpf_trace_printk: Redirecionando...380
+
+          client-21762   [003] ..s2.  8014.078301: bpf_trace_printk: Redirecionando...381
+
+          client-21762   [003] ..s2.  8014.088754: bpf_trace_printk: Redirecionando...382
+
+          client-21762   [003] ..s2.  8014.098937: bpf_trace_printk: Redirecionando...383
+
+          client-21762   [003] ..s2.  8014.109091: bpf_trace_printk: Redirecionando...384
+
+          client-21762   [003] ..s2.  8014.119260: bpf_trace_printk: Redirecionando...385
+
+          client-21762   [003] ..s2.  8014.129396: bpf_trace_printk: Redirecionando...386
+
+          client-21762   [003] ..s2.  8014.139572: bpf_trace_printk: Redirecionando...387
+
+          client-21762   [003] ..s2.  8014.149711: bpf_trace_printk: Redirecionando...388
+
+          client-21762   [003] ..s2.  8014.159854: bpf_trace_printk: Redirecionando...389
+
+          client-21762   [003] ..s2.  8014.170011: bpf_trace_printk: Redirecionando...390
+
+          client-21762   [003] ..s2.  8014.180127: bpf_trace_printk: Redirecionando...391
+
+          client-21762   [003] ..s2.  8014.190263: bpf_trace_printk: Redirecionando...392
+
+          client-21762   [003] ..s2.  8014.200411: bpf_trace_printk: Redirecionando...393
+
+          client-21762   [003] ..s2.  8014.210563: bpf_trace_printk: Redirecionando...394
+
+          client-21762   [003] ..s2.  8014.220749: bpf_trace_printk: Redirecionando...395
+
+          client-21762   [003] ..s2.  8014.231363: bpf_trace_printk: Redirecionando...396
+
+          client-21762   [003] ..s2.  8014.241514: bpf_trace_printk: Redirecionando...397
+
+          client-21762   [003] ..s2.  8014.251679: bpf_trace_printk: Redirecionando...398
+
+          client-21762   [003] ..s2.  8014.261858: bpf_trace_printk: Redirecionando...399
+
+          client-21762   [003] ..s2.  8014.272032: bpf_trace_printk: Redirecionando...400
+
+          client-21762   [003] ..s2.  8014.282234: bpf_trace_printk: Redirecionando...401
+
+          client-21762   [003] ..s2.  8014.292380: bpf_trace_printk: Redirecionando...402
+
+          client-21762   [003] ..s2.  8014.302613: bpf_trace_printk: Redirecionando...403
+
+          client-21762   [003] ..s2.  8014.312797: bpf_trace_printk: Redirecionando...404
+
+          client-21762   [003] ..s2.  8014.322960: bpf_trace_printk: Redirecionando...405
+
+          client-21762   [003] ..s2.  8014.333110: bpf_trace_printk: Redirecionando...406
+
+          client-21762   [003] ..s2.  8014.343243: bpf_trace_printk: Redirecionando...407
+
+          client-21762   [003] ..s2.  8014.353381: bpf_trace_printk: Redirecionando...408
+
+          client-21762   [003] ..s2.  8014.363507: bpf_trace_printk: Redirecionando...409
+
+          client-21762   [003] ..s2.  8014.373658: bpf_trace_printk: Redirecionando...410
+
+          client-21762   [003] ..s2.  8014.383811: bpf_trace_printk: Redirecionando...411
+
+          client-21762   [003] ..s2.  8014.393945: bpf_trace_printk: Redirecionando...412
+
+          client-21762   [003] ..s2.  8014.404094: bpf_trace_printk: Redirecionando...413
+
+          client-21762   [003] ..s2.  8014.414221: bpf_trace_printk: Redirecionando...414
+
+          client-21762   [003] ..s2.  8014.424365: bpf_trace_printk: Redirecionando...415
+
+          client-21762   [003] ..s2.  8014.434497: bpf_trace_printk: Redirecionando...416
+
+          client-21762   [003] ..s2.  8014.444669: bpf_trace_printk: Redirecionando...417
+
+          client-21762   [003] ..s2.  8014.454901: bpf_trace_printk: Redirecionando...418
+
+          client-21762   [003] ..s2.  8014.465112: bpf_trace_printk: Redirecionando...419
+
+          client-21762   [003] ..s2.  8014.475268: bpf_trace_printk: Redirecionando...420
+
+          client-21762   [003] ..s2.  8014.485425: bpf_trace_printk: Redirecionando...421
+
+          client-21762   [003] ..s2.  8014.495571: bpf_trace_printk: Redirecionando...422
+
+          client-21762   [003] ..s2.  8014.505739: bpf_trace_printk: Redirecionando...423
+
+          client-21762   [003] ..s2.  8015.540327: bpf_trace_printk: Redirecionando...424
+
+          client-21762   [003] ..s2.  8015.550487: bpf_trace_printk: Redirecionando...425
+
+          client-21762   [003] ..s2.  8015.560692: bpf_trace_printk: Redirecionando...426
+
+          client-21762   [003] ..s2.  8015.570852: bpf_trace_printk: Redirecionando...427
+
+          client-21762   [003] ..s2.  8015.581014: bpf_trace_printk: Redirecionando...428
+
+          client-21762   [003] ..s2.  8015.591154: bpf_trace_printk: Redirecionando...429
+
+          client-21762   [003] ..s2.  8015.601537: bpf_trace_printk: Redirecionando...430
+
+          client-21762   [003] ..s2.  8015.611698: bpf_trace_printk: Redirecionando...431
+
+          client-21762   [003] ..s2.  8015.621843: bpf_trace_printk: Redirecionando...432
+
+          client-21762   [003] ..s2.  8015.631970: bpf_trace_printk: Redirecionando...433
+
+          client-21762   [003] ..s2.  8015.642096: bpf_trace_printk: Redirecionando...434
+
+          client-21762   [003] ..s2.  8015.652224: bpf_trace_printk: Redirecionando...435
+
+          client-21762   [003] ..s2.  8015.662340: bpf_trace_printk: Redirecionando...436
+
+          client-21762   [003] ..s2.  8015.672459: bpf_trace_printk: Redirecionando...437
+
+          client-21762   [003] ..s2.  8015.682580: bpf_trace_printk: Redirecionando...438
+
+          client-21762   [003] ..s2.  8015.692693: bpf_trace_printk: Redirecionando...439
+
+          client-21762   [003] ..s2.  8015.702825: bpf_trace_printk: Redirecionando...440
+
+          client-21762   [003] ..s2.  8015.712947: bpf_trace_printk: Redirecionando...441
+
+          client-21762   [003] ..s2.  8015.723085: bpf_trace_printk: Redirecionando...442
+
+          client-21762   [003] ..s2.  8015.733209: bpf_trace_printk: Redirecionando...443
+
+          client-21762   [003] ..s2.  8015.743326: bpf_trace_printk: Redirecionando...444
+
+          client-21762   [003] ..s2.  8015.753456: bpf_trace_printk: Redirecionando...445
+
+          client-21762   [003] ..s2.  8015.763565: bpf_trace_printk: Redirecionando...446
+
+          client-21762   [003] ..s2.  8015.773696: bpf_trace_printk: Redirecionando...447
+
+          client-21762   [003] ..s2.  8015.783824: bpf_trace_printk: Redirecionando...448
+
+          client-21762   [003] ..s2.  8015.793973: bpf_trace_printk: Redirecionando...449
+
+          client-21762   [003] ..s2.  8015.806976: bpf_trace_printk: Redirecionando...450
+
+          client-21762   [003] ..s2.  8015.824248: bpf_trace_printk: Redirecionando...451
+
+          client-21762   [003] ..s2.  8015.834399: bpf_trace_printk: Redirecionando...452
+
+          client-21762   [003] ..s2.  8015.844529: bpf_trace_printk: Redirecionando...453
+
+          client-21762   [003] ..s2.  8015.854717: bpf_trace_printk: Redirecionando...454
+
+          client-21762   [003] ..s2.  8015.865036: bpf_trace_printk: Redirecionando...455
+
+          client-21762   [003] ..s2.  8015.875174: bpf_trace_printk: Redirecionando...456
+
+          client-21762   [003] ..s2.  8015.885323: bpf_trace_printk: Redirecionando...457
+
+          client-21762   [003] ..s2.  8015.895458: bpf_trace_printk: Redirecionando...458
+
+          client-21762   [003] ..s2.  8015.905641: bpf_trace_printk: Redirecionando...459
+
+          client-21762   [003] ..s2.  8015.915814: bpf_trace_printk: Redirecionando...460
+
+          client-21762   [003] ..s2.  8015.925956: bpf_trace_printk: Redirecionando...461
+
+          client-21762   [003] ..s2.  8015.936113: bpf_trace_printk: Redirecionando...462
+
+          client-21762   [003] ..s2.  8015.946265: bpf_trace_printk: Redirecionando...463
+
+          client-21762   [003] ..s2.  8015.956448: bpf_trace_printk: Redirecionando...464
+
+          client-21762   [003] ..s2.  8015.966601: bpf_trace_printk: Redirecionando...465
+
+          client-21762   [003] ..s2.  8015.976742: bpf_trace_printk: Redirecionando...466
+
+          client-21762   [003] ..s2.  8015.987027: bpf_trace_printk: Redirecionando...467
+
+          client-21762   [003] ..s2.  8015.997301: bpf_trace_printk: Redirecionando...468
+
+          client-21762   [003] ..s2.  8016.007471: bpf_trace_printk: Redirecionando...469
+
+          client-21762   [003] ..s2.  8016.017618: bpf_trace_printk: Redirecionando...470
+
+          client-21762   [003] ..s2.  8016.027772: bpf_trace_printk: Redirecionando...471
+
+          client-21762   [003] ..s2.  8016.037953: bpf_trace_printk: Redirecionando...472
+
+          client-21762   [003] ..s2.  8016.048114: bpf_trace_printk: Redirecionando...473
+
+          client-21762   [003] ..s2.  8016.058263: bpf_trace_printk: Redirecionando...474
+
+          client-21762   [003] ..s2.  8016.068428: bpf_trace_printk: Redirecionando...475
+
+          client-21762   [003] ..s2.  8016.078575: bpf_trace_printk: Redirecionando...476
+
+          client-21762   [003] ..s2.  8016.088694: bpf_trace_printk: Redirecionando...477
+
+          client-21762   [003] ..s2.  8016.098926: bpf_trace_printk: Redirecionando...478
+
+          client-21762   [003] ..s2.  8016.109067: bpf_trace_printk: Redirecionando...479
+
+          client-21762   [003] ..s2.  8016.119224: bpf_trace_printk: Redirecionando...480
+
+          client-21762   [003] ..s2.  8016.129391: bpf_trace_printk: Redirecionando...481
+
+          client-21762   [003] ..s2.  8016.139558: bpf_trace_printk: Redirecionando...482
+
+          client-21762   [003] ..s2.  8016.149711: bpf_trace_printk: Redirecionando...483
+
+          client-21762   [003] ..s2.  8016.159846: bpf_trace_printk: Redirecionando...484
+
+          client-21762   [003] ..s2.  8016.169992: bpf_trace_printk: Redirecionando...485
+
+          client-21762   [003] ..s2.  8016.180121: bpf_trace_printk: Redirecionando...486
+
+          client-21762   [003] ..s2.  8016.190280: bpf_trace_printk: Redirecionando...487
+
+          client-21762   [003] ..s2.  8016.200467: bpf_trace_printk: Redirecionando...488
+
+          client-21762   [003] ..s2.  8016.210593: bpf_trace_printk: Redirecionando...489
+
+          client-21762   [003] ..s2.  8016.221061: bpf_trace_printk: Redirecionando...490
+
+          client-21762   [003] ..s2.  8016.231211: bpf_trace_printk: Redirecionando...491
+
+          client-21762   [003] ..s2.  8016.241369: bpf_trace_printk: Redirecionando...492
+
+          client-21762   [003] ..s2.  8016.251526: bpf_trace_printk: Redirecionando...493
+
+          client-21762   [003] ..s2.  8016.261686: bpf_trace_printk: Redirecionando...494
+
+          client-21762   [003] ..s2.  8016.271869: bpf_trace_printk: Redirecionando...495
+
+          client-21762   [003] ..s2.  8016.282038: bpf_trace_printk: Redirecionando...496
+
+          client-21762   [003] ..s2.  8016.292179: bpf_trace_printk: Redirecionando...497
+
+          client-21762   [003] ..s2.  8016.302324: bpf_trace_printk: Redirecionando...498
+
+          client-21762   [003] ..s2.  8016.312464: bpf_trace_printk: Redirecionando...499
+
+          client-21762   [003] ..s2.  8016.322661: bpf_trace_printk: Redirecionando...500
+
+          client-21762   [003] ..s2.  8016.332804: bpf_trace_printk: Redirecionando...501
+
+          client-21762   [003] ..s2.  8016.342936: bpf_trace_printk: Redirecionando...502
+
+          client-21762   [003] ..s2.  8016.353093: bpf_trace_printk: Redirecionando...503
+
+          client-21762   [003] ..s2.  8016.363230: bpf_trace_printk: Redirecionando...504
+
+          client-21762   [003] ..s2.  8016.373397: bpf_trace_printk: Redirecionando...505
+
+          client-21762   [003] ..s2.  8016.383548: bpf_trace_printk: Redirecionando...506
+
+          client-21762   [003] ..s2.  8016.393681: bpf_trace_printk: Redirecionando...507
+
+          client-21762   [003] ..s2.  8016.403840: bpf_trace_printk: Redirecionando...508
+
+          client-21762   [003] ..s2.  8016.414495: bpf_trace_printk: Redirecionando...509
+
+          client-21762   [003] ..s2.  8016.424624: bpf_trace_printk: Redirecionando...510
+
+          client-21762   [003] ..s2.  8016.434752: bpf_trace_printk: Redirecionando...511
+
+          client-21762   [003] ..s2.  8016.444868: bpf_trace_printk: Redirecionando...512
+
+          client-21762   [003] ..s2.  8016.455432: bpf_trace_printk: Redirecionando...513
+
+          client-21762   [003] ..s2.  8016.465552: bpf_trace_printk: Redirecionando...514
+
+          client-21762   [003] ..s2.  8016.475678: bpf_trace_printk: Redirecionando...515
+
+          client-21762   [003] ..s2.  8016.485806: bpf_trace_printk: Redirecionando...516
+
+          client-21762   [003] ..s2.  8016.496571: bpf_trace_printk: Redirecionando...517
+
+          client-21762   [003] ..s2.  8016.506754: bpf_trace_printk: Redirecionando...518
+
+          client-21762   [003] ..s2.  8016.516886: bpf_trace_printk: Redirecionando...519
+
+          client-21762   [003] ..s2.  8016.526997: bpf_trace_printk: Redirecionando...520
+
+          client-21762   [003] ..s2.  8016.537117: bpf_trace_printk: Redirecionando...521
+
+          client-21762   [003] ..s2.  8016.547193: bpf_trace_printk: Redirecionando...522
+
+          client-21762   [003] ..s2.  8016.557326: bpf_trace_printk: Redirecionando...523
+
+          client-21762   [003] ..s2.  8016.567455: bpf_trace_printk: Redirecionando...524
+
+          client-21762   [003] ..s2.  8016.577583: bpf_trace_printk: Redirecionando...525
+
+          client-21762   [003] ..s2.  8016.587757: bpf_trace_printk: Redirecionando...526
+
+          client-21762   [003] ..s2.  8016.597890: bpf_trace_printk: Redirecionando...527
+
+          client-21762   [003] ..s2.  8016.608019: bpf_trace_printk: Redirecionando...528
+
+          client-21762   [003] ..s2.  8016.618150: bpf_trace_printk: Redirecionando...529
+
+          client-21762   [003] ..s2.  8016.628265: bpf_trace_printk: Redirecionando...530
+
+          client-21762   [003] ..s2.  8016.638415: bpf_trace_printk: Redirecionando...531
+
+          client-21762   [003] ..s2.  8016.648562: bpf_trace_printk: Redirecionando...532
+
+          client-21762   [003] ..s2.  8016.658682: bpf_trace_printk: Redirecionando...533
+
+          client-21762   [003] ..s2.  8016.668833: bpf_trace_printk: Redirecionando...534
+
+          client-21762   [003] ..s2.  8016.678965: bpf_trace_printk: Redirecionando...535
+
+          client-21762   [003] ..s2.  8016.689127: bpf_trace_printk: Redirecionando...536
+
+          client-21762   [003] ..s2.  8016.699273: bpf_trace_printk: Redirecionando...537
+
+          client-21762   [003] ..s2.  8016.709409: bpf_trace_printk: Redirecionando...538
+
+          client-21762   [003] ..s2.  8016.719554: bpf_trace_printk: Redirecionando...539
+
+          client-21762   [003] ..s2.  8016.729691: bpf_trace_printk: Redirecionando...540
+
+          client-21762   [003] ..s2.  8016.739853: bpf_trace_printk: Redirecionando...541
+
+          client-21762   [003] ..s2.  8016.749997: bpf_trace_printk: Redirecionando...542
+
+          client-21762   [003] ..s2.  8016.760128: bpf_trace_printk: Redirecionando...543
+
+          client-21762   [003] ..s2.  8016.770290: bpf_trace_printk: Redirecionando...544
+
+          client-21762   [003] ..s2.  8016.780433: bpf_trace_printk: Redirecionando...545
+
+          client-21762   [003] ..s2.  8016.790590: bpf_trace_printk: Redirecionando...546
+
+          client-21762   [003] ..s2.  8016.800737: bpf_trace_printk: Redirecionando...547
+
+          client-21762   [003] ..s2.  8016.810852: bpf_trace_printk: Redirecionando...548
+
+          client-21762   [003] ..s2.  8016.821120: bpf_trace_printk: Redirecionando...549
+
+          client-21762   [003] ..s2.  8016.831254: bpf_trace_printk: Redirecionando...550
+
+          client-21762   [003] ..s2.  8016.841382: bpf_trace_printk: Redirecionando...551
+
+          client-21762   [003] ..s2.  8016.851511: bpf_trace_printk: Redirecionando...552
+
+          client-21762   [003] ..s2.  8016.861641: bpf_trace_printk: Redirecionando...553
+
+          client-21762   [003] ..s2.  8016.871779: bpf_trace_printk: Redirecionando...554
+
+          client-21762   [003] ..s2.  8016.881903: bpf_trace_printk: Redirecionando...555
+
+          client-21762   [003] ..s2.  8016.892018: bpf_trace_printk: Redirecionando...556
+
+          client-21762   [003] ..s2.  8016.902142: bpf_trace_printk: Redirecionando...557
+
+          client-21762   [003] ..s2.  8016.912250: bpf_trace_printk: Redirecionando...558
+
+          client-21762   [003] ..s2.  8016.922379: bpf_trace_printk: Redirecionando...559
+
+          client-21762   [003] ..s2.  8016.932537: bpf_trace_printk: Redirecionando...560
+
+          client-21762   [003] ..s2.  8016.942671: bpf_trace_printk: Redirecionando...561
+
+          client-21762   [003] ..s2.  8016.952818: bpf_trace_printk: Redirecionando...562
+
+          client-21762   [003] ..s2.  8016.962943: bpf_trace_printk: Redirecionando...563
+
+          client-21762   [003] ..s2.  8016.973094: bpf_trace_printk: Redirecionando...564
+
+          client-21762   [003] ..s2.  8016.983240: bpf_trace_printk: Redirecionando...565
+
+          client-21762   [003] ..s2.  8016.993360: bpf_trace_printk: Redirecionando...566
+
+          client-21762   [003] ..s2.  8017.003493: bpf_trace_printk: Redirecionando...567
+
+          client-21762   [003] ..s2.  8017.013616: bpf_trace_printk: Redirecionando...568
+
+          client-21762   [003] ..s2.  8017.023772: bpf_trace_printk: Redirecionando...569
+
+          client-21762   [003] ..s2.  8017.033907: bpf_trace_printk: Redirecionando...570
+
+          client-21762   [003] ..s2.  8017.044032: bpf_trace_printk: Redirecionando...571
+
+          client-21762   [003] ..s2.  8017.054178: bpf_trace_printk: Redirecionando...572
+
+          client-21762   [003] ..s2.  8017.064522: bpf_trace_printk: Redirecionando...573
+
+          client-21762   [003] ..s2.  8017.074671: bpf_trace_printk: Redirecionando...574
+
+          client-21762   [003] ..s2.  8017.084817: bpf_trace_printk: Redirecionando...575
+
+          client-21762   [003] ..s2.  8017.094949: bpf_trace_printk: Redirecionando...576
+
+          client-21762   [003] ..s2.  8017.105262: bpf_trace_printk: Redirecionando...577
+
+          client-21762   [003] ..s2.  8017.115438: bpf_trace_printk: Redirecionando...578
+
+          client-21762   [003] ..s2.  8017.125574: bpf_trace_printk: Redirecionando...579
+
+          client-21762   [003] ..s2.  8017.135720: bpf_trace_printk: Redirecionando...580
+
+          client-21762   [003] ..s2.  8017.145838: bpf_trace_printk: Redirecionando...581
+
+          client-21762   [003] ..s2.  8017.155992: bpf_trace_printk: Redirecionando...582
+
+          client-21762   [003] ..s2.  8017.166122: bpf_trace_printk: Redirecionando...583
+
+          client-21762   [003] ..s2.  8017.176255: bpf_trace_printk: Redirecionando...584
+
+          client-21762   [003] ..s2.  8017.186405: bpf_trace_printk: Redirecionando...585
+
+          client-21762   [003] ..s2.  8017.196525: bpf_trace_printk: Redirecionando...586
+
+          client-21762   [003] ..s2.  8017.206661: bpf_trace_printk: Redirecionando...587
+
+          client-21762   [003] ..s2.  8017.216787: bpf_trace_printk: Redirecionando...588
+
+          client-21762   [003] ..s2.  8017.226919: bpf_trace_printk: Redirecionando...589
+
+          client-21762   [003] ..s2.  8017.237059: bpf_trace_printk: Redirecionando...590
+
+          client-21762   [003] ..s2.  8017.247213: bpf_trace_printk: Redirecionando...591
+
+          client-21762   [003] ..s2.  8017.257381: bpf_trace_printk: Redirecionando...592
+
+          client-21762   [003] ..s2.  8017.267525: bpf_trace_printk: Redirecionando...593
+
+          client-21762   [003] ..s2.  8017.277664: bpf_trace_printk: Redirecionando...594
+
+          client-21762   [003] ..s2.  8017.288022: bpf_trace_printk: Redirecionando...595
+
+          client-21762   [003] ..s2.  8017.298190: bpf_trace_printk: Redirecionando...596
+
+          client-21762   [003] ..s2.  8017.308321: bpf_trace_printk: Redirecionando...597
+
+          client-21762   [003] ..s2.  8017.318470: bpf_trace_printk: Redirecionando...598
+
+          client-21762   [003] ..s2.  8017.328606: bpf_trace_printk: Redirecionando...599
+
+          client-21762   [003] ..s2.  8017.338852: bpf_trace_printk: Redirecionando...600
+
+          client-21762   [003] ..s2.  8017.349008: bpf_trace_printk: Redirecionando...601
+
+          client-21762   [003] ..s2.  8017.359141: bpf_trace_printk: Redirecionando...602
+
+          client-21762   [003] ..s2.  8017.369287: bpf_trace_printk: Redirecionando...603
+
+          client-21762   [003] ..s2.  8017.379414: bpf_trace_printk: Redirecionando...604
+
+          client-21762   [003] ..s2.  8017.389575: bpf_trace_printk: Redirecionando...605
+
+          client-21762   [003] ..s2.  8017.399731: bpf_trace_printk: Redirecionando...606
+
+          client-21762   [003] ..s2.  8017.409867: bpf_trace_printk: Redirecionando...607
+
+          client-21762   [003] ..s2.  8017.420023: bpf_trace_printk: Redirecionando...608
+
+          client-21762   [003] ..s2.  8017.430166: bpf_trace_printk: Redirecionando...609
+
+          client-21762   [003] ..s2.  8017.440333: bpf_trace_printk: Redirecionando...610
+
+          client-21762   [003] ..s2.  8017.450487: bpf_trace_printk: Redirecionando...611
+
+          client-21762   [003] ..s2.  8017.460631: bpf_trace_printk: Redirecionando...612
+
+          client-21762   [003] ..s2.  8017.471068: bpf_trace_printk: Redirecionando...613
+
+          client-21762   [003] ..s2.  8018.483752: bpf_trace_printk: Redirecionando...614
+
+          client-21762   [003] ..s2.  8018.493906: bpf_trace_printk: Redirecionando...615
+
+          client-21762   [003] ..s2.  8018.504033: bpf_trace_printk: Redirecionando...616
+
+          client-21762   [003] ..s2.  8018.514162: bpf_trace_printk: Redirecionando...617
+
+          client-21762   [003] ..s2.  8018.524289: bpf_trace_printk: Redirecionando...618
+
+          client-21762   [003] ..s2.  8018.534415: bpf_trace_printk: Redirecionando...619
+
+          client-21762   [003] ..s2.  8018.544549: bpf_trace_printk: Redirecionando...620
+
+          client-21762   [003] ..s2.  8018.554703: bpf_trace_printk: Redirecionando...621
+
+          client-21762   [003] ..s2.  8018.564836: bpf_trace_printk: Redirecionando...622
+
+          client-21762   [003] ..s2.  8018.574962: bpf_trace_printk: Redirecionando...623
+
+          client-21762   [003] ..s2.  8018.585096: bpf_trace_printk: Redirecionando...624
+
+          client-21762   [003] ..s2.  8018.595222: bpf_trace_printk: Redirecionando...625
+
+          client-21762   [003] ..s2.  8018.605408: bpf_trace_printk: Redirecionando...626
+
+          client-21762   [003] ..s2.  8018.615536: bpf_trace_printk: Redirecionando...627
+
+          client-21762   [003] ..s2.  8018.625665: bpf_trace_printk: Redirecionando...628
+
+          client-21762   [003] ..s2.  8018.635798: bpf_trace_printk: Redirecionando...629
+
+          client-21762   [003] ..s2.  8018.645921: bpf_trace_printk: Redirecionando...630
+
+          client-21762   [003] ..s2.  8018.656067: bpf_trace_printk: Redirecionando...631
+
+          client-21762   [003] ..s2.  8018.666201: bpf_trace_printk: Redirecionando...632
+
+          client-21762   [003] ..s2.  8018.676327: bpf_trace_printk: Redirecionando...633
+
+          client-21762   [003] ..s2.  8018.686460: bpf_trace_printk: Redirecionando...634
+
+          client-21762   [003] ..s2.  8018.696593: bpf_trace_printk: Redirecionando...635
+
+          client-21762   [003] ..s2.  8018.706756: bpf_trace_printk: Redirecionando...636
+
+          client-21762   [003] ..s2.  8018.716895: bpf_trace_printk: Redirecionando...637
+
+          client-21762   [003] ..s2.  8018.727018: bpf_trace_printk: Redirecionando...638
+
+          client-21762   [003] ..s2.  8018.737259: bpf_trace_printk: Redirecionando...639
+
+          client-21762   [003] ..s2.  8018.747518: bpf_trace_printk: Redirecionando...640
+
+          client-21762   [003] ..s2.  8018.757657: bpf_trace_printk: Redirecionando...641
+
+          client-21762   [003] ..s2.  8018.767782: bpf_trace_printk: Redirecionando...642
+
+          client-21762   [003] ..s2.  8018.777953: bpf_trace_printk: Redirecionando...643
+
+          client-21762   [003] ..s2.  8018.788081: bpf_trace_printk: Redirecionando...644
+
+          client-21762   [003] ..s2.  8018.798275: bpf_trace_printk: Redirecionando...645
+
+          client-21762   [003] ..s2.  8018.808400: bpf_trace_printk: Redirecionando...646
+
+          client-21762   [003] ..s2.  8018.818544: bpf_trace_printk: Redirecionando...647
+
+          client-21762   [003] ..s2.  8018.828627: bpf_trace_printk: Redirecionando...648
+
+          client-21762   [003] ..s2.  8018.838769: bpf_trace_printk: Redirecionando...649
+
+          client-21762   [003] ..s2.  8018.848906: bpf_trace_printk: Redirecionando...650
+
+          client-21762   [003] ..s2.  8018.859032: bpf_trace_printk: Redirecionando...651
+
+          client-21762   [003] ..s2.  8018.869184: bpf_trace_printk: Redirecionando...652
+
+          client-21762   [003] ..s2.  8018.879338: bpf_trace_printk: Redirecionando...653
+
+          client-21762   [003] ..s2.  8018.889483: bpf_trace_printk: Redirecionando...654
+
+          client-21762   [003] ..s2.  8018.899610: bpf_trace_printk: Redirecionando...655
+
+          client-21762   [003] ..s2.  8018.909725: bpf_trace_printk: Redirecionando...656
+
+          client-21762   [003] ..s2.  8018.919846: bpf_trace_printk: Redirecionando...657
+
+          client-21762   [003] ..s2.  8018.929959: bpf_trace_printk: Redirecionando...658
+
+          client-21762   [003] ..s2.  8018.940095: bpf_trace_printk: Redirecionando...659
+
+          client-21762   [003] ..s2.  8018.950251: bpf_trace_printk: Redirecionando...660
+
+          client-21762   [003] ..s2.  8018.960389: bpf_trace_printk: Redirecionando...661
+
+          client-21762   [003] ..s2.  8018.970518: bpf_trace_printk: Redirecionando...662
+
+          client-21762   [003] ..s2.  8018.981006: bpf_trace_printk: Redirecionando...663
+
+          client-21762   [003] ..s2.  8018.991187: bpf_trace_printk: Redirecionando...664
+
+          client-21762   [003] ..s2.  8019.001341: bpf_trace_printk: Redirecionando...665
+
+          client-21762   [003] ..s2.  8019.011468: bpf_trace_printk: Redirecionando...666
+
+          client-21762   [003] ..s2.  8019.021645: bpf_trace_printk: Redirecionando...667
+
+          client-21762   [003] ..s2.  8019.031970: bpf_trace_printk: Redirecionando...668
+
+          client-21762   [003] ..s2.  8019.042112: bpf_trace_printk: Redirecionando...669
+
+          client-21762   [003] ..s2.  8019.052275: bpf_trace_printk: Redirecionando...670
+
+          client-21762   [003] ..s2.  8019.062411: bpf_trace_printk: Redirecionando...671
+
+          client-21762   [003] ..s2.  8019.072586: bpf_trace_printk: Redirecionando...672
+
+          client-21762   [003] ..s2.  8019.082750: bpf_trace_printk: Redirecionando...673
+
+          client-21762   [003] ..s2.  8019.092882: bpf_trace_printk: Redirecionando...674
+
+          client-21762   [003] ..s2.  8019.103044: bpf_trace_printk: Redirecionando...675
+
+          client-21762   [003] ..s2.  8019.113182: bpf_trace_printk: Redirecionando...676
+
+          client-21762   [003] ..s2.  8019.123355: bpf_trace_printk: Redirecionando...677
+
+          client-21762   [003] ..s2.  8019.133514: bpf_trace_printk: Redirecionando...678
+
+          client-21762   [003] ..s2.  8019.143631: bpf_trace_printk: Redirecionando...679
+
+          client-21762   [003] ..s2.  8019.153789: bpf_trace_printk: Redirecionando...680
+
+          client-21762   [003] ..s2.  8020.212710: bpf_trace_printk: Redirecionando...681
+
+          client-21762   [003] ..s2.  8020.222896: bpf_trace_printk: Redirecionando...682
+
+          client-21762   [003] ..s2.  8020.233037: bpf_trace_printk: Redirecionando...683
+
+          client-21762   [003] ..s2.  8020.243171: bpf_trace_printk: Redirecionando...684
+
+          client-21762   [003] ..s2.  8020.253317: bpf_trace_printk: Redirecionando...685
+
+          client-21762   [003] ..s2.  8020.263451: bpf_trace_printk: Redirecionando...686
+
+          client-21762   [003] ..s2.  8020.273608: bpf_trace_printk: Redirecionando...687
+
+          client-21762   [003] ..s2.  8020.283751: bpf_trace_printk: Redirecionando...688
+
+          client-21762   [003] ..s2.  8020.293885: bpf_trace_printk: Redirecionando...689
+
+          client-21762   [003] ..s2.  8020.304032: bpf_trace_printk: Redirecionando...690
+
+          client-21762   [003] ..s2.  8020.314502: bpf_trace_printk: Redirecionando...691
+
+          client-21762   [003] ..s2.  8020.324602: bpf_trace_printk: Redirecionando...692
+
+          client-21762   [003] ..s2.  8020.334744: bpf_trace_printk: Redirecionando...693
+
+          client-21762   [003] ..s2.  8020.344874: bpf_trace_printk: Redirecionando...694
+
+          client-21762   [003] ..s2.  8020.355040: bpf_trace_printk: Redirecionando...695
+
+          client-21762   [003] ..s2.  8020.365197: bpf_trace_printk: Redirecionando...696
+
+          client-21762   [003] ..s2.  8020.375333: bpf_trace_printk: Redirecionando...697
+
+          client-21762   [003] ..s2.  8020.385481: bpf_trace_printk: Redirecionando...698
+
+          client-21762   [003] ..s2.  8020.395618: bpf_trace_printk: Redirecionando...699
+
+          client-21762   [003] ..s2.  8020.405778: bpf_trace_printk: Redirecionando...700
+
+          client-21762   [003] ..s2.  8020.415922: bpf_trace_printk: Redirecionando...701
+
+          client-21762   [003] ..s2.  8020.426054: bpf_trace_printk: Redirecionando...702
+
+          client-21762   [003] ..s2.  8020.436198: bpf_trace_printk: Redirecionando...703
+
+          client-21762   [003] ..s2.  8020.446350: bpf_trace_printk: Redirecionando...704
+
+          client-21762   [003] ..s2.  8020.456533: bpf_trace_printk: Redirecionando...705
+
+          client-21762   [003] ..s2.  8020.466691: bpf_trace_printk: Redirecionando...706
+
+          client-21762   [003] ..s2.  8020.476825: bpf_trace_printk: Redirecionando...707
+
+          client-21762   [003] ..s2.  8020.486976: bpf_trace_printk: Redirecionando...708
+
+          client-21762   [003] ..s2.  8020.497225: bpf_trace_printk: Redirecionando...709
+
+          client-21762   [003] ..s2.  8020.507363: bpf_trace_printk: Redirecionando...710
+
+          client-21762   [003] ..s2.  8020.517487: bpf_trace_printk: Redirecionando...711
+
+          client-21762   [003] ..s2.  8020.527602: bpf_trace_printk: Redirecionando...712
+
+          client-21762   [003] ..s2.  8020.537732: bpf_trace_printk: Redirecionando...713
+
+          client-21762   [003] ..s2.  8020.547885: bpf_trace_printk: Redirecionando...714
+
+          client-21762   [003] ..s2.  8020.558026: bpf_trace_printk: Redirecionando...715
+
+          client-21762   [003] ..s2.  8020.568582: bpf_trace_printk: Redirecionando...716
+
+          client-21762   [003] ..s2.  8020.578739: bpf_trace_printk: Redirecionando...717
+
+          client-21762   [003] ..s2.  8020.588903: bpf_trace_printk: Redirecionando...718
+
+          client-21762   [003] ..s2.  8020.599052: bpf_trace_printk: Redirecionando...719
+
+          client-21762   [003] ..s2.  8020.609217: bpf_trace_printk: Redirecionando...720
+
+          client-21762   [003] ..s2.  8020.619343: bpf_trace_printk: Redirecionando...721
+
+          client-21762   [003] ..s2.  8020.629460: bpf_trace_printk: Redirecionando...722
+
+          client-21762   [003] ..s2.  8020.639586: bpf_trace_printk: Redirecionando...723
+
+          client-21762   [003] ..s2.  8020.649708: bpf_trace_printk: Redirecionando...724
+
+          client-21762   [003] ..s2.  8020.659837: bpf_trace_printk: Redirecionando...725
+
+          client-21762   [003] ..s2.  8020.669974: bpf_trace_printk: Redirecionando...726
+
+          client-21762   [003] ..s2.  8020.680171: bpf_trace_printk: Redirecionando...727
+
+          client-21762   [003] ..s2.  8020.690344: bpf_trace_printk: Redirecionando...728
+
+          client-21762   [003] ..s2.  8020.700511: bpf_trace_printk: Redirecionando...729
+
+          client-21762   [003] ..s2.  8020.710658: bpf_trace_printk: Redirecionando...730
+
+          client-21762   [003] ..s2.  8020.720832: bpf_trace_printk: Redirecionando...731
+
+          client-21762   [003] ..s2.  8020.730988: bpf_trace_printk: Redirecionando...732
+
+          client-21762   [003] ..s2.  8020.741171: bpf_trace_printk: Redirecionando...733
+
+          client-21762   [003] ..s2.  8020.751300: bpf_trace_printk: Redirecionando...734
+
+          client-21762   [003] ..s2.  8020.761425: bpf_trace_printk: Redirecionando...735
+
+          client-21762   [003] ..s2.  8020.771591: bpf_trace_printk: Redirecionando...736
+
+          client-21762   [003] ..s2.  8020.781734: bpf_trace_printk: Redirecionando...737
+
+          client-21762   [003] ..s2.  8020.791870: bpf_trace_printk: Redirecionando...738
+
+          client-21762   [003] ..s2.  8020.802015: bpf_trace_printk: Redirecionando...739
+
+          client-21762   [003] ..s2.  8020.812159: bpf_trace_printk: Redirecionando...740
+
+          client-21762   [003] ..s2.  8020.822333: bpf_trace_printk: Redirecionando...741
+
+          client-21762   [003] ..s2.  8020.832481: bpf_trace_printk: Redirecionando...742
+
+          client-21762   [003] ..s2.  8020.842616: bpf_trace_printk: Redirecionando...743
+
+          client-21762   [003] ..s2.  8020.852759: bpf_trace_printk: Redirecionando...744
+
+          client-21762   [003] ..s2.  8020.862900: bpf_trace_printk: Redirecionando...745
+
+          client-21762   [003] ..s2.  8020.873027: bpf_trace_printk: Redirecionando...746
+
+          client-21762   [003] ..s2.  8020.883150: bpf_trace_printk: Redirecionando...747
+
+          client-21762   [003] ..s2.  8020.893264: bpf_trace_printk: Redirecionando...748
+
+          client-21762   [003] ..s2.  8020.903389: bpf_trace_printk: Redirecionando...749
+
+          client-21762   [003] ..s2.  8020.913539: bpf_trace_printk: Redirecionando...750
+
+          client-21762   [003] ..s2.  8020.923716: bpf_trace_printk: Redirecionando...751
+
+          client-21762   [003] ..s2.  8020.933844: bpf_trace_printk: Redirecionando...752
+
+          client-21762   [003] ..s2.  8020.943965: bpf_trace_printk: Redirecionando...753
+
+          client-21762   [003] ..s2.  8020.954159: bpf_trace_printk: Redirecionando...754
+
+          client-21762   [003] ..s2.  8020.964287: bpf_trace_printk: Redirecionando...755
+
+          client-21762   [003] ..s2.  8020.974423: bpf_trace_printk: Redirecionando...756
+
+          client-21762   [003] ..s2.  8020.984560: bpf_trace_printk: Redirecionando...757
+
+          client-21762   [003] ..s2.  8020.994694: bpf_trace_printk: Redirecionando...758
+
+          client-21762   [003] ..s2.  8021.004824: bpf_trace_printk: Redirecionando...759
+
+          client-21762   [003] ..s2.  8021.014948: bpf_trace_printk: Redirecionando...760
+
+          client-21762   [003] ..s2.  8021.025073: bpf_trace_printk: Redirecionando...761
+
+          client-21762   [003] ..s2.  8021.035199: bpf_trace_printk: Redirecionando...762
+
+          client-21762   [003] ..s2.  8021.045336: bpf_trace_printk: Redirecionando...763
+
+          client-21762   [003] ..s2.  8021.055478: bpf_trace_printk: Redirecionando...764
+
+          client-21762   [003] ..s2.  8021.065602: bpf_trace_printk: Redirecionando...765
+
+          client-21762   [003] ..s2.  8021.075726: bpf_trace_printk: Redirecionando...766
+
+          client-21762   [003] ..s2.  8021.085853: bpf_trace_printk: Redirecionando...767
+
+          client-21762   [003] ..s2.  8021.095963: bpf_trace_printk: Redirecionando...768
+
+          client-21762   [003] ..s2.  8021.106101: bpf_trace_printk: Redirecionando...769
+
+          client-21762   [003] ..s2.  8021.116221: bpf_trace_printk: Redirecionando...770
+
+          client-21762   [003] ..s2.  8021.126357: bpf_trace_printk: Redirecionando...771
+
+          client-21762   [003] ..s2.  8021.136600: bpf_trace_printk: Redirecionando...772
+
+          client-21762   [003] ..s2.  8021.146751: bpf_trace_printk: Redirecionando...773
+
+          client-21762   [003] ..s2.  8021.156926: bpf_trace_printk: Redirecionando...774
+
+          client-21762   [003] ..s2.  8021.167073: bpf_trace_printk: Redirecionando...775
+
+          client-21762   [003] ..s2.  8021.177214: bpf_trace_printk: Redirecionando...776
+
+          client-21762   [003] ..s2.  8021.187409: bpf_trace_printk: Redirecionando...777
+
+          client-21762   [003] ..s2.  8021.197795: bpf_trace_printk: Redirecionando...778
+
+          client-21762   [003] ..s2.  8021.207939: bpf_trace_printk: Redirecionando...779
+
+          client-21762   [003] ..s2.  8021.218095: bpf_trace_printk: Redirecionando...780
+
+          client-21762   [003] ..s2.  8021.228232: bpf_trace_printk: Redirecionando...781
+
+          client-21762   [003] ..s2.  8021.238449: bpf_trace_printk: Redirecionando...782
+
+          client-21762   [003] ..s2.  8021.248591: bpf_trace_printk: Redirecionando...783
+
+          client-21762   [003] ..s2.  8021.258724: bpf_trace_printk: Redirecionando...784
+
+          client-21762   [003] ..s2.  8021.268876: bpf_trace_printk: Redirecionando...785
+
+          client-21762   [003] ..s2.  8021.279020: bpf_trace_printk: Redirecionando...786
+
+          client-21762   [003] ..s2.  8021.289194: bpf_trace_printk: Redirecionando...787
+
+          client-21762   [003] ..s2.  8021.299334: bpf_trace_printk: Redirecionando...788
+
+          client-21762   [003] ..s2.  8021.309475: bpf_trace_printk: Redirecionando...789
+
+          client-21762   [003] ..s2.  8021.319637: bpf_trace_printk: Redirecionando...790
+
+          client-21762   [003] ..s2.  8021.329770: bpf_trace_printk: Redirecionando...791
+
+          client-21762   [003] ..s2.  8021.339946: bpf_trace_printk: Redirecionando...792
+
+          client-21762   [003] ..s2.  8021.350101: bpf_trace_printk: Redirecionando...793
+
+          client-21762   [003] ..s2.  8021.360237: bpf_trace_printk: Redirecionando...794
+
+          client-21762   [003] ..s2.  8021.370387: bpf_trace_printk: Redirecionando...795
+
+          client-21762   [003] ..s2.  8021.380561: bpf_trace_printk: Redirecionando...796
+
+          client-21762   [003] ..s2.  8021.390724: bpf_trace_printk: Redirecionando...797
+
+          client-21762   [003] ..s2.  8021.400930: bpf_trace_printk: Redirecionando...798
+
+          client-21762   [003] ..s2.  8021.411098: bpf_trace_printk: Redirecionando...799
+
+          client-21762   [003] ..s2.  8021.421294: bpf_trace_printk: Redirecionando...800
+
+          client-21762   [003] ..s2.  8021.431507: bpf_trace_printk: Redirecionando...801
+
+          client-21762   [003] ..s2.  8021.441657: bpf_trace_printk: Redirecionando...802
+
+          client-21762   [003] ..s2.  8021.451792: bpf_trace_printk: Redirecionando...803
+
+          client-21762   [003] ..s2.  8021.461910: bpf_trace_printk: Redirecionando...804
+
+          client-21762   [003] ..s2.  8021.472048: bpf_trace_printk: Redirecionando...805
+
+          client-21762   [003] ..s2.  8021.482181: bpf_trace_printk: Redirecionando...806
+
+          client-21762   [003] ..s2.  8021.492304: bpf_trace_printk: Redirecionando...807
+
+          client-21762   [003] ..s2.  8021.502437: bpf_trace_printk: Redirecionando...808
+
+          client-21762   [003] ..s2.  8021.512575: bpf_trace_printk: Redirecionando...809
+
+          client-21762   [003] ..s2.  8021.522746: bpf_trace_printk: Redirecionando...810
+
+          client-21762   [003] ..s2.  8021.532898: bpf_trace_printk: Redirecionando...811
+
+          client-21762   [003] ..s2.  8021.543030: bpf_trace_printk: Redirecionando...812
+
+          client-21762   [003] ..s2.  8021.553166: bpf_trace_printk: Redirecionando...813
+
+          client-21762   [003] ..s2.  8021.563283: bpf_trace_printk: Redirecionando...814
+
+          client-21762   [003] ..s2.  8021.573419: bpf_trace_printk: Redirecionando...815
+
+          client-21762   [003] ..s2.  8021.583548: bpf_trace_printk: Redirecionando...816
+
+          client-21762   [003] ..s2.  8021.593690: bpf_trace_printk: Redirecionando...817
+
+          client-21762   [003] ..s2.  8021.604559: bpf_trace_printk: Redirecionando...818
+
+          client-21762   [003] ..s2.  8021.614754: bpf_trace_printk: Redirecionando...819
+
+          client-21762   [003] ..s2.  8021.624884: bpf_trace_printk: Redirecionando...820
+
+          client-21762   [003] ..s2.  8021.635006: bpf_trace_printk: Redirecionando...821
+
+          client-21762   [003] ..s2.  8021.645119: bpf_trace_printk: Redirecionando...822
+
+          client-21762   [003] ..s2.  8021.655243: bpf_trace_printk: Redirecionando...823
+
+          client-21762   [003] ..s2.  8021.665362: bpf_trace_printk: Redirecionando...824
+
+          client-21762   [003] ..s2.  8021.675474: bpf_trace_printk: Redirecionando...825
+
+          client-21762   [003] ..s2.  8021.685609: bpf_trace_printk: Redirecionando...826
+
+          client-21762   [003] ..s2.  8021.695723: bpf_trace_printk: Redirecionando...827
+
+          client-21762   [003] ..s2.  8021.705846: bpf_trace_printk: Redirecionando...828
+
+          client-21762   [003] ..s2.  8021.715971: bpf_trace_printk: Redirecionando...829
+
+          client-21762   [003] ..s2.  8021.726093: bpf_trace_printk: Redirecionando...830
+
+          client-21762   [003] ..s2.  8021.736215: bpf_trace_printk: Redirecionando...831
+
+          client-21762   [003] ..s2.  8021.746344: bpf_trace_printk: Redirecionando...832
+
+          client-21762   [003] ..s2.  8021.756501: bpf_trace_printk: Redirecionando...833
+
+          client-21762   [003] ..s2.  8021.766660: bpf_trace_printk: Redirecionando...834
+
+          client-21762   [003] ..s2.  8021.776786: bpf_trace_printk: Redirecionando...835
+
+          client-21762   [003] ..s2.  8021.786936: bpf_trace_printk: Redirecionando...836
+
+          client-21762   [003] ..s2.  8021.797639: bpf_trace_printk: Redirecionando...837
+
+          client-21762   [003] ..s2.  8021.807817: bpf_trace_printk: Redirecionando...838
+
+          client-21762   [003] ..s2.  8021.817987: bpf_trace_printk: Redirecionando...839
+
+          client-21762   [003] ..s2.  8021.828130: bpf_trace_printk: Redirecionando...840
+
+          client-21762   [003] ..s2.  8021.838380: bpf_trace_printk: Redirecionando...841
+
+          client-21762   [003] ..s2.  8021.848556: bpf_trace_printk: Redirecionando...842
+
+          client-21762   [003] ..s2.  8021.858690: bpf_trace_printk: Redirecionando...843
+
+          client-21762   [003] ..s2.  8021.869055: bpf_trace_printk: Redirecionando...844
+
+          client-21762   [003] ..s2.  8021.879249: bpf_trace_printk: Redirecionando...845
+
+          client-21762   [003] ..s2.  8021.889413: bpf_trace_printk: Redirecionando...846
+
+          client-21762   [003] ..s2.  8021.899555: bpf_trace_printk: Redirecionando...847
+
+          client-21762   [003] ..s2.  8021.909687: bpf_trace_printk: Redirecionando...848
+
+          client-21762   [003] ..s2.  8021.919835: bpf_trace_printk: Redirecionando...849
+
+          client-21762   [003] ..s2.  8021.929975: bpf_trace_printk: Redirecionando...850
+
+          client-21762   [003] ..s2.  8021.940148: bpf_trace_printk: Redirecionando...851
+
+          client-21762   [003] ..s2.  8021.950298: bpf_trace_printk: Redirecionando...852
+
+          client-21762   [003] ..s2.  8021.960431: bpf_trace_printk: Redirecionando...853
+
+          client-21762   [003] ..s2.  8021.970616: bpf_trace_printk: Redirecionando...854
+
+          client-21762   [003] ..s2.  8021.980787: bpf_trace_printk: Redirecionando...855
+
+          client-21762   [003] ..s2.  8021.990966: bpf_trace_printk: Redirecionando...856
+
+          client-21762   [003] ..s2.  8022.001136: bpf_trace_printk: Redirecionando...857
+
+          client-21762   [003] ..s2.  8022.011265: bpf_trace_printk: Redirecionando...858
+
+          client-21762   [003] ..s2.  8022.021540: bpf_trace_printk: Redirecionando...859
+
+          client-21762   [003] ..s2.  8023.091650: bpf_trace_printk: Redirecionando...860
+
+          client-21762   [003] ..s2.  8023.101810: bpf_trace_printk: Redirecionando...861
+
+          client-21762   [003] ..s2.  8023.111961: bpf_trace_printk: Redirecionando...862
+
+          client-21762   [003] ..s2.  8023.122169: bpf_trace_printk: Redirecionando...863
+
+          client-21762   [003] ..s2.  8023.132349: bpf_trace_printk: Redirecionando...864
+
+          client-21762   [003] ..s2.  8023.142520: bpf_trace_printk: Redirecionando...865
+
+          client-21762   [003] ..s2.  8024.179626: bpf_trace_printk: Redirecionando...866
+
+          client-21762   [003] ..s2.  8024.189810: bpf_trace_printk: Redirecionando...867
+
+          client-21762   [003] ..s2.  8024.199944: bpf_trace_printk: Redirecionando...868
+
+          client-21762   [003] ..s2.  8024.210074: bpf_trace_printk: Redirecionando...869
+
+          client-21762   [003] ..s2.  8024.220220: bpf_trace_printk: Redirecionando...870
+
+          client-21762   [003] ..s2.  8024.230379: bpf_trace_printk: Redirecionando...871
+
+          client-21762   [003] ..s2.  8024.240526: bpf_trace_printk: Redirecionando...872
+
+          client-21762   [003] ..s2.  8024.250671: bpf_trace_printk: Redirecionando...873
+
+          client-21762   [003] ..s2.  8024.260803: bpf_trace_printk: Redirecionando...874
+
+          client-21762   [003] ..s2.  8024.271293: bpf_trace_printk: Redirecionando...875
+
+          client-21762   [003] ..s2.  8024.281548: bpf_trace_printk: Redirecionando...876
+
+          client-21762   [003] ..s2.  8024.291698: bpf_trace_printk: Redirecionando...877
+
+          client-21762   [003] ..s2.  8024.301849: bpf_trace_printk: Redirecionando...878
+
+          client-21762   [003] ..s2.  8024.311978: bpf_trace_printk: Redirecionando...879
+
+          client-21762   [003] ..s2.  8024.322158: bpf_trace_printk: Redirecionando...880
+
+          client-21762   [003] ..s2.  8024.332398: bpf_trace_printk: Redirecionando...881
+
+          client-21762   [003] ..s2.  8024.342530: bpf_trace_printk: Redirecionando...882
+
+          client-21762   [003] ..s2.  8024.352685: bpf_trace_printk: Redirecionando...883
+
+          client-21762   [003] ..s2.  8024.362811: bpf_trace_printk: Redirecionando...884
+
+          client-21762   [003] ..s2.  8024.372971: bpf_trace_printk: Redirecionando...885
+
+          client-21762   [003] ..s2.  8024.383122: bpf_trace_printk: Redirecionando...886
+
+          client-21762   [003] ..s2.  8024.393244: bpf_trace_printk: Redirecionando...887
+
+          client-21762   [003] ..s2.  8024.403733: bpf_trace_printk: Redirecionando...888
+
+          client-21762   [003] ..s2.  8024.413956: bpf_trace_printk: Redirecionando...889
+
+          client-21762   [003] ..s2.  8024.424072: bpf_trace_printk: Redirecionando...890
+
+          client-21762   [003] ..s2.  8024.434204: bpf_trace_printk: Redirecionando...891
+
+          client-21762   [003] ..s2.  8024.444365: bpf_trace_printk: Redirecionando...892
+
+          client-21762   [003] ..s2.  8024.454521: bpf_trace_printk: Redirecionando...893
+
+          client-21762   [003] ..s2.  8025.523594: bpf_trace_printk: Redirecionando...894
+
+          client-21762   [003] ..s2.  8025.533739: bpf_trace_printk: Redirecionando...895
+
+          client-21762   [003] ..s2.  8025.543863: bpf_trace_printk: Redirecionando...896
+
+          client-21762   [003] ..s2.  8025.554103: bpf_trace_printk: Redirecionando...897
+
+          client-21762   [003] ..s2.  8025.564247: bpf_trace_printk: Redirecionando...898
+
+          client-21762   [003] ..s2.  8025.574372: bpf_trace_printk: Redirecionando...899
+
+          client-21762   [003] ..s2.  8025.584520: bpf_trace_printk: Redirecionando...900
+
+          client-21762   [003] ..s2.  8025.594648: bpf_trace_printk: Redirecionando...901
+
+          client-21762   [003] ..s2.  8025.604801: bpf_trace_printk: Redirecionando...902
+
+          client-21762   [003] ..s2.  8025.614940: bpf_trace_printk: Redirecionando...903
+
+          client-21762   [003] ..s2.  8025.625084: bpf_trace_printk: Redirecionando...904
+
+          client-21762   [003] ..s2.  8025.635222: bpf_trace_printk: Redirecionando...905
+
+          client-21762   [003] ..s2.  8025.645350: bpf_trace_printk: Redirecionando...906
+
+          client-21762   [003] ..s2.  8025.655483: bpf_trace_printk: Redirecionando...907
+
+          client-21762   [003] ..s2.  8025.665616: bpf_trace_printk: Redirecionando...908
+
+          client-21762   [003] ..s2.  8025.675755: bpf_trace_printk: Redirecionando...909
+
+          client-21762   [003] ..s2.  8025.685912: bpf_trace_printk: Redirecionando...910
+
+          client-21762   [003] ..s2.  8025.696046: bpf_trace_printk: Redirecionando...911
+
+          client-21762   [003] ..s2.  8025.706221: bpf_trace_printk: Redirecionando...912
+
+          client-21762   [003] ..s2.  8025.716450: bpf_trace_printk: Redirecionando...913
+
+          client-21762   [003] ..s2.  8025.726602: bpf_trace_printk: Redirecionando...914
+
+          client-21762   [003] ..s2.  8025.736754: bpf_trace_printk: Redirecionando...915
+
+          client-21762   [003] ..s2.  8025.746924: bpf_trace_printk: Redirecionando...916
+
+          client-21762   [003] ..s2.  8025.757080: bpf_trace_printk: Redirecionando...917
+
+          client-21762   [003] ..s2.  8025.767220: bpf_trace_printk: Redirecionando...918
+
+          client-21762   [003] ..s2.  8025.777348: bpf_trace_printk: Redirecionando...919
+
+          client-21762   [003] ..s2.  8025.787496: bpf_trace_printk: Redirecionando...920
+
+          client-21762   [003] ..s2.  8025.797795: bpf_trace_printk: Redirecionando...921
+
+          client-21762   [003] ..s2.  8025.808059: bpf_trace_printk: Redirecionando...922
+
+          client-21762   [003] ..s2.  8025.818201: bpf_trace_printk: Redirecionando...923
+
+          client-21762   [003] ..s2.  8025.828325: bpf_trace_printk: Redirecionando...924
+
+          client-21762   [003] ..s2.  8025.838485: bpf_trace_printk: Redirecionando...925
+
+          client-21762   [003] ..s2.  8025.848652: bpf_trace_printk: Redirecionando...926
+
+          client-21762   [003] ..s2.  8025.858795: bpf_trace_printk: Redirecionando...927
+
+          client-21762   [003] ..s2.  8025.868941: bpf_trace_printk: Redirecionando...928
+
+          client-21762   [003] ..s2.  8025.879094: bpf_trace_printk: Redirecionando...929
+
+          client-21762   [003] ..s2.  8025.889277: bpf_trace_printk: Redirecionando...930
+
+          client-21762   [003] ..s2.  8025.899449: bpf_trace_printk: Redirecionando...931
+
+          client-21762   [003] ..s2.  8025.909595: bpf_trace_printk: Redirecionando...932
+
+          client-21762   [003] ..s2.  8025.919740: bpf_trace_printk: Redirecionando...933
+
+          client-21762   [003] ..s2.  8025.929868: bpf_trace_printk: Redirecionando...934
+
+          client-21762   [003] ..s2.  8025.940068: bpf_trace_printk: Redirecionando...935
+
+          client-21762   [003] ..s2.  8025.950211: bpf_trace_printk: Redirecionando...936
+
+          client-21762   [003] ..s2.  8025.960341: bpf_trace_printk: Redirecionando...937
+
+          client-21762   [003] ..s2.  8025.970706: bpf_trace_printk: Redirecionando...938
+
+          client-21762   [003] ..s2.  8025.980875: bpf_trace_printk: Redirecionando...939
+
+          client-21762   [003] ..s2.  8025.991029: bpf_trace_printk: Redirecionando...940
+
+          client-21762   [003] ..s2.  8026.001178: bpf_trace_printk: Redirecionando...941
+
+          client-21762   [003] ..s2.  8026.011318: bpf_trace_printk: Redirecionando...942
+
+          client-21762   [003] ..s2.  8026.021575: bpf_trace_printk: Redirecionando...943
+
+          client-21762   [003] ..s2.  8026.031797: bpf_trace_printk: Redirecionando...944
+
+          client-21762   [003] ..s2.  8026.041933: bpf_trace_printk: Redirecionando...945
+
+          client-21762   [003] ..s2.  8026.052080: bpf_trace_printk: Redirecionando...946
+
+          client-21762   [003] ..s2.  8026.062240: bpf_trace_printk: Redirecionando...947
+
+          client-21762   [003] ..s2.  8026.072416: bpf_trace_printk: Redirecionando...948
+
+          client-21762   [003] ..s2.  8026.082564: bpf_trace_printk: Redirecionando...949
+
+          client-21762   [003] ..s2.  8026.092710: bpf_trace_printk: Redirecionando...950
+
+          client-21762   [003] ..s2.  8026.102852: bpf_trace_printk: Redirecionando...951
+
+          client-21762   [003] ..s2.  8026.112958: bpf_trace_printk: Redirecionando...952
+
+          client-21762   [003] ..s2.  8026.123132: bpf_trace_printk: Redirecionando...953
+
+          client-21762   [003] ..s2.  8026.133298: bpf_trace_printk: Redirecionando...954
+
+          client-21762   [003] ..s2.  8026.143427: bpf_trace_printk: Redirecionando...955
+
+          client-21762   [003] ..s2.  8026.153574: bpf_trace_printk: Redirecionando...956
+
+          client-21762   [003] ..s2.  8026.163735: bpf_trace_printk: Redirecionando...957
+
+          client-21762   [003] ..s2.  8026.173899: bpf_trace_printk: Redirecionando...958
+
+          client-21762   [003] ..s2.  8026.184053: bpf_trace_printk: Redirecionando...959
+
+          client-21762   [003] ..s2.  8026.194185: bpf_trace_printk: Redirecionando...960
+
+          client-21762   [003] ..s2.  8026.204390: bpf_trace_printk: Redirecionando...961
+
+          client-21762   [003] ..s2.  8026.214714: bpf_trace_printk: Redirecionando...962
+
+          client-21762   [003] ..s2.  8026.224866: bpf_trace_printk: Redirecionando...963
+
+          client-21762   [003] ..s2.  8026.235013: bpf_trace_printk: Redirecionando...964
+
+          client-21762   [003] ..s2.  8026.245180: bpf_trace_printk: Redirecionando...965
+
+          client-21762   [003] ..s2.  8026.255345: bpf_trace_printk: Redirecionando...966
+
+          client-21762   [003] ..s2.  8026.265503: bpf_trace_printk: Redirecionando...967
+
+          client-21762   [003] ..s2.  8026.275651: bpf_trace_printk: Redirecionando...968
+
+          client-21762   [003] ..s2.  8026.285797: bpf_trace_printk: Redirecionando...969
+
+          client-21762   [003] ..s2.  8026.295932: bpf_trace_printk: Redirecionando...970
+
+          client-21762   [003] ..s2.  8026.306095: bpf_trace_printk: Redirecionando...971
+
+          client-21762   [003] ..s2.  8026.316237: bpf_trace_printk: Redirecionando...972
+
+          client-21762   [003] ..s2.  8026.326369: bpf_trace_printk: Redirecionando...973
+
+          client-21762   [003] ..s2.  8026.336465: bpf_trace_printk: Redirecionando...974
+
+          client-21762   [003] ..s2.  8026.346591: bpf_trace_printk: Redirecionando...975
+
+          client-21762   [003] ..s2.  8026.356752: bpf_trace_printk: Redirecionando...976
+
+          client-21762   [003] ..s2.  8026.366904: bpf_trace_printk: Redirecionando...977
+
+          client-21762   [003] ..s2.  8026.377039: bpf_trace_printk: Redirecionando...978
+
+          client-21762   [003] ..s2.  8026.387417: bpf_trace_printk: Redirecionando...979
+
+          client-21762   [003] ..s2.  8026.397573: bpf_trace_printk: Redirecionando...980
+
+          client-21762   [003] ..s2.  8026.407698: bpf_trace_printk: Redirecionando...981
+
+          client-21762   [003] ..s2.  8026.417814: bpf_trace_printk: Redirecionando...982
+
+          client-21762   [003] ..s2.  8026.427918: bpf_trace_printk: Redirecionando...983
+
+          client-21762   [003] ..s2.  8026.438039: bpf_trace_printk: Redirecionando...984
+
+          client-21762   [003] ..s2.  8026.448149: bpf_trace_printk: Redirecionando...985
+
+          client-21762   [003] ..s2.  8026.458265: bpf_trace_printk: Redirecionando...986
+
+          client-21762   [003] ..s2.  8026.468381: bpf_trace_printk: Redirecionando...987
+
+          client-21762   [003] ..s2.  8026.478495: bpf_trace_printk: Redirecionando...988
+
+          client-21762   [003] ..s2.  8026.488617: bpf_trace_printk: Redirecionando...989
+
+          client-21762   [003] ..s2.  8026.498747: bpf_trace_printk: Redirecionando...990
+
+          client-21762   [003] ..s2.  8026.508867: bpf_trace_printk: Redirecionando...991
+
+          client-21762   [003] ..s2.  8026.518986: bpf_trace_printk: Redirecionando...992
+
+          client-21762   [003] ..s2.  8026.529115: bpf_trace_printk: Redirecionando...993
+
+          client-21762   [003] ..s2.  8026.539243: bpf_trace_printk: Redirecionando...994
+
+          client-21762   [003] ..s2.  8026.549377: bpf_trace_printk: Redirecionando...995
+
+          client-21762   [003] ..s2.  8026.559477: bpf_trace_printk: Redirecionando...996
+
+          client-21762   [003] ..s2.  8026.569917: bpf_trace_printk: Redirecionando...997
+
+          client-21762   [003] ..s2.  8026.580133: bpf_trace_printk: Redirecionando...998
+
+          client-21762   [003] ..s2.  8026.590274: bpf_trace_printk: Redirecionando...999

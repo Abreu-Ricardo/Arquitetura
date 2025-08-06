@@ -5,7 +5,7 @@ CC = gcc
 CL = clang
 
 # SOURCE codes
-SOURCE_BPF = signal_monitor.bpf.c sigsnoop.bpf.c teste_tc.bpf.c
+SOURCE_BPF = teste_tc.bpf.c signal_monitor.bpf.c sigsnoop.bpf.c
 SOURCE_C   = signal_monitor.c meu_loader.c
 
 OBJETOS_BPF     = $(SOURCE_BPF:bpf.c=bpf.o)
@@ -14,7 +14,7 @@ OBJETOS_LIB_BPF = $(OBJETOS_BPF:bpf.o=skel.h)
 
 # FLAGS
 BPF_FLAGS = -g -O2 -target bpf -c 
-C_FLAGS = -lbpf
+C_FLAGS   = -lbpf 
 GERA_SKEL = bpftool gen skeleton
 
 # skeleton libs
