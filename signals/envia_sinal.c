@@ -101,7 +101,8 @@ int main(int argc, char **argv){
 
     struct timespec remaining, request = { 0,1 };
     union sigval sig_struct;
-    sig_struct.sival_ptr = (void *)1234567890;
+    uint64_t dados = 1234567890;
+    sig_struct.sival_ptr = (void *)dados;
 
     int j = 0;
     start = RDTSC();

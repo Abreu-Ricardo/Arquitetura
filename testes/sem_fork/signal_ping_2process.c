@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
     
     configura_umem();
     configura_socket( iface );
-    cria_segundo_socket( iface );
+    //cria_segundo_socket( iface );
 
     /*###############################FIM CONFIGS DA UMEM E SOCKET###################################################*/
 
@@ -338,15 +338,15 @@ int main(int argc, char **argv) {
         sprintf(settar_cpuf, "taskset -cp 5 %d", fpid);
         system(settar_cpuf);
        
-        int chave2 =  0;
-        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
-        if (ret_update2 < 0){
-            perror("+++ erro ao atualizar o mapa com o PID +++");
-            capta_sinal(SIGINT);
-        }
+        //int chave2 =  0;
+        //int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &fpid, BPF_ANY );
+        //if (ret_update2 < 0){
+        //    perror("+++ erro ao atualizar o mapa com o PID +++");
+        //    capta_sinal(SIGINT);
+        //}
 
-        printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
-        printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
+        //printf("RETORNO DA SYSCALL DO FILHO -->> %d\n\n", ret_sys);
+        //printf("PROCESSO FILHO CRIADO E NA CPU 5\n");
 
         //struct sigaction act;
         //act.sa_flags = SA_SIGINFO | SA_NODEFER ;  // Permite recebimento de sinal com dados
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
         //sigemptyset(&act.sa_mask);
 
 
-        recebe_signal_RX( ptr_mem_info_global );
+        //recebe_signal_RX( ptr_mem_info_global );
     }
 
     // Processo pai
@@ -362,7 +362,7 @@ int main(int argc, char **argv) {
         // Trocando o nome do processo para poolpingPAI
         strncpy(argv[0], "sig_PAI", strlen(argv[0]));
 
-        //ppid = getpid();
+        ppid = getpid();
         char settar_cpup[30]; 
         
         //sprintf(settar_cpup, "taskset -cp 4 %d", ppid);
@@ -371,6 +371,14 @@ int main(int argc, char **argv) {
         system(settar_cpup);
 
         fpid = *ptr_trava;
+        int chave2 =  0;
+        int ret_update2 = bpf_map_update_elem( bpf_map__fd( skel->maps.mapa_sinal) , &chave2 , &ppid, BPF_ANY );
+        if (ret_update2 < 0){
+            perror("+++ erro ao atualizar o mapa com o PID +++");
+            capta_sinal(SIGINT);
+        }
+
+        recebe_signal_RX( ptr_mem_info_global );
 
     	//struct sigaction act;
         //act.sa_flags = SA_SIGINFO;  // Permite recebimento de sinal com dados
@@ -389,18 +397,18 @@ int main(int argc, char **argv) {
 
         // Espera pelo sinal do proc filho
         // sigwait(&set, &sig);
-        while(1){
-            //if( sigwait(&set, &sig_usr1) >= 0 ){
-            if( sigwait(&set, &sigrtmin1) >= 0 ){
-                //printf("<PAI> PID do filho %d\n", fpid);
-                
-                   xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
-                   complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                               &ptr_mem_info_global->umem_frame_free, 
-                               &ptr_mem_info_global->tx_restante);
-                  //complete_tx();
-            }
-        }
+        //while(1){
+        //    //if( sigwait(&set, &sig_usr1) >= 0 ){
+        //    if( sigwait(&set, &sigrtmin1) >= 0 ){
+        //        //printf("<PAI> PID do filho %d\n", fpid);
+        //        
+        //           xsk_ring_cons__release(&umem_info2->rx, ptr_mem_info_global->ret_ring);
+        //           complete_tx(ptr_mem_info_global->umem_frame_addr, 
+        //                       &ptr_mem_info_global->umem_frame_free, 
+        //                       &ptr_mem_info_global->tx_restante);
+        //          //complete_tx();
+        //    }
+        //}
     }
     else{
         perror("+++ ERRO NO FORK +++");

@@ -153,6 +153,19 @@ void configura_socket(const char *iface ){
         exit(1);
  
     }
+
+    int ret_update = xsk_socket__update_xskmap(xsk, bpf_map__fd(skel->maps.xsk_map));
+    if (ret_update < 0){
+        fprintf(stderr, "Erro ao atualizar o mapa xsk_map\n");
+        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_SKB_MODE, 0);
+        //xdp_program__detach(xdp_prog, ifindex, XDP_FLAGS_DRV_MODE, 0);
+        //xdp_program__close(xdp_prog);
+        //xsk_kern_bpf__destroy(skel);
+        //xsk_socket__delete(xsk);
+        //xsk_umem__delete(umem_info->umem);
+        capta_sinal(SIGINT);
+        free(buffer_do_pacote);
+    }
     return;
 }
 
@@ -262,13 +275,15 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 novo)
 /*************************************************************************/
 
 
-static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
+//static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
+int processa_pacote(uint64_t addr, uint32_t len){
     // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
   
     /******************************************************/
     //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr);
+    printf("Endereco com deslocamento: %p\n", pkt);
     //end = RDTSC();
     //start = RDTSC();
     // Primeiro pkt demora 12K ciclos, dai pra frente menos de 800ciclos
@@ -302,19 +317,19 @@ static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
     // Primeiro pkt demora 3K ciclos, dai pra frente menos de 300 ciclos
     //start = RDTSC();
     /******************************************************/
-    ret = xsk_ring_prod__reserve(&umem_info2->tx, 1, &tx_idx);
-    if (ret != 1) {
-        /* No more transmit slots, drop the packet */
-        return false;
-    }
+    //ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
+    //if (ret != 1) {
+    //    /* No more transmit slots, drop the packet */
+    //    return false;
+    //}
 
-    xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->addr = addr;
-    xsk_ring_prod__tx_desc(&umem_info2->tx, tx_idx)->len = len;
-    xsk_ring_prod__submit( &umem_info2->tx, 1);
-    //umem_info->tx_restante++;
-    
-    //info_global-> tx_restante++;
-    ptr_mem_info_global->tx_restante++;
+    //xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
+    //xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
+    //xsk_ring_prod__submit( &umem_info->tx, 1);
+    ////umem_info->tx_restante++;
+    //
+    ////info_global-> tx_restante++;
+    //ptr_mem_info_global->tx_restante++;
 
     //end = RDTSC();
     /******************************************************/
@@ -346,7 +361,7 @@ void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_resta
     //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
     
     //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
-    retsend = sendto(xsk_socket__fd(xsk2), NULL, 0, MSG_DONTWAIT, NULL, 0);
+    retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
     //printf("Retorno do sendto: %d\n", retsend);
 
     // Se retorno de sendto for < 0, houve erro 
@@ -487,6 +502,7 @@ uint32_t idx_rx = 0;
 uint32_t idx_fq = 0;
 uint64_t addr;
 uint32_t len; 
+uint32_t tx_idx = 0;
 
 union sigval valor_struct;
 sigset_t set;
@@ -507,25 +523,29 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
 
     /**************************************************************/
 
-    pid_alvo = ppid;
+    //pid_alvo = ppid;
 
+    int temp, key = 1;
+    sigval_t send;
+    siginfo_t rcv;
 
     //while(1){
      //while( sigwait(&set, &sig_usr1) == 0 ){
      while( sigwait(&set, &sigrtmin1) == 0 ){
-    //while( pause()  ){
-        //if(*ptr_trava == 0){ 
-            //while (lock == 1) {
-            // esse laco pode ser o equivalente a funcao handle_receive_packets
-            // do advanced03-AF-XDP
+            
             idx_rx = 0;
             idx_fq = 0;
             i = 0;
 
+
+            bpf_map_lookup_elem(bpf_map__fd( skel->maps.mapa_sinal), &key, &temp);
+            pid_alvo = temp;
+            printf("PID_ALVO: %d\n", pid_alvo);
+
             // Verifica se há pacotes no ring buffer de recepção
             // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
             // Essa funcao no exemplo advanced03 tbm retorna 0
-            ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
+            ret_ring = xsk_ring_cons__peek(&umem_info->rx, 64, &idx_rx);
 
             //printf("\nVALOR DO ret_ring %d\n", ret_ring);
             //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
@@ -566,19 +586,47 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
             /* Process received packets */
             for (i = 0; i < ret_ring; i++) {
                 // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
-                addr = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx)->addr;
-                len  = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx++)->len;
+                addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
+                len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
 
                 printf("Tamanho do pacote recebido %d | num pkt:%ld | addr:%ld\n", len, cont_pkt, addr);
-
+                
+                send.sival_ptr = (void *)addr;
                 // CHAMA PROCESSA_PACOTE
                 //if (!processa_pacote(umem_info,  addr, len)){
-                if ( !processa_pacote( addr, len) ){
+                //if ( !processa_pacote( addr, len) ){
+                //if ( !processa_pacote( addr, len) ){
+                if ( sigqueue(pid_alvo, sigrtmin1, send) == 0){
+                    sigwaitinfo(&set, &rcv);
+                    
+                    int ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
+                    if (ret != 1) {
+                        /* No more transmit slots, drop the packet */
+                       // return false;
+                       printf("Erro ao reservar buffer tx | ret: %d\n", ret);
+                    }
+
+                    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
+                    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
+                    xsk_ring_prod__submit( &umem_info->tx, 1);
+                    //umem_info->tx_restante++;
+
+                    //info_global-> tx_restante++;
+                    ptr_mem_info_global->tx_restante++;
                     desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
+                }
+                else{
+                    perror("Erro ao enviar sinal para pid_alvo");
                 }
 
                 cont_pkt++;
              }
+
+            // Resposta do pkt
+            xsk_ring_cons__release(&umem_info->rx, ptr_mem_info_global->ret_ring);
+            complete_tx(ptr_mem_info_global->umem_frame_addr, 
+                    &ptr_mem_info_global->umem_frame_free, 
+                    &ptr_mem_info_global->tx_restante);
 
             //union sigval valor;
             //valor.sival_int = dado;  // Anexa dado ao sinal
@@ -586,181 +634,22 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
             // Enviando sinal e verificando se deu erro
             //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
             //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
-            if ( sigqueue(pid_alvo, SIGRTMIN+1, valor_struct) == -1 ) {
-                perror("Erro no sigqueue do filho");
-                capta_sinal(SIGINT);
-            }
-            
+            //if ( sigqueue(pid_alvo, SIGRTMIN+1, valor_struct) == -1 ) {
+            //    perror("Erro no sigqueue do filho");
+            //    capta_sinal(SIGINT);
+            //}
+
             //printf("\n\npkt = %lu\n\n", cont_pkt );
             // Se bateu o limite de pkts a serem processados
             // termina o processo de maneira graciosa para o
             // gprof rodar sem problemas e salvar os dados de profiling
-            if ( cont_pkt >= PKT_LIMIT ){
-                //kill(pid_alvo, SIGUSR1);
-                kill(pid_alvo, SIGUSR2);
-                capta_sinal(SIGINT);
-            }
-        }
-}
-
-/*************************************************************************/
-char *MSG_UDP = "PODE IR";
-
-void recebe_pkt_RX(struct xsk_info_global *info_global ){
-    //pid_t tid = pthread_self();
-    //printf("<Entrou polling_RX com a thread:%ld>\n", /*gettid()*/ syscall(SYS_gettid));
-    //printf("<Entrou em polling_RX>\n");
-    
-    /**************************************************************/
-    int i =0;
-
-    __u32 ret_ring=0, stock_frames=0;
-    __uint64_t cont_pkt=0;
-   
-    uint32_t idx_rx = 0;
-    uint32_t idx_fq = 0;
-    uint64_t addr;
-    uint32_t len;
-
-
-
-   
-    //ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
-
-    while( 1 ){
-    //while( sigwait(&set, &sig_usr1) == 0 ){
-    
-            //if(*ptr_trava == 0){ 
-            //while (lock == 1) {
-            // esse laco pode ser o equivalente a funcao handle_receive_packets
-            // do advanced03-AF-XDP
-            idx_rx = 0;
-            idx_fq = 0;
-            i = 0;
-
-            // Verifica se há pacotes no ring buffer de recepção
-            // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
-            // Essa funcao no exemplo advanced03 tbm retorna 0
-            ret_ring = xsk_ring_cons__peek(&umem_info2->rx, 64, &idx_rx);
-
-            //printf("\nVALOR DO ret_ring %d\n", ret_ring);
-            //printf("valor do umem_frame_free: %d\n", *info_global->umem_frame_free);
-
-            if( !ret_ring ){
-                //printf("\n\n<PROC_FILHO> <ret_ring deu zero>\n");
-                //sigwait( &set , &sig );
-                continue;
-            }
-
-            ptr_mem_info_global->ret_ring = ret_ring;
-
-            // Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-            // retorna o endereco do pacote --> __u64 address of the packet.
-            stock_frames = xsk_prod_nb_free(&umem_info->fq,	ptr_mem_info_global->umem_frame_free);
-            //printf("******************VALOR DO stock_frames %d\n", stock_frames);
-
-            if(stock_frames > 0){
-                //printf("stock_frames OK ret_ring %d\n", ret_ring);
-                // Reserve one or more slots in a producer ring.
-                // retorna --> __u32 number of slots that were successfully reserved (idx) on success, or a 0 in case of failure.
-                int ret_res = xsk_ring_prod__reserve(&umem_info->fq, stock_frames, &idx_fq);
-
-                /* This should not happen, but just in case */
-                while (ret_res != stock_frames)
-                    ret_res = xsk_ring_prod__reserve(&umem_info->fq, ret_ring, &idx_fq);
-
-                for (i = 0; i < stock_frames; i++){
-                    //Use this function to get a pointer to a slot in the fill ring to set the address of a packet buffer.
-                    *xsk_ring_prod__fill_addr(&umem_info->fq, idx_fq++) = alloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free);
-                }
-                // Submit the filled slots so the kernel can process them
-                xsk_ring_prod__submit(&umem_info->fq, stock_frames);
-            }
-
-
-            /* Process received packets */
-            for (i = 0; i < ret_ring; i++) {
-                // xsk_ring_cons__rx_desc() --> This function is used to retrieve the receive descriptor at a specific index in the Rx ring
-                addr = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx)->addr;
-                len  = xsk_ring_cons__rx_desc(&umem_info2->rx, idx_rx++)->len;
-
-                //cont_pkt++;
-                //printf("Tamanho do pacote recebido %d | num pkt:%ld | addr: %ld\n", len, cont_pkt, addr);
-
-                // CHAMA PROCESSA_PACOTE
-                //if (!processa_pacote(umem_info,  addr, len)){
-                if ( !processa_pacote( addr, len) ){
-                    //desaloca_umem_frame(info_global->umem_frame_addr, info_global->umem_frame_free, addr);
-                    desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
-                }
-             }
-
-
-            /*********************/
-            //*ptr_trava = 1;
-            
-            // Envia sinal para o processo pai para enviar os pkts
-            if ( sendto(fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, client_len)  < 0 ){
-                perror("\t\t### <PROC_FILHO>Erro ao enviar pkt para o proc_pai ###");
-                capta_sinal( SIGINT );
-            }
-            else{ 
-                //printf("<PROC_FILHO>Enviando pkt para o pai(%d)...-->\n", ppid);
-                //printf("<PROC_FILHO>Esperando pkt do pai...\n");
-                
-                if( recvfrom( fd_sock_client, MSG_UDP, sizeof(MSG_UDP), 0, (struct sockaddr *)&client_addr, &client_len) < 0  ){
-                    //printf("<PROC_FILHO>Pkt do PAI recebido...<--\n\n");
-                    continue;
-                }
-
-            } 
+            //if ( cont_pkt >= PKT_LIMIT ){
+            //    //kill(pid_alvo, SIGUSR1);
+            //    kill(pid_alvo, SIGUSR2);
+            //    capta_sinal(SIGINT);
+            //}
         }
 }
 
 /*************************************************************************/
 
-//void signal_handler(int signum, siginfo_t *info, void *context) {
-//    if (signum == SIGUSR1) {
-//
-//        printf("CPU: %d | PID:<%d> Sinal recebido do PROC_FILHO: = %lld \n\n", sched_getcpu() , getpid(), info->si_int + (long long int) + 0 );
-// 
-//        //printf("\n          ### Sinal recebido SIGUSR1 com dado: %d ###\n", info->si_value.sival_int);
-//        //capta_sinal(SIGINT);
-//    }
-//}
-
-
-/*************************************************************************/
-//void tempo_sinal(int sig, siginfo_t *info, void *context){
-//
-//    sinal_recebido.sival_int = sig_recebido = RDTSC(); // Pega o clock do recebimento
-//    if ( sigqueue(ppid, SIGUSR1, sinal_recebido) == -1 ) {                                         
-//        perror("Erro no sigqueue do PAI");                                                               
-//        capta_sinal(SIGINT);                                                               
-//    }  
-//    cont_sinal++;
-//    //memcpy(&antigo, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
-//    memcpy(&inicio.tv_nsec, &info->si_int, sizeof( info->si_int) ); // Pega o clock carregado no sinal quando foi gerado
-//    
-//    //info->_sifields._timer
-//    resul    = sig_recebido - inicio.tv_nsec;                  // Clock final - Clock inicial
-//    double r = ( (double)resul / 3600000000.0 ) / 1000;  // Resultado em clock divido pelo clock travado da CPU
-//                                                         // Pq para cada 1s 3.6 Bilhoes de insns sao executadas por segundo
-//                                                         // O resultado eh um tempo em nano segundos dividindo por 1000 temos
-//                                                         // microsegundos
-//
-//    // TODO
-//    // Travar o programa eBPF para que o RDTSC pegue o timestamp da CPU que foi travado sempre
-//    // para quando for calcular o tempo o timestamp seja sempre na mesma CPU
-//    // --> Travar na mesma CPU que o processo filho(CPU 5)
-//    
-//    //printf("(pkt:%d) Sinal recebido do kernel tempo: %lld - %lld = %f | %.2f us\n", cont_sinal, sinal_recebido , antigo, (sinal_recebido - antigo) / 3600000000.0 , r);
-//    //printf("(pkt:%d) Sinal recebido do kernel tempo: %d\n", cont_sinal, antigo);
-//    //printf("-->PPID: %d\n", ppid);
-//
-//    printf("CPU: %d | <pkt:%d | PID:%d> Sinal recebido do kernel: %lld\n", sched_getcpu() , cont_sinal, getpid(), info->si_int + (long long int)0); 
-//    return;
-//}
-
-/*************************************************************************/
-/*************************************************************************/
