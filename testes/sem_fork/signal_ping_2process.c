@@ -106,30 +106,7 @@ int main(int argc, char **argv) {
     skel->links.xdp_prog = bpf_program__attach_xdp( skel->progs.xdp_prog , ifindex );
 
     printf("Indice da interface %d\n",ifindex);
-	// load XDP object by libxdp 
-	//xdp_prog = xdp_program__open_file(caminho_prog, "xdp", NULL);
-	//if (!xdp_prog) {
-	//	printf("Erro ao abrir o programa xdp\n");
-	//	return 1;
-	//}
 
-	// attach XDP program to interface with xdp mode
-	// Please set ulimit if you got an -EPERM error.
-	//int ret_attach = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_SKB, 0);
-	//ret_attach = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_NATIVE, 0);
-	//if (ret_attach) {
-	//	printf("Error, Set xdp fd on %d failed\n", ifindex);
-	//	return ret_attach;
-	//}
-
-	// Find the map fd from the bpf object
-    // Pega um bpf_object a partir da struct xdp_program
-	//bpf_obj = xdp_program__bpf_obj(xdp_prog);
-	
-    //bpf_obj = bpf_object__open_file(caminho_prog, NULL);
-    //if (bpf_obj == NULL){
-    //    perror("Erro ao abrir o arquivo para bpf_object");
-    //}
 	
     //int mapa_fd = bpf_object__find_map_fd_by_name(bpf_obj, "mapa_fd");
     // Pega o fd do mapa
@@ -298,7 +275,9 @@ int main(int argc, char **argv) {
    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
    //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
    sigaddset(&set, SIGRTMIN+1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
-   sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
+   sigaddset(&set, SIGRTMIN+2);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+   pthread_sigmask(SIG_BLOCK, &set, NULL);
+   //sigprocmask(SIG_BLOCK, &set, NULL);  // Aplica o conjunto q pode "ouvir"
 
     //act.sa_flags     = SA_SIGINFO | SA_NODEFER;  // Permite recebimento de sinal com dados
     //act.sa_sigaction = teste; //signal_handler;
@@ -307,8 +286,12 @@ int main(int argc, char **argv) {
 
     //signal( SIGUSR1 , capta_sinal );
     //ppid = getpid();
-    pid  = fork();
+    //pid  = fork();
+    pid  = 1;
     strcpy(nomeproc, argv[0]);
+
+    pthread_t thread_complete_tx; 
+    pthread_create(&thread_complete_tx, NULL, (void *)complete_tx, (void *)info_global);
 
     // ############################## PROCESSAMENTO DOS PACOTE #############################
     // Processo filho

@@ -173,7 +173,8 @@ void recebe_RX(struct xsk_info_global *info_global);
 void recebe_signal_RX(struct xsk_info_global *info_global );
 void recebe_pkt_RX(struct xsk_info_global *info_global );
 
-void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+//void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante);
+void complete_tx(struct xsk_info_global *info_global);
 
 /**********************************************/
 

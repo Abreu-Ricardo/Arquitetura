@@ -2,16 +2,17 @@
 
 set -o pipefail
 
-export SIGSHARED=$(pwd)
+SIGSHARED=$(pwd)
+export SIGSHARED
 echo "$SIGSHARED"
 
 string="$1"
 
 if [ "$string" = "up" ]; then
-    ip netns add c1; 
-    ip netns add c2; 
-    ip netns add c3; 
-    ip netns add c4; 
+    sudo ip netns add c1; 
+    sudo ip netns add c2; 
+    sudo ip netns add c3; 
+    sudo ip netns add c4; 
 
     # Servidor --> R1
     # 10.10.1.1 --> 192.168.1.2
@@ -95,7 +96,7 @@ if [ "$string" = "up" ]; then
 
 
     # Habilitando o roteamento nos containers
-    bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';
+    sudo bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';
 
     sudo ip netns exec c1 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
     sudo ip netns exec c2 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
@@ -125,23 +126,25 @@ if [ "$string" = "up" ]; then
     #sudo ip netns exec       c3 sh -c 'route add -net 0.0.0.0/0 gw 30.30.30.3 '; 
 
     # Atribuindo o MAC estaticamente para atribuir o arp
-    sudo ip netns exec c1 sh -c 'ifconfig veth1 hw ether 00:11:22:33:44:11'
-    sudo ip netns exec c1 sh -c 'ifconfig veth8 hw ether 00:11:22:33:44:88'
-
-    sudo ip netns exec       c2 sh -c 'ifconfig veth2 hw ether 00:11:22:33:44:22'
-    sudo ip netns exec       c2 sh -c 'ifconfig veth3 hw ether 00:11:22:33:44:33'
-
-    sudo ip netns exec       c3 sh -c 'ifconfig veth4 hw ether 00:11:22:33:44:44'
-    sudo ip netns exec       c3 sh -c 'ifconfig veth5 hw ether 00:11:22:33:44:55'
+    sudo ip netns exec  c1 sh -c 'ifconfig veth1 hw ether 00:11:22:33:44:11'
+    sudo ip netns exec  c1 sh -c 'ifconfig veth8 hw ether 00:11:22:33:44:88'
+    sudo ip netns exec  c2 sh -c 'ifconfig veth2 hw ether 00:11:22:33:44:22'
+    sudo ip netns exec  c2 sh -c 'ifconfig veth3 hw ether 00:11:22:33:44:33'
+    sudo ip netns exec  c3 sh -c 'ifconfig veth4 hw ether 00:11:22:33:44:44'
+    sudo ip netns exec  c3 sh -c 'ifconfig veth5 hw ether 00:11:22:33:44:55'
 
     # Atribuindo ARP esticamente
-
     sudo ip netns exec c1 sh -c 'arp -s 10.10.10.1 00:11:22:33:44:22'
+    sudo ip netns exec c2 sh -c 'arp -s 10.10.10.2 00:11:22:33:44:11'
+    sudo ip netns exec c2 sh -c 'arp -s 20.20.20.2 00:11:22:33:44:44'
+    sudo ip netns exec c3 sh -c 'arp -s 20.20.20.1 00:11:22:33:44:33'
 
-    sudo ip netns exec       c2 sh -c 'arp -s 10.10.10.2 00:11:22:33:44:11'
-    sudo ip netns exec       c2 sh -c 'arp -s 20.20.20.2 00:11:22:33:44:44'
-
-    sudo ip netns exec       c3 sh -c 'arp -s 20.20.20.1 00:11:22:33:44:33'
+    
+    # Pegando caminho absoluto da raiz do github
+    #gnome-terminal --tab -- sh -c 'sudo ip netns exec c1 sh -c 'sudo source init_containers.sh';exec bash; '
+    #sudo ip netns exec c1 sh -c 'sudo source init_containers.sh && echo $SIGSHARED'
+    #sudo ip netns exec c2 sh -c 'source init_containers.sh'
+    #sudo ip netns exec c3 sh -c 'source init_containers.sh'
 
 
     # Aqui vai criar um link no dir dados para o bpffs
@@ -152,9 +155,9 @@ if [ "$string" = "up" ]; then
     #sudo ip netns exec c3 sh -c 'ethtool -K veth5 gro on' 
 
     echo "Servidor--> sudo ip netns exec c1 bash";
-    echo "R1--> sudo ip netns exec c2 bash";
-    echo "N3--> sudo ip netns exec c3 bash";
-    echo "N4--> sudo ip netns exec c4 bash";
+    echo "      R1--> sudo ip netns exec c2 bash";
+    echo "      N3--> sudo ip netns exec c3 bash";
+    echo "      N4--> sudo ip netns exec c4 bash";
 
     echo -e "\n +++ Use dentro de cada container antes de entrar nos dirs: < source init_containers.sh > +++"
 
@@ -173,6 +176,13 @@ if [ "$string" = "up" ]; then
     # Se nao, vai usar a veth que n tem par com a outra veth
     echo " "
     echo " "
+
+    gnome-terminal --tab -- sh -c " sudo ip netns exec c1 bash && sudo ip netns exec c1 bash -c 'source init_containers.sh'  "
+    gnome-terminal --tab -- sh -c " sudo ip netns exec c2 bash && sudo ip netns exec c2 bash -c 'source init_containers.sh'  "
+    gnome-terminal --tab -- sh -c " sudo ip netns exec c3 bash && sudo ip netns exec c3 bash -c 'source init_containers.sh'  "
+
+
+    #gnome-terminal --tab -- sh -c "bash;"
     #echo "Para pingar--> ping 10.10.10.* -c 3 -I <nome_veth>"
     #echo "Para alterar a exec entre apenas host e entre containers alterar os seguintes arquivos"
     #echo "/bib/teste_bib.c= carrega_ebpf() remove_ebpf()"
@@ -187,18 +197,18 @@ if [ "$string" = "up" ]; then
 fi
 ######################################
 
+
 ######################################
 if [ "$1" == "down" ]; then
-
-    ip netns delete c1;  #server
-    ip netns delete c2;  #client
-    ip netns delete c3;  #host
-    ip netns delete c4;  #host
+    sudo ip netns delete c1;  #server
+    sudo ip netns delete c2;  #client
+    sudo ip netns delete c3;  #host
+    sudo ip netns delete c4;  #host
 
     # Para desvicular o dir /dados de /sys/fs/bpf
     sudo umount $(pwd)/dados
 
 
-    bash -c 'echo 0 > /proc/sys/net/ipv4/ip_forward'
+    sudo bash -c 'echo 0 > /proc/sys/net/ipv4/ip_forward'
 
 fi

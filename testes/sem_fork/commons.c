@@ -35,21 +35,7 @@ void capta_sinal(int signum){
 
     if (signum == 2){
         bpf_object__unpin_maps( skel->obj , path);
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_fd")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_fd");  
-        
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_map")         , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_map");
-        
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_rodata") , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_rodata");
-        
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "xsk_kern_bss")    , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/xsk_kern_bss");
-        
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "tempo_sig")       , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/tempo_sig");
-        
-        //bpf_map__unpin( bpf_object__find_map_by_name( skel->obj , "mapa_sinal")      , "/home/ricardo/Documents/Mestrado/Projeto-Mestrado/Projeto_eBPF/codigos_eBPF/codigo_proposta/Arquitetura/dados/mapa_sinal");
-
-        //xdp_program__detach(xdp_prog, 2, XDP_MODE_SKB, 0);
-        //xdp_program__detach(xdp_prog, 2, XDP_MODE_NATIVE, 0);
-        //xdp_program__close(xdp_prog);
+   
 
         xsk_kern_bpf__destroy(skel);
         xsk_socket__delete(xsk);
@@ -86,10 +72,6 @@ void capta_sinal(int signum){
             recebe_RX(ptr_mem_info_global);
         }
 
-    //else if( signum == 10){
-    //    recebe_RX( ptr_mem_info_global );
-    //}
-    //return;
 }
 
 
@@ -247,6 +229,7 @@ void cria_segundo_socket(const char *iface){
 /****************************************************************************/
 static __always_inline void desaloca_umem_frame(uint64_t *vetor_frame, uint32_t *frame_free, uint64_t frame){
 	
+    
     assert( ptr_mem_info_global->umem_frame_free < NUM_FRAMES);
 
     //printf("(desaloca_umem)#### umem_frame_free: %d\n", ptr_mem_info_global->umem_frame_free);
@@ -277,16 +260,21 @@ static __always_inline void csum_replace2(__sum16 *sum, __be16 old, __be16 novo)
 
 //static __always_inline int processa_pacote(uint64_t addr, uint32_t len){
 int processa_pacote(uint64_t addr, uint32_t len){
-    // Allow to get a pointer to the packet data with the Rx descriptor, in aligned mode.
-  
+
     /******************************************************/
     //start = RDTSC();
     // Primeiro pacote demora uns 5K ciclos, dai pra frente demora 10-20 ciclos
     uint8_t *pkt = xsk_umem__get_data(buffer_do_pacote, addr);
-    printf("Endereco com deslocamento: %p\n", pkt);
+    //printf("Endereco com deslocamento: %p\n", pkt);
     //end = RDTSC();
     //start = RDTSC();
     // Primeiro pkt demora 12K ciclos, dai pra frente menos de 800ciclos
+
+
+
+
+
+
     /******************************************************/
     int ret;
     uint32_t tx_idx = 0;
@@ -343,60 +331,97 @@ int processa_pacote(uint64_t addr, uint32_t len){
 
 /*************************************************************************/
 int cont = 0;
-void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+//void complete_tx(uint64_t *vetor_frame, uint32_t *frame_free, uint32_t *tx_restante){
+void complete_tx(struct xsk_info_global *info_global){
     //printf("chamando complete_tx: %d\n", cont);
-    //cont++;
-    
-    //start = RDTSC();
 
-    int i, retsend; 
-    unsigned int completed;
-	uint32_t idx_cq;
-	
-    //if (!*tx_restante){
-    if (!ptr_mem_info_global->tx_restante){
-	    //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
-        return;
-    }
-    //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
-    
-    //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
-    retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
-    //printf("Retorno do sendto: %d\n", retsend);
+    sigset_t set_tx;
+    sigval_t send;
+    siginfo_t rcv;
+    int len_temp = 98;
+    uint64_t addr;
 
-    // Se retorno de sendto for < 0, houve erro 
-    if (retsend >= 0){
+    int sigrtmin2 = SIGRTMIN+2;
+    sigemptyset(&set_tx);                   // limpa os sinais que pode "ouvir"
+    sigaddset(&set_tx, SIGRTMIN+2);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+    sigprocmask(SIG_BLOCK, &set_tx, NULL); 
+      
 
-        //printf("ret sendto: %d\n", retsend);
-        /* Collect/free completed TX buffers */
+    while( sigwaitinfo(&set_tx, &rcv) ){
 
-        // Tem hora que leva 40 ciclos outras 1000+
-        completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
-       
-        //printf("(complete_tx) valor de completed: %d\n", completed);
-        if (completed > 0) {
-            //printf("-->Entrou no completed<--\n");
-            for (i = 0; i < completed; i++){
-                //printf("Desalocando %d\n", i);
-                //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
-                desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+        //printf("<complete_tx> Recebeu sinal SIGRTMIN+2 !!!\n");
+        addr = (uint64_t)rcv.si_value.sival_ptr;
+
+        uint32_t tx_idx = 0;
+        // Daqui pra baixo soh usa tx
+        // Acho que da pra colocar tudo em complete_tx e
+        // botar uma thread pra cuidar isso soh recebendo o addr
+        int ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
+        if (ret != 1) {
+            /* No more transmit slots, drop the packet */
+            // return false;
+            printf("Erro ao reservar buffer tx | ret: %d\n", ret);
+        }
+
+        xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
+        xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len_temp;
+        xsk_ring_prod__submit( &umem_info->tx, 1);
+
+        //info_global-> tx_restante++;
+        ptr_mem_info_global->tx_restante++;
+        //desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
+        xsk_ring_cons__release(&umem_info->rx, ptr_mem_info_global->ret_ring);
+
+
+        int i, retsend; 
+        unsigned int completed;
+        uint32_t idx_cq;
+
+        //if (!*tx_restante){
+        if (!ptr_mem_info_global->tx_restante){
+            //printf("\n\n###(complete_tx) nao enviou o pkt, umem_info->tx_restante: %d\n", *tx_restante);
+            return;
+        }
+        //printf("\n\nPassou do !umem_info->tx_restante, valor: %d\n", umem_info->tx_restante); 
+
+        //sendto() --> Demora mais q tudo nessa func, 18000 ciclos
+        retsend = sendto(xsk_socket__fd(xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
+        //printf("Retorno do sendto: %d\n", retsend);
+
+        // Se retorno de sendto for < 0, houve erro 
+        if (retsend >= 0){
+
+            //printf("ret sendto: %d\n", retsend);
+            /* Collect/free completed TX buffers */
+
+            // Tem hora que leva 40 ciclos outras 1000+
+            completed = xsk_ring_cons__peek(&umem_info->cq,	XSK_RING_CONS__DEFAULT_NUM_DESCS, &idx_cq);
+
+            //printf("(complete_tx) valor de completed: %d\n", completed);
+            if (completed > 0) {
+                //printf("-->Entrou no completed<--\n");
+                for (i = 0; i < completed; i++){
+                    //printf("Desalocando %d\n", i);
+                    //desaloca_umem_frame(vetor_frame, frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+                    desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, *xsk_ring_cons__comp_addr(&umem_info->cq, idx_cq++) );
+                }
+                xsk_ring_cons__release(&umem_info->cq, completed);
+                //*tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
+                ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
             }
-            xsk_ring_cons__release(&umem_info->cq, completed);
-            //*tx_restante -= completed < *tx_restante ?	completed : *tx_restante;
-            ptr_mem_info_global->tx_restante -= completed < ptr_mem_info_global->tx_restante ?	completed : ptr_mem_info_global->tx_restante;
+        }
+        else{
+            printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
+            printf("*****************************\n\n");
         }
     }
-    else{
-         printf("ERRO, retorno do sendto() menor que 0, valor: %d\n\n", retsend);
-         printf("*****************************\n\n");
-    }
-
     //end = RDTSC();
     
     //printf("tempo fil da func complete_tx() --> %f\n", (end - start) / 3.6 );
     //printf("----- Terminou complete_tx() ------\n");
     return;
 }
+
 
 /*************************************************************************/
 // info_global == ptr_mem_info_global
@@ -521,6 +546,9 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
     //    capta_sinal(SIGINT);
     //}
 
+    sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
+                                         //sigaddset(&set, SIGUSR1);            // Atribui o sinal SIGUSR1 para conjunto de sinais q pode "ouvir"
+    sigaddset(&set, SIGRTMIN+1);            
     /**************************************************************/
 
     //pid_alvo = ppid;
@@ -529,18 +557,17 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
     sigval_t send;
     siginfo_t rcv;
 
-    //while(1){
-     //while( sigwait(&set, &sig_usr1) == 0 ){
-     while( sigwait(&set, &sigrtmin1) == 0 ){
-            
-            idx_rx = 0;
-            idx_fq = 0;
-            i = 0;
+    //while( sigwait(&set, &sig_usr1) == 0 ){
+    while( sigwait(&set, &sigrtmin1) == 0 ){
+
+        idx_rx = 0;
+        idx_fq = 0;
+        i = 0;
 
 
             bpf_map_lookup_elem(bpf_map__fd( skel->maps.mapa_sinal), &key, &temp);
             pid_alvo = temp;
-            printf("PID_ALVO: %d\n", pid_alvo);
+            //printf("PID_ALVO: %d\n", pid_alvo);
 
             // Verifica se há pacotes no ring buffer de recepção
             // xsk_ring_cons_peek(ANEL_RX, tam_do_lote, )
@@ -589,65 +616,45 @@ void recebe_signal_RX(struct xsk_info_global *info_global ){
                 addr = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx)->addr;
                 len  = xsk_ring_cons__rx_desc(&umem_info->rx, idx_rx++)->len;
 
-                printf("Tamanho do pacote recebido %d | num pkt:%ld | addr:%ld\n", len, cont_pkt, addr);
+                //printf("Tamanho do pacote recebido %d | num pkt:%ld | addr:%ld\n", len, cont_pkt, addr);
                 
                 send.sival_ptr = (void *)addr;
-                // CHAMA PROCESSA_PACOTE
-                //if (!processa_pacote(umem_info,  addr, len)){
-                //if ( !processa_pacote( addr, len) ){
                 //if ( !processa_pacote( addr, len) ){
                 if ( sigqueue(pid_alvo, sigrtmin1, send) == 0){
-                    sigwaitinfo(&set, &rcv);
                     
-                    int ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
-                    if (ret != 1) {
-                        /* No more transmit slots, drop the packet */
-                       // return false;
-                       printf("Erro ao reservar buffer tx | ret: %d\n", ret);
-                    }
+                    //sigwaitinfo(&set, &rcv);
+                   
+                    //// Daqui pra baixo soh usa tx
+                    //// Acho que da pra colocar tudo em complete_tx e
+                    //// botar uma thread pra cuidar isso soh recebendo o addr
+                    //int ret = xsk_ring_prod__reserve(&umem_info->tx, 1, &tx_idx);
+                    //if (ret != 1) {
+                    //    /* No more transmit slots, drop the packet */
+                    //   // return false;
+                    //   printf("Erro ao reservar buffer tx | ret: %d\n", ret);
+                    //}
 
-                    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
-                    xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
-                    xsk_ring_prod__submit( &umem_info->tx, 1);
-                    //umem_info->tx_restante++;
+                    //xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->addr = addr;
+                    //xsk_ring_prod__tx_desc(&umem_info->tx, tx_idx)->len = len;
+                    //xsk_ring_prod__submit( &umem_info->tx, 1);
 
-                    //info_global-> tx_restante++;
-                    ptr_mem_info_global->tx_restante++;
-                    desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
+                    ////info_global-> tx_restante++;
+                    //ptr_mem_info_global->tx_restante++;
+                    //desaloca_umem_frame(ptr_mem_info_global->umem_frame_addr, &ptr_mem_info_global->umem_frame_free, addr);
                 }
                 else{
                     perror("Erro ao enviar sinal para pid_alvo");
                 }
 
-                cont_pkt++;
+                //cont_pkt++;
              }
 
             // Resposta do pkt
-            xsk_ring_cons__release(&umem_info->rx, ptr_mem_info_global->ret_ring);
-            complete_tx(ptr_mem_info_global->umem_frame_addr, 
-                    &ptr_mem_info_global->umem_frame_free, 
-                    &ptr_mem_info_global->tx_restante);
+            //xsk_ring_cons__release(&umem_info->rx, ptr_mem_info_global->ret_ring);
+            //complete_tx(ptr_mem_info_global->umem_frame_addr, 
+            //        &ptr_mem_info_global->umem_frame_free, 
+            //        &ptr_mem_info_global->tx_restante);
 
-            //union sigval valor;
-            //valor.sival_int = dado;  // Anexa dado ao sinal
-
-            // Enviando sinal e verificando se deu erro
-            //if ( kill(pid_alvo, SIGUSR1) == -1 ) {
-            //if ( sigqueue(pid_alvo, SIGUSR1, valor_struct) == -1 ) {
-            //if ( sigqueue(pid_alvo, SIGRTMIN+1, valor_struct) == -1 ) {
-            //    perror("Erro no sigqueue do filho");
-            //    capta_sinal(SIGINT);
-            //}
-
-            //printf("\n\npkt = %lu\n\n", cont_pkt );
-            // Se bateu o limite de pkts a serem processados
-            // termina o processo de maneira graciosa para o
-            // gprof rodar sem problemas e salvar os dados de profiling
-            //if ( cont_pkt >= PKT_LIMIT ){
-            //    //kill(pid_alvo, SIGUSR1);
-            //    kill(pid_alvo, SIGUSR2);
-            //    capta_sinal(SIGINT);
-            //}
         }
 }
 

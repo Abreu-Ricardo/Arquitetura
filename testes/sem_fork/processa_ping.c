@@ -37,7 +37,8 @@ pid_t pega_pid(struct bpf_map *mapa, char *dir_base){
 int main(int argc, char **argv){
     
     uint32_t tam_pkt_ping = 98;
-    uint64_t addr;      
+    uint64_t addr;   
+    int sigrtmin2 = SIGRTMIN+2;
 
     sigset_t set;
     siginfo_t rcv;
@@ -49,6 +50,10 @@ int main(int argc, char **argv){
 
     int temp_key = 1;
     int pid = getpid();
+
+    char settar_cpup[30]; 
+    sprintf(settar_cpup, "taskset -cp 5 %d", pid);
+    system(settar_cpup);
     
     /**************************************************************/
 
@@ -78,12 +83,14 @@ int main(int argc, char **argv){
     while(sigwaitinfo(&set , &rcv)){
         
         addr = (uint64_t)rcv.si_value.sival_ptr;
-        printf("<processa ping> addr: %ld\n", addr);
+        //printf("<processa ping> addr: %ld\n", addr);
         processa_pacote(addr, tam_pkt_ping);
 
         send.sival_ptr = (void *)addr; 
 
-        if(sigqueue(target_pid , sigrtmin1, send) < 0) perror("<processa ping> Erro ao enviar sinal");
+        // ENVIAR SINAL SIGRTMIN+2
+        //if(sigqueue(target_pid , sigrtmin1, send) < 0) perror("<processa ping> Erro ao enviar sinal");
+        if(sigqueue(target_pid , sigrtmin2, send) < 0) perror("<processa ping> Erro ao enviar sinal");
 
     }
 
