@@ -149,11 +149,16 @@ if [ "$string" = "up" ]; then
 
     # Aqui vai criar um link no dir dados para o bpffs
     sudo mount --bind /sys/fs/bpf $(pwd)/dados;
+    #sudo mount -t bpf bpffs $(pwd)/dados 
+    #sudo mount -t bpf bpffs /sys/fs/bpf
+    #sudo mkdir -p /sys/fs/bpf/sigshared/
+    #sudo mount -t bpf bpffs /bpffs
 
 
     #sudo ip netns exec c3 sh -c 'ethtool -K veth4 gro on' 
     #sudo ip netns exec c3 sh -c 'ethtool -K veth5 gro on' 
 
+    sleep 1
     echo "Servidor--> sudo ip netns exec c1 bash";
     echo "      R1--> sudo ip netns exec c2 bash";
     echo "      N3--> sudo ip netns exec c3 bash";
@@ -177,9 +182,14 @@ if [ "$string" = "up" ]; then
     echo " "
     echo " "
 
-    gnome-terminal --tab -- sh -c " sudo ip netns exec c1 bash && sudo ip netns exec c1 bash -c 'source init_containers.sh'  "
-    gnome-terminal --tab -- sh -c " sudo ip netns exec c2 bash && sudo ip netns exec c2 bash -c 'source init_containers.sh'  "
-    gnome-terminal --tab -- sh -c " sudo ip netns exec c3 bash && sudo ip netns exec c3 bash -c 'source init_containers.sh'  "
+    sleep 2
+    gnome-terminal --tab -- bash -c " sudo ip netns exec c1 bash  "
+    
+    sleep 2
+    gnome-terminal --tab -- bash -c " sudo ip netns exec c2 bash  "
+    
+    sleep 2
+    gnome-terminal --tab -- bash -c " sudo ip netns exec c3 bash  "
 
 
     #gnome-terminal --tab -- sh -c "bash;"
@@ -189,10 +199,6 @@ if [ "$string" = "up" ]; then
     #echo "/eBPF/espaco_kernel.c= comentar atributo pinning do mapa"
     #
     #echo "/gerenciador_mem/consumidor.c= alterar caminho de mapa_fd"
-
-    #sudo ip netns exec n1 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
-    #sudo ip netns exec n2 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
-    #sudo ip netns exec c3 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';  
 
 fi
 ######################################

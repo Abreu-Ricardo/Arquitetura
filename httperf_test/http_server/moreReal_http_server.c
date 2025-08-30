@@ -1,6 +1,7 @@
 // Realistic HTTP Server in C with latency, routing, logging, and threading
 // gcc real_http_server.c -o real_http_server -lpthread
 // ./real_http_server
+// CLIENTE: httperf --server=localhost --port=8080 --uri=/product --num-conn=1000 --rate=50
 
 #include <stdio.h>
 #include <stdlib.h>
