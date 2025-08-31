@@ -15,17 +15,35 @@ void cria_sigshared_mem(int fd_sigshared_mem, int tam_sigshared){
         exit(1);
     }
 
-    int ret_ftruncate = ftruncate(fd_sigshared_mem, tam_sigshared); 
-    if ( ret_ftruncate == -1 ){
-        perror("ERRO NO ftruncate()");
-        exit(1);  
-    }
-
 
     sigshared_ptr   = ( void *) mmap(0, tam_sigshared, PROT_WRITE, MAP_SHARED, fd_sigshared_mem, 0);
+    printf("Memoria compartilhada acessada...\n");
 }
 
 
+/***********************************/
+
+void imprime_mapa(int fd_mapa_sinal, int nf_id){
+
+    pid_t temp;
+
+    printf("nf_id %d\n", nf_id);
+
+    for(uint32_t i=0; i <= nf_id; i++){
+
+        //printf("Iteracao: %d\n", i);
+        if ( bpf_map_lookup_elem(fd_mapa_sinal, &i, &temp) < 0 ){ 
+            perror("Erro ao consultar o mapa eBPF"); 
+            continue; 
+        }
+
+        printf("mapa_sinal[%d]: %d\n", /*nf_id*/i, temp);
+        fflush(stdout);
+        //i++;
+    }
+
+    return;
+}
 
 /***********************************/
 
@@ -41,12 +59,24 @@ int main(int argc, char **argv){
     
     strcpy( path, dir_temp);
     strcat( path, "/dados"); 
+
+    strcat( path, "/mapa_sinal"); 
     printf("PATH: %s\n", path);
+    int fd_mapa_sinal =  bpf_obj_get(path);
+    if ( fd_mapa_sinal < 0){
+        perror("Erro ao pegar FD do mapa");
+        exit(1);
+    }
 
 
-    int pid = getpid();
-    int key = atoi(argv[1]);
-    bpf_map_update_elem(bpf_map__fd(skel->maps.mapa_sinal), &key, &pid, BPF_ANY);
+    pid_t pid = getpid();
+    uint32_t nf_id = atoi(argv[1]);
+    printf("Atualizando mapa eBPF com pid: %d e com chave NF:%d\n", pid, nf_id);
+    //bpf_map_update_elem(bpf_map__fd(skel->maps.mapa_sinal), &nf_id, &pid, BPF_ANY);
+    if (bpf_map_update_elem(fd_mapa_sinal, &nf_id, &pid, BPF_ANY) < 0){
+        perror("Erro ao atualizar mapa eBPF");
+        exit(1);
+    }
     
     sigshared_ptr = NULL;
     int fd_sigshared_mem;
@@ -62,20 +92,34 @@ int main(int argc, char **argv){
    
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
     sigaddset(&set, SIGRTMIN+1);            
+    sigprocmask(SIG_BLOCK, &set, NULL); 
 
-    int next_nf = key;
+    int next_nf = nf_id+1;
     int pid_alvo;
 
-    while(sigwaitinfo(&set, &data_rcv)){
+    imprime_mapa(fd_mapa_sinal, nf_id);
+
+    struct http_transaction *txn;
+    void *ptr;
+
+    printf("\n==NF%d== Esperando sinal...\n", nf_id);
+    while(sigwaitinfo(&set, &data_rcv) ){
         
         int addr = data_rcv.si_int;
-        struct http_transaction *txn = (struct http_transaction *) sigshared_ptr;
+        //struct http_transaction *txn = (struct http_transaction *) sigshared_ptr;
+
+        //txn = /*(struct http_transaction *)*/ sigshared_ptr;
+        ptr = /*(struct http_transaction *)*/ sigshared_ptr;
+        ptr += (sizeof(struct http_transaction) * addr);
+        txn = (struct http_transaction *)ptr;
+
         printf("MSG: %s\nContador: %d\n", txn->msg_shm, txn->contador_containers);
 
-        strcpy(txn->msg_shm,"MENSAGEM DO CONTAINER C2\n");
-        txn->contador_containers = key;
+        sprintf(txn->msg_shm, "MENSAGEM DO CONTAINER C%d\n", nf_id);
+        //strcpy(txn->msg_shm,"MENSAGEM DO CONTAINER C2\n");
+        txn->contador_containers = nf_id;
         
-        bpf_map_lookup_elem(bpf_map__fd(skel->maps.mapa_sinal), &next_nf, &pid_alvo);
+        bpf_map_lookup_elem(fd_mapa_sinal, &next_nf, &pid_alvo);
         data_send.sival_int = next_nf;
         sigqueue(pid_alvo, sigrtmin1, data_send);
 

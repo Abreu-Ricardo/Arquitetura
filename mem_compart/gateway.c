@@ -18,6 +18,28 @@ void clean_bpf(int signum){
     exit(0);
 }
 
+
+/***********************************/
+
+void imprime_mapa(int fd_mapa_sinal, int nf_id){
+
+    pid_t temp;
+
+    for(uint32_t i=0; i <= nf_id; i++){
+
+        if ( bpf_map_lookup_elem(fd_mapa_sinal, &i, &temp) < 0 ){ 
+            perror("Erro ao consultar o mapa eBPF"); 
+            continue; 
+        }
+
+        printf("mapa_sinal[%d]: %d\n", /*nf_id*/i, temp);
+    }
+
+    return;
+}
+
+/***********************************/
+
 void cria_sigshared_mem(int fd_sigshared_mem, int tam_sigshared){
 
     fd_sigshared_mem = shm_open(SIGSHARED_NAME, O_CREAT | O_RDWR, 0777);
@@ -77,6 +99,7 @@ int main(int argc, char **argv){
     sigset_t set;
     sigemptyset(&set);                   // limpa os sinais que pode "ouvir"
     sigaddset(&set, SIGRTMIN+1); 
+    sigaddset(&set, SIGRTMIN+2);            
     sigprocmask(SIG_BLOCK, &set, NULL); 
 
     int sigrtmin1 = 35;
@@ -89,8 +112,11 @@ int main(int argc, char **argv){
     getchar();
 
     printf("PID: %d\n", pid);
+    imprime_mapa(bpf_map__fd(skel->maps.mapa_sinal), 3);
 
-    while( sigwait(&set, &sigrtmin1) == 0 ){
+    printf("Esperando gatilho para enviar o sinal...\n");
+    //while( sigwait(&set, &sigrtmin1) == 0 ){
+    if( sigwait(&set, &sigrtmin1) == 0 ){
    
         printf("--> Recebeu sinal\n");
         // fazer consulta no mapa ebpf para pegar o PID
@@ -102,6 +128,18 @@ int main(int argc, char **argv){
         }
 
     }
+
+    struct http_transaction *txn;
+    txn = (struct http_transaction *) sigshared_ptr;
+
+    for(int i=0; i< 5; i++){
+
+        printf("contador[%d]: %d\n", i, txn[i].contador_containers );
+        printf("Mensagem[%d]: %s\n", i, txn[i].msg_shm );
+        printf("\n\n");
+
+    }
+
 
     return EXIT_SUCCESS;
 }

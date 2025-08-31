@@ -53,4 +53,5 @@ nf: nf.c
 #.PHONY: clean
 clean:
 	sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
+	rm  nf
 	@#sudo bpftool prog show
