@@ -5,7 +5,7 @@ CL = clang
 
 # SOURCE codes
 SOURCE_BPF = xsk_kern.bpf.c
-SOURCE_C   = gateway.c nf.c 
+SOURCE_C   = shm_test.c ringbuf.c 
 
 OBJETOS_BPF     = $(SOURCE_BPF:bpf.c=bpf.o)
 OBJETOS_C       = $(SOURCE_C:.c=)
@@ -28,31 +28,30 @@ DIR = $(shell pwd)
 # $@ --> nome do target
 # $(SOURCE_BPF:bpf.c=bpf.o) --> Pega os nomes da var e troca a extensao bpf.c por bpf.o
 
-all: bpf skel user 
-	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
-	@echo -e '\n+++ Compilação pronta! +++'
+all: gateway nf envia_sinal
+	@echo -e 'Compilacao terminada'
 
-bpf: $(SOURCE_BPF)
-	$(CL) $(BPF_FLAGS) $^
+gateway: ringbuf.o shm_test.o
+	$(CC) $^ -o gateway
 
-skel: $(OBJETOS_BPF)
-	@$(foreach i, $^, $(GERA_SKEL) $i > $(i:.bpf.o=.skel.h);)
-	@echo -e 'Skeletons gerados...\n'
-	@#sudo bpftool prog load ./signal_monitor.bpf.o /sys/fs/bpf/signal_monitor type tracepoint
+nf: shm_test.o nf.o
+	$(CC)  $^ -o $@ 
 
+nf.o: nf.c
+	$(CC) -c $^ -o $@ 
 
-user: gateway nf
-	@echo -e 'gateway, nf criados...'
+ringbuf.o: ringbuf.c
+	$(CC) -c $^ -o $@ 
 
-gateway: gateway.c  
-	$(CC) $< sigshared.c -o $@ $(C_FLAGS)
+shm_test.o: shm_test.c
+	$(CC) -c $^ -o $@ 
 
-nf: nf.c  
-	$(CC) $< sigshared.c -o $@ $(C_FLAGS)
-
+envia_sinal: envia_sinal.c
+	$(CC) $^ -o $@
 
 
 #.PHONY: clean
 clean:
-	sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
+	@#sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
+	rm *.o gateway envia_sinal
 	@#sudo bpftool prog show

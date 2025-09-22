@@ -148,9 +148,9 @@ if [ "$string" = "up" ]; then
 
 
     # Aqui vai criar um link no dir dados para o bpffs
+    sudo mount -t bpf bpffs /sys/fs/bpf
     sudo mount --bind /sys/fs/bpf $(pwd)/dados;
     #sudo mount -t bpf bpffs $(pwd)/dados 
-    #sudo mount -t bpf bpffs /sys/fs/bpf
     #sudo mkdir -p /sys/fs/bpf/sigshared/
     #sudo mount -t bpf bpffs /bpffs
 
@@ -182,14 +182,18 @@ if [ "$string" = "up" ]; then
     echo " "
     echo " "
 
-    sleep 2
+    sleep 1
     gnome-terminal --tab -- bash -c " sudo ip netns exec c1 bash  "
+    sudo ip netns exec c1 sh -c 'mount -t debugfs none /sys/kernel/debug'
     
-    sleep 2
+    sleep 1
     gnome-terminal --tab -- bash -c " sudo ip netns exec c2 bash  "
     
-    sleep 2
+    sleep 1
     gnome-terminal --tab -- bash -c " sudo ip netns exec c3 bash  "
+
+    sleep 1
+    gnome-terminal --tab -- bash -c " sudo ip netns exec c4 bash  "
 
 
     #gnome-terminal --tab -- sh -c "bash;"
