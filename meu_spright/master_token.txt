@@ -1,0 +1,2 @@
+kubeadm join 192.168.0.20:6443 --token 9gakxr.jesuworopgmq7jcm \
+	--discovery-token-ca-cert-hash sha256:14a19694d5ef598c410abb76f29620ecc350e68a78eba78669753a93cdc56565 

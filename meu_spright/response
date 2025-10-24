@@ -1,0 +1,218 @@
+./src/gateway.c:    if (txn->next_fn != sigshared_cfg->route[txn->route_id].hop[txn->hop_count])
+./src/gateway.c:        if (txn->hop_count == 0)
+./src/gateway.c:            txn->next_fn = sigshared_cfg->route[txn->route_id].hop[txn->hop_count];
+./src/gateway.c:    //ret = io_tx(&txn, txn->next_fn);
+./src/gateway.c:    //ret_io = io_tx(txn->addr, txn->next_fn, &mapa_fd);
+./src/gateway.c:    ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, matriz);
+./src/gateway.c:    log_debug("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", txn->route_id, txn->hop_count,
+./src/gateway.c:                sigshared_cfg->route[txn->route_id].hop[txn->hop_count], txn->next_fn);
+./src/gateway.c:              txn->route_id, txn->hop_count, cfg->route[txn->route_id].hop[txn->hop_count], txn->next_fn,
+./src/gateway.c:              txn->caller_nf, txn->caller_fn, txn->rpc_handler);
+./src/gateway.c:    uint8_t peer_node_idx = get_node(txn->next_fn);
+./src/gateway.c:    const char *string = strstr(txn->request, "/");
+./src/gateway.c:        txn->route_id = 0;
+./src/gateway.c:        txn->route_id = strtol(string, NULL, 10);
+./src/gateway.c:        if (unlikely(errno != 0 || txn->route_id < 0)) {
+./src/gateway.c:            txn->route_id = 0;
+./src/gateway.c:    log_debug("Route ID: %d", txn->route_id);
+./src/gateway.c:    printf("==gateway(%d)== PASSOU DO mempool_get | txn->addr:%ld\n", getpid() , txn->addr);
+./src/gateway.c:    txn->length_request = read(sockfd, txn->request, HTTP_MSG_LENGTH_MAX);
+./src/gateway.c:    if (unlikely(txn->length_request == -1))
+./src/gateway.c:    txn->sockfd = sockfd;
+./src/gateway.c:    txn->sk_ctx = sk_ctx;
+./src/gateway.c:    txn->tenant_id = 0;
+./src/gateway.c:    txn->hop_count = 0;
+./src/gateway.c:    log_debug("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", txn->route_id, txn->hop_count,
+./src/gateway.c:                sigshared_cfg->route[txn->route_id].hop[txn->hop_count], txn->next_fn);
+./src/gateway.c:    //if (sigshared_cfg->route[txn->route_id].hop[txn->hop_count] != fn_id)
+./src/gateway.c:    txn->hop_count++;
+./src/gateway.c:    log_debug("Next hop is Fn %u", sigshared_cfg->route[txn->route_id].hop[txn->hop_count]);
+./src/gateway.c:    txn->next_fn = sigshared_cfg->route[txn->route_id].hop[txn->hop_count];
+./src/gateway.c:    if (txn->hop_count < sigshared_cfg->route[txn->route_id].length)
+./src/gateway.c:    *sockfd = txn->sockfd;
+./src/gateway.c:    txn->length_response = strlen(HTTP_RESPONSE);
+./src/gateway.c:    memcpy(txn->response, HTTP_RESPONSE, txn->length_response);
+./src/gateway.c:    bytes_sent = write(*sockfd, txn->response, txn->length_response);
+./src/gateway.c:    //free(txn->sk_ctx);
+./src/gateway.c:    sigshared_mempool_put(txn, txn->addr);
+./src/io_helper.c:    uint32_t tenant_id = txn->tenant_id;
+./src/nf.c:            txn->hop_count++;
+./src/nf.c:            if (likely(txn->hop_count < cfg->route[txn->route_id].length))
+./src/nf.c:                txn->next_fn = cfg->route[txn->route_id].hop[txn->hop_count];
+./src/nf.c:                txn->next_fn = 0;
+./src/nf.c:                      txn->route_id, txn->hop_count, cfg->route[txn->route_id].hop[txn->hop_count], txn->next_fn,
+./src/nf.c:                      txn->caller_nf, txn->caller_fn, txn->rpc_handler);
+./src/nf.c:            //ret = io_tx(txn->addr, txn->next_fn, &mapa_fd);
+./src/nf.c:            //ret_io = io_tx(txn->addr, txn->next_fn, &mapa_fd);
+./src/nf.c:            ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, matriz);
+./src/shm_rpc.c:    txn->hop_count += 100;
+./src/shm_rpc.c:    txn->next_fn = GATEWAY;
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "GetAds");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = AD_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "GetSupportedCurrencies");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = CURRENCY_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "ListProducts");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = PRODUCTCATA_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:    strcpy(txn->get_cart_request.UserId, "ucr-students");
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "GetCart");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = CART_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:        for (i = 0; i < txn->list_products_response.num_products; i++)
+./src/shm_rpc.c:            txn->product_view[i].Item = txn->list_products_response.Products[i];
+./src/shm_rpc.c:            txn->product_view[i].Price = txn->list_products_response.Products[i].PriceUsd;
+./src/shm_rpc.c:        txn->hop_count++;
+./src/shm_rpc.c:        if (txn->productViewCntr != 0)
+./src/shm_rpc.c:            txn->product_view[txn->productViewCntr - 1].Item =
+./src/shm_rpc.c:                txn->list_products_response.Products[txn->productViewCntr - 1];
+./src/shm_rpc.c:            txn->product_view[txn->productViewCntr - 1].Price = txn->currency_conversion_result;
+./src/shm_rpc.c:        int size = sizeof(txn->product_view) / sizeof(txn->product_view[0]);
+./src/shm_rpc.c:        if (txn->productViewCntr < size)
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.ToCode, defaultCurrency);
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.From.CurrencyCode,
+./src/shm_rpc.c:                   txn->list_products_response.Products[txn->productViewCntr].PriceUsd.CurrencyCode);
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Units =
+./src/shm_rpc.c:                txn->list_products_response.Products[txn->productViewCntr].PriceUsd.Units;
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Nanos =
+./src/shm_rpc.c:                txn->list_products_response.Products[txn->productViewCntr].PriceUsd.Nanos;
+./src/shm_rpc.c:            strcpy(txn->rpc_handler, "Convert");
+./src/shm_rpc.c:            txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:            txn->next_fn = CURRENCY_SVC;
+./src/shm_rpc.c:            txn->productViewCntr++;
+./src/shm_rpc.c:            txn->hop_count++;
+./src/shm_rpc.c:    char *query = httpQueryParser(txn->request);
+./src/shm_rpc.c:    char *req = txn->request;
+./src/shm_rpc.c:        strcpy(txn->get_product_request.Id, strchr(start_of_product_id, '=') + 1);
+./src/shm_rpc.c:        log_debug("Product ID: %s", txn->get_product_request.Id);
+./src/shm_rpc.c:        strcpy(txn->get_product_request.Id, query);
+./src/shm_rpc.c:        log_debug("Product ID: %s", txn->get_product_request.Id);
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "GetProduct");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = PRODUCTCATA_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:    strcpy(txn->list_recommendations_request.ProductId, txn->get_product_request.Id);
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "ListRecommendations");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = RECOMMEND_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:        txn->product_view[0].Item = txn->get_product_response;
+./src/shm_rpc.c:        txn->product_view[0].Price = txn->get_product_response.PriceUsd;
+./src/shm_rpc.c:        if (txn->productViewCntr != 0)
+./src/shm_rpc.c:            txn->product_view[txn->productViewCntr - 1].Item = txn->get_product_response;
+./src/shm_rpc.c:            txn->product_view[txn->productViewCntr - 1].Price = txn->currency_conversion_result;
+./src/shm_rpc.c:        if (txn->productViewCntr < size)
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.ToCode, defaultCurrency);
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.From.CurrencyCode, txn->get_product_response.PriceUsd.CurrencyCode);
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Units = txn->get_product_response.PriceUsd.Units;
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Nanos = txn->get_product_response.PriceUsd.Nanos;
+./src/shm_rpc.c:            strcpy(txn->rpc_handler, "Convert");
+./src/shm_rpc.c:            txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:            txn->next_fn = CURRENCY_SVC;
+./src/shm_rpc.c:            txn->productViewCntr++;
+./src/shm_rpc.c:    char *query = httpQueryParser(txn->request);
+./src/shm_rpc.c:    char *req = txn->request;
+./src/shm_rpc.c:    AddItemRequest *in = &txn->add_item_request;
+./src/shm_rpc.c:        // strcpy(txn->get_product_request.Id, strchr(start_of_product_id, '=') + 1);
+./src/shm_rpc.c:    strcpy(in->Item.ProductId, txn->get_product_request.Id);
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "AddItem");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = CART_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:    GetQuoteRequest *in = &txn->get_quote_request;
+./src/shm_rpc.c:    txn->get_quote_response.conversion_flag = false;
+./src/shm_rpc.c:    for (i = 0; i < txn->get_cart_response.num_items; i++)
+./src/shm_rpc.c:    strcpy(txn->rpc_handler, "GetQuote");
+./src/shm_rpc.c:    txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:    txn->next_fn = SHIPPING_SVC;
+./src/shm_rpc.c:    txn->hop_count++;
+./src/shm_rpc.c:        if (txn->cartItemCurConvertCntr != 0)
+./src/shm_rpc.c:            txn->cart_item_view[txn->cartItemCurConvertCntr - 1].Price = txn->currency_conversion_result;
+./src/shm_rpc.c:        if (txn->cartItemCurConvertCntr < txn->cartItemViewCntr)
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.ToCode, defaultCurrency);
+./src/shm_rpc.c:            txn->currency_conversion_req.From = txn->cart_item_view[txn->cartItemCurConvertCntr].Price;
+./src/shm_rpc.c:            strcpy(txn->rpc_handler, "Convert");
+./src/shm_rpc.c:            txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:            txn->next_fn = CURRENCY_SVC;
+./src/shm_rpc.c:            txn->cartItemCurConvertCntr++;
+./src/shm_rpc.c:    log_debug("%d items in the cart.", txn->get_cart_response.num_items);
+./src/shm_rpc.c:    if (txn->get_cart_response.num_items <= 0)
+./src/shm_rpc.c:        txn->total_price.Units = 0;
+./src/shm_rpc.c:        txn->total_price.Nanos = 0;
+./src/shm_rpc.c:    if (txn->cartItemViewCntr != 0)
+./src/shm_rpc.c:        txn->cart_item_view[txn->cartItemViewCntr - 1].Item = txn->get_product_response;
+./src/shm_rpc.c:        txn->cart_item_view[txn->cartItemViewCntr - 1].Quantity =
+./src/shm_rpc.c:            txn->get_cart_response.Items[txn->cartItemViewCntr - 1].Quantity;
+./src/shm_rpc.c:        txn->cart_item_view[txn->cartItemViewCntr - 1].Price = txn->get_product_response.PriceUsd;
+./src/shm_rpc.c:    if (txn->cartItemViewCntr < txn->get_cart_response.num_items)
+./src/shm_rpc.c:        strcpy(txn->get_product_request.Id, txn->get_cart_response.Items[txn->cartItemViewCntr].ProductId);
+./src/shm_rpc.c:        // log_debug("Product ID: %s", txn->get_product_request.Id);
+./src/shm_rpc.c:        strcpy(txn->rpc_handler, "GetProduct");
+./src/shm_rpc.c:        txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:        txn->next_fn = PRODUCTCATA_SVC;
+./src/shm_rpc.c:        txn->cartItemViewCntr++;
+./src/shm_rpc.c:        txn->cartItemCurConvertCntr = 0;
+./src/shm_rpc.c:        txn->hop_count++;
+./src/shm_rpc.c:        txn->get_quote_response.conversion_flag = true;
+./src/shm_rpc.c:        if (txn->get_quote_response.conversion_flag == true)
+./src/shm_rpc.c:            txn->get_quote_response.CostUsd = txn->currency_conversion_result;
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.ToCode, defaultCurrency);
+./src/shm_rpc.c:            strcpy(txn->currency_conversion_req.From.CurrencyCode, txn->get_quote_response.CostUsd.CurrencyCode);
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Units = txn->get_quote_response.CostUsd.Units;
+./src/shm_rpc.c:            txn->currency_conversion_req.From.Nanos = txn->get_quote_response.CostUsd.Nanos;
+./src/shm_rpc.c:            strcpy(txn->rpc_handler, "Convert");
+./src/shm_rpc.c:            txn->caller_fn = FRONTEND;
+./src/shm_rpc.c:            txn->next_fn = CURRENCY_SVC;
+./src/shm_rpc.c:    for (i = 0; i < txn->cartItemViewCntr; i++)
+./src/shm_rpc.c:        MultiplySlow(&txn->cart_item_view[i].Price, txn->cart_item_view[i].Quantity);
+./src/shm_rpc.c:        Sum(&txn->total_price, &txn->cart_item_view[i].Price);
+./src/shm_rpc.c:    Sum(&txn->total_price, &txn->get_quote_response.CostUsd);
+./src/utility.c:    ListProductsResponse *out = &txn->list_products_response;
+./src/utility.c:    PrintProduct(&txn->get_product_response);
+./src/utility.c:    SearchProductsResponse *out = &txn->search_products_response;
+./src/utility.c:    Cart *out = &txn->get_cart_response;
+./src/utility.c:    if (txn->get_cart_response.num_items == -1)
+./src/utility.c:    // int size = sizeof(txn->product_view)/sizeof(txn->product_view[0]);
+./src/utility.c:    int size = txn->productViewCntr;
+./src/utility.c:        Product *p = &txn->product_view[i].Item;
+./src/utility.c:        Money *m = &txn->product_view[i].Price;
+./src/utility.c:    log_debug("Recommended Product ID: %s", txn->list_recommendations_response.ProductId);
+./src/utility.c:    ShipOrderResponse *out = &txn->ship_order_response;
+./src/utility.c:    GetQuoteResponse *out = &txn->get_quote_response;
+./src/utility.c:    log_debug("Total Price:  %ld.%d", txn->total_price.Units, txn->total_price.Nanos);
+./src/utility.c:    log_debug("email: %s", txn->place_order_request.Email);
+./src/utility.c:    log_debug("street_address: %s", txn->place_order_request.address.StreetAddress);
+./src/utility.c:    log_debug("zip_code: %d", txn->place_order_request.address.ZipCode);
+./src/utility.c:    log_debug("city: %s", txn->place_order_request.address.City);
+./src/utility.c:    log_debug("state: %s", txn->place_order_request.address.State);
+./src/utility.c:    log_debug("country: %s", txn->place_order_request.address.Country);
+./src/utility.c:    log_debug("credit_card_number: %s", txn->place_order_request.CreditCard.CreditCardNumber);
+./src/utility.c:    log_debug("credit_card_expiration_month: %d", txn->place_order_request.CreditCard.CreditCardExpirationMonth);
+./src/utility.c:    log_debug("credit_card_expiration_year: %d", txn->place_order_request.CreditCard.CreditCardExpirationYear);
+./src/utility.c:    log_debug("credit_card_cvv: %d", txn->place_order_request.CreditCard.CreditCardCvv);
+./src/utility.c:    char *query = httpQueryParser(txn->request);
+./src/utility.c:    strcpy(txn->place_order_request.Email, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("email: %s", txn->place_order_request.Email);
+./src/utility.c:    strcpy(txn->place_order_request.address.StreetAddress, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("street_address: %s", txn->place_order_request.address.StreetAddress);
+./src/utility.c:    txn->place_order_request.address.ZipCode = atoi(strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("zip_code: %d", txn->place_order_request.address.ZipCode);
+./src/utility.c:    strcpy(txn->place_order_request.address.City, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("city: %s", txn->place_order_request.address.City);
+./src/utility.c:    strcpy(txn->place_order_request.address.State, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("state: %s", txn->place_order_request.address.State);
+./src/utility.c:    strcpy(txn->place_order_request.address.Country, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("country: %s", txn->place_order_request.address.Country);
+./src/utility.c:    strcpy(txn->place_order_request.CreditCard.CreditCardNumber, strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("credit_card_number: %s", txn->place_order_request.CreditCard.CreditCardNumber);
+./src/utility.c:    txn->place_order_request.CreditCard.CreditCardExpirationMonth = atoi(strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("credit_card_expiration_month: %d", txn->place_order_request.CreditCard.CreditCardExpirationMonth);
+./src/utility.c:    txn->place_order_request.CreditCard.CreditCardExpirationYear = atoi(strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("credit_card_expiration_year: %d", txn->place_order_request.CreditCard.CreditCardExpirationYear);
+./src/utility.c:    txn->place_order_request.CreditCard.CreditCardCvv = atoi(strchr(start_of_query, '=') + 1);
+./src/utility.c:    // log_debug("credit_card_cvv: %d", txn->place_order_request.CreditCard.CreditCardCvv);
