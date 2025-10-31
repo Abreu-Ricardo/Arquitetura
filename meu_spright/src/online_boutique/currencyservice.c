@@ -477,6 +477,8 @@ int main(int argc, char **argv){
 	return 1;
     }
 
+    //printf("Config name: %s\n", sigshared_cfg->name);
+    
     sigemptyset(&set);          
     sigaddset(&set, SIGRTMIN+1); 
     sigprocmask(SIG_BLOCK, &set, NULL);

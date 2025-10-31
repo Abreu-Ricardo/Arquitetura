@@ -623,6 +623,8 @@ static int shm_mgr(char *cfg_file)
     printf("###\n%s\n", path);
 
 
+    cfg_print();
+
     /* TODO: Exit loop on interrupt */
     while (1)
     {

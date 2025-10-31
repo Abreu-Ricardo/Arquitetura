@@ -208,6 +208,7 @@ static void *nf_worker(void *arg)
 
         if (strcmp(txn->rpc_handler, "Charge") == 0)
         {
+	    log_info("Charge foi chamado...");
             Charge(txn);
         }
         else
@@ -219,16 +220,17 @@ static void *nf_worker(void *arg)
         }
 
 	//printf("==payment(%d)== bf: next_fn:%d caller_fn:%d\n",getpid(), txn->next_fn, txn->caller_fn);
-        
-	//txn->next_fn = txn->caller_fn;
-        //txn->caller_fn = PAYMENT_SVC;
+        printf("rpc_handler: %s\n", txn->rpc_handler);
 
-	if (txn->caller_fn != PAYMENT_SVC){
-		//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
-		//txn->next_fn = txn->caller_fn;
-		txn->next_fn = FRONTEND;
-	}
-	txn->caller_fn = PAYMENT_SVC;
+	txn->next_fn = txn->caller_fn;
+        txn->caller_fn = PAYMENT_SVC;
+
+	//if (txn->caller_fn != PAYMENT_SVC){
+	//	//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
+	//	//txn->next_fn = txn->caller_fn;
+	//	txn->next_fn = FRONTEND;
+	//}
+	//txn->caller_fn = PAYMENT_SVC;
 	
 	//printf("==payment(%d)== af: next_fn:%d caller_fn:%d\n\n", getpid(), txn->next_fn, txn->caller_fn);
 
@@ -258,10 +260,9 @@ static void *nf_rx(void *arg){
         //txn = io_rx(txn, sigshared_ptr, &set);
         io_rx((void **)&txn, sigshared_ptr, &set);
         //if (unlikely(addr == -1)){
-        if (unlikely(txn == NULL)){
-            log_error("io_rx() error");
-            return NULL;
-        }
+        //    log_error("io_rx() error");
+        //    return NULL;
+        //}
 
 
 	//txn = sigshared_mempool_access(txn, addr);
@@ -524,6 +525,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    //log_info("Config name: %s", sigshared_cfg->name);
 
     sigemptyset(&set);       
     sigaddset(&set, SIGRTMIN+1); 

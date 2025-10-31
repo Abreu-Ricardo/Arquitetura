@@ -16,6 +16,8 @@
 # SPDX-License-Identifier: Apache-2.0
 */
 
+#include "sigshared.h"
+
 #include "./include/shm_rpc.h"
 #include "./log/log.h"
 
@@ -150,49 +152,118 @@ void convertCurrencyOfProducts(struct http_transaction *txn){
     }
 }
 
+static __always_inline char *find_char(const char *s, char c) {
+    if (!s) return NULL;
+    while (*s && *s != c)
+        s++;
+    return *s ? (char*)s : NULL;
+}
 // Get a single product
 void getProduct(struct http_transaction *txn){
     //char *query = httpQueryParser(txn->request);
     
-    // char query[HTTP_MSG_LENGTH_MAX];
-    // httpQueryParser(txn->request, query);
    
-    char aux[HTTP_MSG_LENGTH_MAX];	
-    //char *query = httpQueryParser(txn->request, aux);
-    char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
+    //char aux[HTTP_MSG_LENGTH_MAX];	
+    //char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
+    //char *query = httpQueryParser(txn->request);
     //if (!query) {
-    if (!aux) {
-            log_error("httpQueryParser retornou NULL");
-	    exit(1);
-            //return;
-    }
-    
-    //log_info("DPS do hhttpQueryParser");
-    //char *req = txn->request;
+    //        //if (!aux) {
+    //        log_error("httpQueryParser retornou NULL");
+    //        exit(1);
+    //        //return;
+    //}
 
-    char req[HTTP_MSG_LENGTH_MAX];
-    strncpy(req, txn->request, sizeof(txn->request));
+    
+    //char *query = httpQueryParser(txn->request);
+    if (!txn || !txn->request) {
+        log_error("insertCart: invalid txn or request");
+        returnResponse(txn);
+        return;
+    } 
+    
+    //char aux[HTTP_MSG_LENGTH_MAX];
+    ////char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
+    //if ( !query ) {
+    //        log_error("httpQueryParser retornou NULL");
+    //        exit(1);
+    //        //return;
+    //}
+    
+   //log_info("Query: %s", query);
+
+    char *req = txn->request;
+    //char tmp[600]; 
+    char tmp[HTTP_MSG_LENGTH_MAX+1]; 
+    //strcpy(tmp, req);
+    strncpy(tmp, req, sizeof(tmp) -1);
+    tmp[sizeof(tmp) -1] = '\0';
+    
+    char *saveptr = NULL;
+    //char *start_of_path = strtok(tmp, " ");
+    char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    if( unlikely( start_of_path == NULL) ){
+	log_error("start_of_path == NULL, erro no strtok");
+        returnResponse(txn);
+	return;
+    	//exit(1);
+    }
+
+    //start_of_path = strtok(NULL, " ");
+    start_of_path = strtok_r(NULL, " ", &saveptr);
+    if( unlikely(start_of_path == NULL)){
+        log_error("start_of_path == NULL, erro no strtok");
+        returnResponse(txn);
+	return;
+    	//exit(1);
+    }
+    //printf("%s\n", start_of_path); 
+
+    //char *query = strchr(start_of_path, '?') + 1;
+    char *query = find_char(start_of_path, '?');
+    //if( query == NULL){
+    if( unlikely(!query  || *(query+1) == '\0')){
+    	log_error("query == NULL, erro em strchr");
+        returnResponse(txn);
+	return;
+	//exit(1);
+    }
+    //char temp_req[HTTP_MSG_LENGTH_MAX];
+    //strcpy(temp_req, txn->request);
+    //strncpy(temp_req, txn->request, sizeof(txn->request));
+
+    query +=1;
+ 
+
+    //log_info("DPS do hhttpQueryParser");
+
+    //char req[HTTP_MSG_LENGTH_MAX];
+    //strncpy(req, txn->request, sizeof(txn->request));
 
     if (strstr(req, "/1/cart?") != NULL && strstr(req, "POST")){
 
         char *start_of_product_id = strtok(query, "&");
-	char *ID = strchr(start_of_product_id, '=') +1;
+        //char *start_of_product_id = strtok(aux, "&");
+	//char *ID = strchr(start_of_product_id, '=') +1;
         
-	//strcpy(txn->get_product_request.Id, strchr(start_of_product_id, '=') + 1);
-        strncpy(txn->get_product_request.Id,  ID, sizeof(*ID));
+	strcpy(txn->get_product_request.Id, strchr(start_of_product_id, '=') + 1);
+	//strcpy(txn->get_product_request.Id, ID);
+        //strncpy(txn->get_product_request.Id,  ID, sizeof(*ID));
         log_debug("Product ID: %s", txn->get_product_request.Id);
         // returnResponse(txn); return;
     }
     else if (strstr(req, "/1/product") != NULL){
 
-        //strcpy(txn->get_product_request.Id, query);
-        strncpy(txn->get_product_request.Id, query, sizeof(*query));
+        //char *start_of_product_id = strtok(aux, "&");
+        strcpy(txn->get_product_request.Id, query);
+        //strncpy(txn->get_product_request.Id, query, sizeof(*query));
+        //strcpy(txn->get_product_request.Id, start_of_product_id);
         log_debug("Product ID: %s", txn->get_product_request.Id);
     }
     else{
 
         log_warn("HTTP Query cannot be parsed!");
         log_warn("\t#### %s", query);
+        //log_warn("\t#### %s", aux);
         returnResponse(txn);
 	//free(query);
         return;
@@ -270,46 +341,88 @@ void convertCurrencyOfProduct(struct http_transaction *txn){
     return;
 }
 
+
+
 void insertCart(struct http_transaction *txn){
     
     //PrintPlaceOrderRequest(txn);
     
-    // Provavelmente o erro eh q essa funcao retorna uma var que 
-    // logo deixa de existir por isso da erro de segfault e sempre eh 
-    // para um ponteiro nulo
-    // TODO: criar essa var *query e passar como parametro para a func
     //char *query = httpQueryParser(txn->request);
+    if ( unlikely(!txn || !txn->request)) {
+        log_error("insertCart: invalid txn or request");
+        //returnResponse(txn);
+        return;
+    } 
     
-    // char query[HTTP_MSG_LENGTH_MAX];
-    // httpQueryParser(txn->request, query);
-    
-    char aux[HTTP_MSG_LENGTH_MAX];
-    //char *query = httpQueryParser(txn->request, aux);
-    char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
-    if (query == NULL) {
-            log_error("httpQueryParser retornou NULL");
-	    exit(1);
-            //return;
-    }
+    //char aux[HTTP_MSG_LENGTH_MAX];
+    ////char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
+    //if ( !query ) {
+    //        log_error("httpQueryParser retornou NULL");
+    //        exit(1);
+    //        //return;
+    //}
     
    //log_info("Query: %s", query);
 
     char *req = txn->request;
-    char temp_req[HTTP_MSG_LENGTH_MAX];
-    //strcpy(temp_req, txn->request);
-    strncpy(temp_req, txn->request, sizeof(txn->request));
+    //char tmp[600]; 
+    char tmp[HTTP_MSG_LENGTH_MAX+1]; 
+    //strcpy(tmp, req);
+    strncpy(tmp, req, sizeof(tmp) -1);
+    tmp[sizeof(tmp) -1] = '\0';
+    
+    char *saveptr = NULL;
+    //char *start_of_path = strtok(tmp, " ");
+    char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    if( unlikely( start_of_path == NULL)){
+	log_error("start_of_path == NULL, erro no strtok");
+        //returnResponse(txn);
+	return;
+    	//exit(1);
+    }
 
+    //start_of_path = strtok(NULL, " ");
+    start_of_path = strtok_r(NULL, " ", &saveptr);
+    if( unlikely(start_of_path == NULL )){
+        log_error("start_of_path == NULL, erro no strtok");
+        //returnResponse(txn);
+	return;
+    	//exit(1);
+    }
+    //printf("%s\n", start_of_path); 
+
+    //char *query = strchr(start_of_path, '?') + 1;
+    char *query = find_char(start_of_path, '?');
+    //if( query == NULL){
+    if( unlikely(!query  || *(query+1) == '\0')){
+    	log_error("query == NULL, erro em strchr");
+        //returnResponse(txn);
+	return;
+	//exit(1);
+    }
+    //char temp_req[HTTP_MSG_LENGTH_MAX];
+    //strcpy(temp_req, txn->request);
+    //strncpy(temp_req, txn->request, sizeof(txn->request));
+
+    query +=1;
     AddItemRequest *in = &txn->add_item_request;
 
     if (strstr(req, "/1/cart?") != NULL && strstr(req, "POST")){
 
         // log_debug("Query : %s", query);
-        //log_info("antes de acessar o query");
+        //log_info("Query : %s", query);
 	
-        char *start_of_quantity = strchr(query, '&') + 1;
-	//log_info("Passou primeiro strchr");
+        //char *start_of_quantity = strchr(query, '&') + 1;
+        char *start_of_quantity = find_char(query, '&') + 1;
+	if(unlikely(!start_of_quantity)){
+		log_error("start_of_quantity == NULL, erro com strchr");
+        	//returnResponse(txn);
+		return;
+		//exit(1);
+	}
         
-	in->Item.Quantity = atoi(strchr(start_of_quantity, '=') + 1);
+	//in->Item.Quantity = atoi(strchr(start_of_quantity, '=') + 1);
+	in->Item.Quantity = atoi(find_char(start_of_quantity, '=') + 1);
         //strcpy(txn->get_product_request.Id, strchr(start_of_product_id, '=') + 1);
         
 	//log_debug("Product Quantity: %d", in->Item.Quantity);
@@ -331,7 +444,8 @@ void insertCart(struct http_transaction *txn){
     strcpy(txn->rpc_handler, "AddItem");
 
     /**************************/
-    txn->caller_fn = FRONTEND;
+    if (txn->caller_fn != FRONTEND)
+    	txn->caller_fn = FRONTEND;
     txn->next_fn = CART_SVC;
     /**************************/
 

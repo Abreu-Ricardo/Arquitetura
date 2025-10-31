@@ -165,7 +165,7 @@ static void *nf_rx(void *arg){
     struct http_transaction *txn = NULL;
     ssize_t bytes_written;
     uint8_t i;
-    int ret;
+    int ret = -1;
 
     for (i = 0;; i = (i + 1) % cfg->nf[fn_id - 1].n_threads){
         //ret = io_rx((void **)&txn);
@@ -194,7 +194,7 @@ static void *nf_tx(void *arg){
     int n_fds;
     int epfd;
     int ret;
-    int ret_io;
+    //int ret_io;
     int pid = getpid();
 
     epfd = epoll_create1(0);
@@ -259,7 +259,7 @@ static void *nf_tx(void *arg){
             //ret = io_tx(txn->addr, txn->next_fn, &mapa_fd);
             //ret_io = io_tx(txn->addr, txn->next_fn, &mapa_fd);
             //ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, matriz);
-    	    ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, pid, matriz, matriz[txn->next_fn][1]);
+    	    ret = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, pid, matriz, matriz[txn->next_fn][1]);
             if (unlikely(ret == -1))
             {
                 log_error("io_tx() error");

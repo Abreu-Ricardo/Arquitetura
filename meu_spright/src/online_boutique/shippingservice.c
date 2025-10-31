@@ -544,6 +544,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    //log_info("Config name: %s", sigshared_cfg->name);
 
     sigemptyset(&set);       
     sigaddset(&set, SIGRTMIN+1); 

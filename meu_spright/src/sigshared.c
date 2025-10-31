@@ -165,7 +165,7 @@ char *path_fixo = "/mydata/spright/dados/mapa_sinal";
         return -1;
     }
 
-    printf("==update_map== Mapa atualizado...\n");
+    printf("==update_map(%d)== Mapa atualizado...\n", getpid());
 
     return 0;
 }
@@ -254,7 +254,8 @@ struct sigshared_ringbuffer *sigshared_mempool_create(){
 uint64_t sigshared_mempool_get(){
 
     uint64_t temp;
-    
+    //usleep(100);
+    //usleep(300);
     // Se a cabeca + 1 for igual a posicao final
     if (ringbuff->head+1 == N_ELEMENTOS ){
 
@@ -273,7 +274,7 @@ uint64_t sigshared_mempool_get(){
 	    //printf("+++caiu no ELSE+++\n");
             while(ringbuff->head == ringbuff->tail){
                 printf("+++ERRO1+++ <sigshared_mempool_get()> HEAD == TAIL | head:%ld tail:%ld\n", ringbuff->head, ringbuff->tail);
-                usleep(500);
+                //usleep(100);
             }
 
             //temp =  ringbuff->ringbuffer[ringbuff->head];
@@ -295,7 +296,7 @@ uint64_t sigshared_mempool_get(){
         //printf("++++ERRO2+++ <sigshared_mempool_get()> HEAD == TAIL \n");
         while(ringbuff->head == ringbuff->tail){
                 printf("<sigshared_mempool_get()> HEAD == TAIL \n");
-                usleep(500);
+                //usleep(100);
         }
 
         temp =  ringbuff->rb[ringbuff->ringbuffer[ringbuff->head]];
@@ -357,6 +358,9 @@ int sigshared_mempool_put( uint64_t addr){
 /********************************************************************************************/
 //struct http_transaction *sigshared_mempool_access(struct http_transaction *temp, uint64_t addr){
 struct http_transaction *sigshared_mempool_access(void **temp, uint64_t addr){
+
+    	//usleep(100);
+    	//usleep(300);
 
 	//printf("==sigshared_mempool_access== addr:%ld\n", addr);
 	//temp = NULL;

@@ -51,33 +51,70 @@ static int pipefd_tx[UINT8_MAX][2];
 
 // char defaultCurrency[5] = "CAD";
 
+__always_inline char *find_char(const char *s, char c) {
+    if (!s) return NULL;
+    while (*s && *s != c)
+        s++;
+    return *s ? (char*)s : NULL;
+}
+
 static void setCurrencyHandler(struct http_transaction *txn){
 
     log_debug("Call setCurrencyHandler");
-    //log_info("Call setCurrencyHandler");
     //char *query = httpQueryParser(txn->request);
     
-    //char query[HTTP_MSG_LENGTH_MAX];
-    //httpQueryParser(txn->request, query);
-    char aux[HTTP_MSG_LENGTH_MAX];
-    //char *query = httpQueryParser(txn->request, aux);
-    char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
-    if (!query) {
-	    log_error("Invalid query string");
-	    exit(1);
-	    //return;
+    
+    //char *aux = NULL;
+    //char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
+    //char *query = httpQueryParser(txn->request);
+    //if (!query) {
+    ////if (!aux) {
+    //        log_error("httpQueryParser retornou NULL");
+    //        exit(1);
+    //        //return;
+    //}
+
+    char *req = txn->request;
+    //char tmp[600]; 
+    char tmp[HTTP_MSG_LENGTH_MAX + 1]; 
+    //strcpy(tmp, req);
+    strncpy(tmp, req, sizeof(tmp) -1);
+    tmp[sizeof(tmp) -1] = '\0';
+    
+    char *saveptr = NULL;
+    //char *start_of_path = strtok(tmp, " ");
+    char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    if( unlikely(start_of_path == NULL) ){
+	log_error("start_of_path == NULL, erro no strtok");
+    	exit(1);
     }
 
+    //start_of_path = strtok(NULL, " ");
+    start_of_path = strtok_r(NULL, " ", &saveptr);
+    if( unlikely(start_of_path == NULL)){
+	log_error("start_of_path == NULL, erro no strtok");
+    	exit(1);
+    }
+    //printf("%s\n", start_of_path); 
+
+    //char *query = strchr(start_of_path, '?') + 1;
+    char *query = find_char(start_of_path, '?') ;
+    if( unlikely(!query || query == NULL)){
+    	log_error("query == NULL, erro em strchr");
+	//returnResponse(txn);
+	return;
+	//exit(1);
+    }
+    query +=1;
+    // printf("%s\n", start_of_path); //printing the token
+    
+    //char *start_of_query = strchr(start_of_path, '?') + 1;
 
     //log_info("QUERY: %s", query);
-
     char _defaultCurrency[5] = "CAD";
-    //strcpy(_defaultCurrency, strchr(query, '=') + 1);
+    strcpy(_defaultCurrency, strchr(query, '=') + 1);
     
-    // EH AQUI OOHH O ERRO  TODO
-    char *quantidade = strchr(query, '=') + 1; 
-    //log_info("qtd: %s", quantidade );
-    strncpy(_defaultCurrency, quantidade, sizeof(*quantidade));
+
 
     txn->hop_count += 100;
     txn->next_fn = GATEWAY; // Hack: force gateway to return a response
@@ -89,6 +126,7 @@ static void setCurrencyHandler(struct http_transaction *txn){
 static void homeHandler(struct http_transaction *txn){
 
     log_debug("Call homeHandler ### Hop: %u", txn->hop_count);
+    //log_info("Call homeHandler ### Hop: %u", txn->hop_count);
 
     if (txn->hop_count == 0){
         // next_fn = currency.c
@@ -127,6 +165,7 @@ static void homeHandler(struct http_transaction *txn){
 static void productHandler(struct http_transaction *txn)
 {
     log_debug("Call productHandler ### Hop: %u", txn->hop_count);
+    //log_info("Call productHandler ### Hop: %u", txn->hop_count);
 
     if (txn->hop_count == 0)
     {
@@ -172,6 +211,8 @@ static void productHandler(struct http_transaction *txn)
 static void addToCartHandler(struct http_transaction *txn)
 {
     log_debug("Call addToCartHandler ### Hop: %u", txn->hop_count);
+    //log_info("Call addToCartHandler ### Hop: %u", txn->hop_count);
+    
     if (txn->hop_count == 0)
     {
         // next_fn = productcatalog.c
@@ -199,6 +240,8 @@ static void addToCartHandler(struct http_transaction *txn)
 static void viewCartHandler(struct http_transaction *txn)
 {
     log_debug("Call viewCartHandler ### Hop: %u", txn->hop_count);
+    //log_info("Call viewCartHandler ### Hop: %u", txn->hop_count);
+    
     if (txn->hop_count == 0)
     {
         // next_fn = currency.c
@@ -277,6 +320,7 @@ static void PlaceOrder(struct http_transaction *txn)
 static void placeOrderHandler(struct http_transaction *txn)
 {
     log_debug("Call placeOrderHandler ### Hop: %u", txn->hop_count);
+    //log_info("Call placeOrderHandler ### Hop: %u", txn->hop_count);
 
     if (txn->hop_count == 0)
     {
@@ -313,6 +357,7 @@ static void httpRequestDispatcher(struct http_transaction *txn)
     
     // Requisicao de checkout
     if (strstr(req, "/1/cart/checkout") != NULL)
+    //if (strstr(req, "/6/cart/checkout") != NULL)
     {
         // next_fn = checkout.c
         // next_fn = recommendations.c
@@ -321,6 +366,7 @@ static void httpRequestDispatcher(struct http_transaction *txn)
         placeOrderHandler(txn);
     }
     else if (strstr(req, "/1/cart") != NULL)
+    //else if (strstr(req, "/4/cart") != NULL || strstr(req, "/5/cart"))
     {
         if (strstr(req, "GET"))
         {
@@ -344,6 +390,7 @@ static void httpRequestDispatcher(struct http_transaction *txn)
         }
     }
     else if (strstr(req, "/1/product") != NULL)
+    //else if (strstr(req, "/3/product") != NULL)
     {
         // next_fn = productcatalog.c
         // next_fn = currency.c
@@ -354,6 +401,7 @@ static void httpRequestDispatcher(struct http_transaction *txn)
         productHandler(txn);
     }
     else if (strstr(req, "/1/setCurrency") != NULL)
+    //else if (strstr(req, "/2/setCurrency") != NULL)
     {
         // next_fn = gateway.c 
         setCurrencyHandler(txn);
@@ -736,6 +784,13 @@ int main(int argc, char **argv){
     	return 1;
     }
 
+    // verificar se abriu corretamente o sigshared_cfg
+    //for (int i=0; i < 7; i++){
+    //	log_info("%s", sigshared_cfg->route[i].name );
+    //}
+
+    //log_info("Config name: %s", sigshared_cfg->name);
+    
     sigemptyset(&set);       
     sigaddset(&set, SIGRTMIN+1); 
     sigprocmask(SIG_BLOCK, &set, NULL);

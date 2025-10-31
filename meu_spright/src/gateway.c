@@ -380,30 +380,36 @@ static int conn_close(struct server_vars *sv, int sockfd){
 //    return -1;
 //}
 
-static void parse_route_id(struct http_transaction *txn)
-{
+static void parse_route_id(struct http_transaction *txn){
     const char *string = strstr(txn->request, "/");
+    //log_info("%s", string);
 
+    // /1/cart
     if (unlikely(string == NULL)) {
         txn->route_id = 0;
+	log_error("==gateway== txn->request EH NULO");
     } else {
         // Skip consecutive slashes in one step
         string += strspn(string, "/");
-
-        errno = 0;
+	
+	//log_info("string: %s", string);
+        
+ 	errno = 0;
         txn->route_id = strtol(string, NULL, 10);
         if (unlikely(errno != 0 || txn->route_id < 0)) {
             txn->route_id = 0;
+	    log_error("==gateway== 2 route_id = 0");
         }
     }
 
-    log_debug("Route ID: %d", txn->route_id);
+    //log_debug("Route ID: %d", txn->route_id);
+    //log_info("Route ID: %d", txn->route_id);
 }
 
 int cont=0;
 // Recebe requisicao do usuario
-static int conn_read(int sockfd, void* sk_ctx)
-{
+static int conn_read(int sockfd, void* sk_ctx){
+
     struct http_transaction *txn = NULL;
     int ret;
     uint64_t addr;
@@ -452,7 +458,7 @@ static int conn_read(int sockfd, void* sk_ctx)
 
     txn->hop_count = 0;
 
-    usleep(500);
+    //usleep(100);
     ret = dispatch_msg_to_fn(txn);
     if (unlikely(ret == -1)){
         log_error("dispatch_msg_to_fn() error: %s", strerror(errno));
@@ -512,7 +518,8 @@ static uint64_t conn_write(int *sockfd){
     //}
 
     txn->hop_count++;
-    log_debug("Next hop is Fn %u", sigshared_cfg->route[txn->route_id].hop[txn->hop_count]);
+    //log_debug("Next hop is Fn %u", sigshared_cfg->route[txn->route_id].hop[txn->hop_count]);
+    //log_info("Next hop is Fn %u", sigshared_cfg->route[txn->route_id].hop[txn->hop_count]);
     txn->next_fn = sigshared_cfg->route[txn->route_id].hop[txn->hop_count];
 
     // Intra-node Communication (use io_tx() method)

@@ -530,6 +530,7 @@ void io_rx( void **obj, void *sigshared_ptr, sigset_t *set){
 	addr = (uint64_t)data_rcv.si_value.sival_ptr;
 
 	//printf("==io_rx(%d)== recebeu %ld sinal de: %d", getpid(), addr, data_rcv.si_pid);
+	//log_info("==io_rx(%d)== recebeu %ld sinal de: %d", getpid(), addr, data_rcv.si_pid);
     	//log_info("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
     	//printf("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
 
@@ -577,7 +578,7 @@ int io_tx_matriz(uint64_t addr, uint8_t next_fn, int *map_fd, int pid ,int matri
     
     if( unlikely(pid == next_fn_pid) ){
 	log_error("==%d== ERRO -> ENVIANDO SINAL PARA ELE MESMO...", pid);
-	//exit(1);
+	return -1;
     }
 
     if( unlikely(sigqueue( next_fn_pid, sigrtmin1, data_send) < 0) ){

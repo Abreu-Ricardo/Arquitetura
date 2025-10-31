@@ -299,261 +299,93 @@ void PrintPlaceOrderRequest(struct http_transaction *txn)
     log_info("ADDR: %ld", txn->addr);
 }
 
-//void parsePlaceOrderRequest(struct http_transaction *txn){
-//
-//    //PrintPlaceOrderRequest(txn);
-//    //log_info("REQUEST: %s", txn->request);
-//
-//    //char query[HTTP_MSG_LENGTH_MAX];
-//    //httpQueryParser(txn->request, query);
-//    //if(query == NULL){
-//    //	log_error("httpQueryParser retornou NULL");
-//    //    exit(1);
-//    //}
-//
-//
-//    char aux[HTTP_MSG_LENGTH_MAX];
-//    char *query = httpQueryParser(txn->request, aux);
-//    if (query == NULL) {
-//            log_error("httpQueryParser retornou NULL");
-//            return;
-//    }
-// 
-//
-//    // log_debug("QUERY: %s", query);
-//    //log_info("QUERY: %s", query);
-//
-//    char *start_of_query = strtok(query, "&");
-//    // char *email = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.Email, strchr(start_of_query, '=') + 1);
-//    // log_debug("email: %s", txn->place_order_request.Email);
-//    //log_info("email: %s", txn->place_order_request.Email);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *street_address = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.address.StreetAddress, strchr(start_of_query, '=') + 1);
-//    // log_debug("street_address: %s", txn->place_order_request.address.StreetAddress);
-//    //log_info("street_address: %s", txn->place_order_request.address.StreetAddress);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *zip_code = strchr(start_of_query, '=') + 1;
-//    txn->place_order_request.address.ZipCode = atoi(strchr(start_of_query, '=') + 1);
-//    // log_debug("zip_code: %d", txn->place_order_request.address.ZipCode);
-//    //log_info("zip_code: %d", txn->place_order_request.address.ZipCode);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *city = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.address.City, strchr(start_of_query, '=') + 1);
-//    // log_debug("city: %s", txn->place_order_request.address.City);
-//    //log_info("city: %s", txn->place_order_request.address.City);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *state = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.address.State, strchr(start_of_query, '=') + 1);
-//    // log_debug("state: %s", txn->place_order_request.address.State);
-//    //log_info("state: %s", txn->place_order_request.address.State);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *country = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.address.Country, strchr(start_of_query, '=') + 1);
-//    // log_debug("country: %s", txn->place_order_request.address.Country);
-//    //log_info("country: %s", txn->place_order_request.address.Country);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *credit_card_number = strchr(start_of_query, '=') + 1;
-//    strcpy(txn->place_order_request.CreditCard.CreditCardNumber, strchr(start_of_query, '=') + 1);
-//    // log_debug("credit_card_number: %s", txn->place_order_request.CreditCard.CreditCardNumber);
-//    //log_info("credit_card_number: %s", txn->place_order_request.CreditCard.CreditCardNumber);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *credit_card_expiration_month = strchr(start_of_query, '=') + 1;
-//    txn->place_order_request.CreditCard.CreditCardExpirationMonth = atoi(strchr(start_of_query, '=') + 1);
-//    // log_debug("credit_card_expiration_month: %d", txn->place_order_request.CreditCard.CreditCardExpirationMonth);
-//    //log_info("credit_card_expiration_month: %d", txn->place_order_request.CreditCard.CreditCardExpirationMonth);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *credit_card_expiration_year = strchr(start_of_query, '=') + 1;
-//    txn->place_order_request.CreditCard.CreditCardExpirationYear = atoi(strchr(start_of_query, '=') + 1);
-//    // log_debug("credit_card_expiration_year: %d", txn->place_order_request.CreditCard.CreditCardExpirationYear);
-//    //log_info("credit_card_expiration_year: %d", txn->place_order_request.CreditCard.CreditCardExpirationYear);
-//
-//    start_of_query = strtok(NULL, "&");
-//    // char *credit_card_cvv = strchr(start_of_query, '=') + 1;
-//    txn->place_order_request.CreditCard.CreditCardCvv = atoi(strchr(start_of_query, '=') + 1);
-//    // log_debug("credit_card_cvv: %d", txn->place_order_request.CreditCard.CreditCardCvv);
-//    //log_info("credit_card_cvv: %d", txn->place_order_request.CreditCard.CreditCardCvv);
-//
-//    free(query);    
-//    //PrintPlaceOrderRequest(txn);
-//}
-/**********************************************************************/
-
 void parsePlaceOrderRequest(struct http_transaction *txn){
 
-    char aux[HTTP_MSG_LENGTH_MAX];
-    //char *query = httpQueryParser(txn->request, aux);
-    char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
-    if (!query){
-	    log_error("httpQueryParser retornou NULL");
-    	exit(1);
-    } 
+    //PrintPlaceOrderRequest(txn);
+    //log_info("REQUEST: %s", txn->request);
 
-    char *param = strtok(query, "&");
-    while (param) {
-        char *key = strtok(param, "=");
-        char *val = strtok(NULL, "=");
-        if (!key || !val) continue;
+    char *saveptr = NULL;	
 
-        if (strcmp(key, "email") == 0)
-            COPY_FIELD(txn->place_order_request.Email, val);
-        else if (strcmp(key, "street") == 0)
-            COPY_FIELD(txn->place_order_request.address.StreetAddress, val);
-        else if (strcmp(key, "zip") == 0)
-            txn->place_order_request.address.ZipCode = atoi(val);
-        else if (strcmp(key, "city") == 0)
-            COPY_FIELD(txn->place_order_request.address.City, val);
-        else if (strcmp(key, "state") == 0)
-            COPY_FIELD(txn->place_order_request.address.State, val);
-        else if (strcmp(key, "country") == 0)
-            COPY_FIELD(txn->place_order_request.address.Country, val);
-        else if (strcmp(key, "ccnum") == 0)
-            COPY_FIELD(txn->place_order_request.CreditCard.CreditCardNumber, val);
-        else if (strcmp(key, "expmonth") == 0)
-            txn->place_order_request.CreditCard.CreditCardExpirationMonth = atoi(val);
-        else if (strcmp(key, "expyear") == 0)
-            txn->place_order_request.CreditCard.CreditCardExpirationYear = atoi(val);
-        else if (strcmp(key, "cvv") == 0)
-            txn->place_order_request.CreditCard.CreditCardCvv = atoi(val);
+    char *query = httpQueryParser(txn->request);
+    // log_debug("QUERY: %s", query);
 
-        param = strtok(NULL, "&");
-    }
+    //char *start_of_query = strtok(query, "&");
+    char *start_of_query = strtok_r(query, "&", &saveptr);
+    // char *email = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.Email, strchr(start_of_query, '=') + 1);
+    // log_debug("email: %s", txn->place_order_request.Email);
 
-    //free(query);
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&",  &saveptr);
+    // char *street_address = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.address.StreetAddress, strchr(start_of_query, '=') + 1);
+    // log_debug("street_address: %s", txn->place_order_request.address.StreetAddress);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *zip_code = strchr(start_of_query, '=') + 1;
+    txn->place_order_request.address.ZipCode = atoi(strchr(start_of_query, '=') + 1);
+    // log_debug("zip_code: %d", txn->place_order_request.address.ZipCode);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *city = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.address.City, strchr(start_of_query, '=') + 1);
+    // log_debug("city: %s", txn->place_order_request.address.City);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *state = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.address.State, strchr(start_of_query, '=') + 1);
+    // log_debug("state: %s", txn->place_order_request.address.State);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *country = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.address.Country, strchr(start_of_query, '=') + 1);
+    // log_debug("country: %s", txn->place_order_request.address.Country);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *credit_card_number = strchr(start_of_query, '=') + 1;
+    strcpy(txn->place_order_request.CreditCard.CreditCardNumber, strchr(start_of_query, '=') + 1);
+    // log_debug("credit_card_number: %s", txn->place_order_request.CreditCard.CreditCardNumber);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *credit_card_expiration_month = strchr(start_of_query, '=') + 1;
+    txn->place_order_request.CreditCard.CreditCardExpirationMonth = atoi(strchr(start_of_query, '=') + 1);
+    // log_debug("credit_card_expiration_month: %d", txn->place_order_request.CreditCard.CreditCardExpirationMonth);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *credit_card_expiration_year = strchr(start_of_query, '=') + 1;
+    txn->place_order_request.CreditCard.CreditCardExpirationYear = atoi(strchr(start_of_query, '=') + 1);
+    // log_debug("credit_card_expiration_year: %d", txn->place_order_request.CreditCard.CreditCardExpirationYear);
+
+    //start_of_query = strtok(NULL, "&");
+    start_of_query = strtok_r(NULL, "&", &saveptr);
+    // char *credit_card_cvv = strchr(start_of_query, '=') + 1;
+    txn->place_order_request.CreditCard.CreditCardCvv = atoi(strchr(start_of_query, '=') + 1);
+    // log_debug("credit_card_cvv: %d", txn->place_order_request.CreditCard.CreditCardCvv);
+
+    //PrintPlaceOrderRequest(txn);
 }
+/**********************************************************************/
 
+char *httpQueryParser(const char *req){
 
+	char tmp[600]; 
+	strcpy(tmp, req);
 
+	char *start_of_path = strtok(tmp, " ");
+	start_of_path = strtok(NULL, " ");
+	// printf("%s\n", start_of_path); //printing the token
+	char *start_of_query = strchr(start_of_path, '?') + 1;
+	// printf("%s\n", start_of_query); //product_id=66VCHSJNUP&quantity=1
 
-/*********************************************************************/
-//char *httpQueryParser(char *req){
-//char *httpQueryParser(char *req, char *query){
-//
-//    //char tmp[600];
-//    char tmp[HTTP_MSG_LENGTH_MAX];
-//    strcpy(tmp, req);
-//    
-//    //PrintPlaceOrderRequest(txn);
-//    char *start_of_path = strtok(tmp, " ");
-//    start_of_path = strtok(NULL, " ");
-//
-//    if(start_of_path == NULL){
-//    	log_error("ERRO start_of_path == NULL");
-//	exit(1);
-//    }
-//
-//    //log_info("==start_of_path: %s", start_of_path);
-//    char *start_of_query = strchr(start_of_path, '?') + 1;
-//    query = strchr(start_of_path, '?') + 1;
-//
-//    if(start_of_query == NULL || query == NULL){
-//	    log_error("start_of_query == NULL");
-//	    exit(1);
-//    }
-//    
-//    //log_info("--start_of_query: %s",  start_of_query);
-//
-//    // Remove trailing slash if present
-//    size_t len       = strlen(start_of_query);
-//    size_t len_query = strlen(query);
-//    
-//    if (start_of_query[len - 1] == '/'){
-//        start_of_query[len - 1] = '\0';
-//    }
-//
-//    if (query[len_query - 1] == '/'){
-//        query[len_query - 1] = '\0';
-//    }
-//
-//
-//    //strncpy(query, start_of_query, sizeof(start_of_query));
-//    //log_error("Tamanho do  len %d", len);
-//    //return start_of_query;
-//    return query;
-//}
+	return start_of_query;
 
-//char *auux;
-//// TODO: garantir que sempre retorne certo e nao um NULL
-//char *httpQueryParser(char *req, char *tmp){
-//    if (req == NULL){
-//	    log_error("txn->request passado eh NULL");
-//	    exit(1);
-//    } 
-//
-//    // Use a local copy for tokenizing
-//    //char tmp[HTTP_MSG_LENGTH_MAX];
-//    strncpy(tmp, req, sizeof(tmp) - 1);
-//    tmp[sizeof(tmp) - 1] = '\0';
-//	
-//
-//    char *method = strtok(tmp, " ");
-//    char *path   = strtok(NULL, " ");
-//    if (!path) return NULL;
-//
-//    char *qmark = strchr(path, '?');
-//    if (!qmark) return NULL;
-//
-//    qmark++; // move past '?'
-//
-//    size_t len = strlen(qmark);
-//    if (len > 0 && qmark[len - 1] == '/')
-//        //qmark[len - 1] = '\0';
-//        auux[len - 1] = '\0';
-//    }
-//
-//    // Return a heap-allocated copy
-//    //char *query = strdup(qmark);
-//    //temp = strdup(qmark);
-//    //return  strdup(qmark);
-//
-//    auux = strdup(qmark);
-//    
-//    log_info("auux: %s", auux);
-//    
-//    return  auux;
-//
-//    //if(!query){
-//    //if(temp == NULL){
-//    //        log_error("strdup returnou NULL(sem memoria)");
-//    //        exit(1);
-//    //}
-//    //return query; // caller must free()
-//    //return temp; // caller must free()
-//}
-
-char *httpQueryParser(const char *req, char *out, size_t outlen){
-
-    if (!req || !out || outlen == 0)
-        return NULL;
-
-    char tmp[HTTP_MSG_LENGTH_MAX];
-    strncpy(tmp, req, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-
-    char *path = strtok(tmp, " ");
-    path = strtok(NULL, " ");
-    if (!path) return NULL;
-
-    char *qmark = strchr(path, '?');
-    if (!qmark) return NULL;
-
-    qmark++;
-    size_t len = strlen(qmark);
-    if (len > 0 && qmark[len - 1] == '/')
-        qmark[len - 1] = '\0';
-
-    strncpy(out, qmark, outlen - 1);
-    out[outlen - 1] = '\0';
-    return out;
 }
 
 

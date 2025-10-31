@@ -63,7 +63,8 @@ void parsePlaceOrderRequest(struct http_transaction *txn);
 
 //char *httpQueryParser(char *req);
 //char *httpQueryParser(char *req, char *query);
-char *httpQueryParser(const char *req, char *query, size_t outlen);
+//char *httpQueryParser(const char *req, char *query, size_t outlen);
+char *httpQueryParser(const char *req);
 
 /*
  * A simple key-value table for function-node mapping
