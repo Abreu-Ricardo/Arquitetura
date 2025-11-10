@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <sys/shm.h>
 
+#include <time.h>
 #include "sigshared.h"
 
 
@@ -519,37 +520,43 @@ int io_exit(void)
 //uint64_t io_rx(struct http_transaction *obj, void *sigshared_ptr, sigset_t *set){
 //struct http_transaction * io_rx(struct http_transaction *obj, void *sigshared_ptr, sigset_t *set){
 //struct http_transaction * io_rx( void **obj, void *sigshared_ptr, sigset_t *set){
+
+
+//const struct timespec * restrict crono = {0 , 1000000};
+
 void io_rx( void **obj, void *sigshared_ptr, sigset_t *set){
 
-    uint64_t addr;
-    siginfo_t data_rcv;
-    
-    //printf("==io_rx==Esperando sinal...\n");
-    if( likely( sigwaitinfo(set, &data_rcv) > 0) ){
-	
-	addr = (uint64_t)data_rcv.si_value.sival_ptr;
+	//crono->tv_nsec = 500;
+	uint64_t addr;
+	siginfo_t data_rcv;
 
-	//printf("==io_rx(%d)== recebeu %ld sinal de: %d", getpid(), addr, data_rcv.si_pid);
-	//log_info("==io_rx(%d)== recebeu %ld sinal de: %d", getpid(), addr, data_rcv.si_pid);
-    	//log_info("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
-    	//printf("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
+	//printf("==io_rx==Esperando sinal...\n");
+	if( likely( sigwaitinfo(set, &data_rcv) > 0) ){
+		//if(  sigtimedwait(set, &data_rcv, crono) > 0){
 
-	if(addr >= 0 && addr < N_ELEMENTOS){
-		//printf("| SAIU...\n");
-		sigshared_mempool_access(obj, addr);
-		return;
+		addr = (uint64_t)data_rcv.si_value.sival_ptr;
+
+		//printf("==io_rx(%d)== recebeu %ld sinal de: %d\n", getpid(), addr, data_rcv.si_pid);
+		//log_info("==io_rx(%d)== recebeu %ld sinal de: %d", getpid(), addr, data_rcv.si_pid);
+		//log_info("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
+		//printf("Route id: %u, Hop Count %u, Next Hop: %u, Next Fn: %u", obj->route_id, obj->hop_count, sigshared_cfg->route[obj->route_id].hop[obj->hop_count], obj->next_fn);
+
+		if(addr >= 0 && addr < N_ELEMENTOS){
+			//printf("| SAIU...\n");
+			sigshared_mempool_access(obj, addr);
+			return;
+		}
+		else{
+			//return -1;
+			//return NULL;
+			printf("ADDR invalido\n");
+			return;
+		}
 	}
-	else{
-        	//return -1;
-        	//return NULL;
-        	return;
-	}
-    }
-
-    //printf("==io_rx== Erro ao receber sinal!!!\n");
-    //return -1;
-    //return NULL;
-    return;
+	//printf("==io_rx== Erro ao receber sinal!!!\n");
+	//return -1;
+	//return NULL;
+	return;
 }
 
 /**************************************************************************/
@@ -568,7 +575,6 @@ int io_tx_matriz(uint64_t addr, uint8_t next_fn, int *map_fd, int pid ,int matri
     //printf("===io_tx_matriz= Entrou... ");
 
     //printf("==io_tx_matriz(%d)==Enviando %ld p/ %d(next_fn:%d)...\n", pid, addr, matriz[next_fn][1], next_fn);
-    //log_info("==io_tx_matriz(%d)==Enviando %ld p/ %d(next_fn:%d)...\n", pid, addr, matriz[next_fn][1], next_fn);
     if( unlikely( matriz[next_fn][1] == 0) ){
 	    next_fn_pid = sigshared_lookup_map( "mapa_sinal", next_fn, map_fd);
 	    matriz[next_fn][1] = next_fn_pid;
@@ -581,7 +587,11 @@ int io_tx_matriz(uint64_t addr, uint8_t next_fn, int *map_fd, int pid ,int matri
 	return -1;
     }
 
+
     if( unlikely(sigqueue( next_fn_pid, sigrtmin1, data_send) < 0) ){
+    //ret = sigqueue( next_fn_pid, sigrtmin1, data_send);
+    //if( sigqueue( next_fn_pid, sigrtmin1, data_send) < 0) {
+    //if( unlikely(ret < 0) ){
 	//printf("==io_tx_matriz(%d)== ERRO: next_fn:%d pid:%d | sinal:%d | addr:%ld\n", pid, next_fn, matriz[next_fn][1], sigrtmin1, addr);
 	log_error("==io_tx_matriz(%d)== ERRO AO ENVIAR SINAL: next_fn:%d pid:%d | sinal:%d | addr:%ld", pid, next_fn, matriz[next_fn][1], sigrtmin1, addr);
         //log_error("ERRO NO ENVIO DO SINAL",strerror(errno));
@@ -590,7 +600,6 @@ int io_tx_matriz(uint64_t addr, uint8_t next_fn, int *map_fd, int pid ,int matri
     }
     //printf("Saiu..\n");
 
-    //data_send.sival_ptr = (void *)0;
     return 0;
 }
 

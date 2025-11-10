@@ -261,15 +261,15 @@ static void *nf_worker(void *arg)
 	//printf("==catalog(%d)== bf: next_fn:%d caller_fn:%d\n", getpid(), txn->next_fn, txn->caller_fn);
         //usleep(100); 
         
-	//txn->next_fn = txn->caller_fn;
-        //txn->caller_fn = PRODUCTCATA_SVC;
+	txn->next_fn = txn->caller_fn;
+        txn->caller_fn = PRODUCTCATA_SVC;
 
-	if (txn->caller_fn != PRODUCTCATA_SVC){
-		//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
-		//txn->next_fn = txn->caller_fn;
-		txn->next_fn = FRONTEND;
-	}
-	txn->caller_fn = PRODUCTCATA_SVC;
+	//if (txn->caller_fn != PRODUCTCATA_SVC){
+	//	//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
+	//	//txn->next_fn = txn->caller_fn;
+	//	txn->next_fn = FRONTEND;
+	//}
+	//txn->caller_fn = PRODUCTCATA_SVC;
 
 	//printf("==catalog(%d)== af: next_fn:%d caller_fn:%d\n\n", getpid(), txn->next_fn, txn->caller_fn);
         

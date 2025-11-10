@@ -208,7 +208,7 @@ static void *nf_worker(void *arg)
 
         if (strcmp(txn->rpc_handler, "Charge") == 0)
         {
-	    log_info("Charge foi chamado...");
+	    //log_info("Charge foi chamado...");
             Charge(txn);
         }
         else

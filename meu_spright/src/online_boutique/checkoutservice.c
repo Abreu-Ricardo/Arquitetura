@@ -315,46 +315,46 @@ void prepareOrderItemsAndShippingQuoteFromCart(struct http_transaction *txn){
         getCart(txn);
         txn->orderItemViewCntr = 0;
     }
-    //else if (txn->checkoutsvc_hop_cnt >= 1 && txn->checkoutsvc_hop_cnt <= 2)
-    else if (txn->checkoutsvc_hop_cnt == 2)
+    else if (txn->checkoutsvc_hop_cnt >= 1 && txn->checkoutsvc_hop_cnt <= 2)
+    //else if (txn->checkoutsvc_hop_cnt == 2)
     {
-    	log_info("Chamando prepOrderItems... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+    	//log_info("Chamando prepOrderItems... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         prepOrderItems(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 3)
     {
-	log_info("quoteShipping... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+	//log_info("quoteShipping... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         quoteShipping(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 4)
     {
-        log_info("Chamando convertCurrencyOfShippingQuote... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando convertCurrencyOfShippingQuote... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         convertCurrencyOfShippingQuote(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 5)
     {
-        log_info("Chamando calculateTotalPrice... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando calculateTotalPrice... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         calculateTotalPrice(txn);
         chargeCard(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 6)
     {
-        log_info("Chamando shipOrder... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando shipOrder... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         shipOrder(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 7)
     {
-        log_info("Chamando emptyUserCart... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando emptyUserCart... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         emptyUserCart(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 8)
     {
-        log_info("Chamando sendOrderConfirmation... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando sendOrderConfirmation... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         sendOrderConfirmation(txn);
     }
     else if (txn->checkoutsvc_hop_cnt == 9)
     {
-        log_info("Chamando returniResponseToFrontendWithOrderResult... ### Hop: %u", txn->checkoutsvc_hop_cnt);
+        //log_info("Chamando returniResponseToFrontendWithOrderResult... ### Hop: %u", txn->checkoutsvc_hop_cnt);
         returnResponseToFrontendWithOrderResult(txn);
     }
     else

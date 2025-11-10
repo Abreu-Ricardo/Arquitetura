@@ -181,7 +181,7 @@ pid_t sigshared_lookup_map(char *map_name, int key, int *mapa_sig_fd){
 
 	char temp[256];
 	char *dir_temp = getenv("SIGSHARED");
-	int map_fd;
+	//int map_fd;
 	pid_t pid_ret;
 
 	if(mapa_sig_fd <= 0){
@@ -391,6 +391,7 @@ struct http_transaction *sigshared_mempool_access(void **temp, uint64_t addr){
 		return *temp;
 	}
 	else{
+		printf("==sigshared_mempool_access== ADDR invalido\n");
 		return NULL;
 	}
 }

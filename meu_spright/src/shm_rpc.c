@@ -165,21 +165,21 @@ void getProduct(struct http_transaction *txn){
    
     //char aux[HTTP_MSG_LENGTH_MAX];	
     //char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
-    //char *query = httpQueryParser(txn->request);
-    //if (!query) {
-    //        //if (!aux) {
-    //        log_error("httpQueryParser retornou NULL");
-    //        exit(1);
-    //        //return;
-    //}
+    char *query = httpQueryParser(txn->request);
+    if (!query) {
+            //if (!aux) {
+            log_error("httpQueryParser retornou NULL");
+            exit(1);
+            //return;
+    }
 
     
     //char *query = httpQueryParser(txn->request);
-    if (!txn || !txn->request) {
-        log_error("insertCart: invalid txn or request");
-        returnResponse(txn);
-        return;
-    } 
+    //if (!txn || !txn->request) {
+    //    log_error("insertCart: invalid txn or request");
+    //    returnResponse(txn);
+    //    return;
+    //} 
     
     //char aux[HTTP_MSG_LENGTH_MAX];
     ////char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
@@ -192,46 +192,46 @@ void getProduct(struct http_transaction *txn){
    //log_info("Query: %s", query);
 
     char *req = txn->request;
-    //char tmp[600]; 
-    char tmp[HTTP_MSG_LENGTH_MAX+1]; 
-    //strcpy(tmp, req);
-    strncpy(tmp, req, sizeof(tmp) -1);
-    tmp[sizeof(tmp) -1] = '\0';
-    
-    char *saveptr = NULL;
-    //char *start_of_path = strtok(tmp, " ");
-    char *start_of_path = strtok_r(tmp, " ", &saveptr);
-    if( unlikely( start_of_path == NULL) ){
-	log_error("start_of_path == NULL, erro no strtok");
-        returnResponse(txn);
-	return;
-    	//exit(1);
-    }
+    ////char tmp[600]; 
+    //char tmp[HTTP_MSG_LENGTH_MAX+1]; 
+    ////strcpy(tmp, req);
+    //strncpy(tmp, req, sizeof(tmp) -1);
+    //tmp[sizeof(tmp) -1] = '\0';
+    //
+    //char *saveptr = NULL;
+    ////char *start_of_path = strtok(tmp, " ");
+    //char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    //if( unlikely( start_of_path == NULL) ){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //    returnResponse(txn);
+    //    return;
+    //	//exit(1);
+    //}
 
-    //start_of_path = strtok(NULL, " ");
-    start_of_path = strtok_r(NULL, " ", &saveptr);
-    if( unlikely(start_of_path == NULL)){
-        log_error("start_of_path == NULL, erro no strtok");
-        returnResponse(txn);
-	return;
-    	//exit(1);
-    }
-    //printf("%s\n", start_of_path); 
+    ////start_of_path = strtok(NULL, " ");
+    //start_of_path = strtok_r(NULL, " ", &saveptr);
+    //if( unlikely(start_of_path == NULL)){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //    returnResponse(txn);
+    //    return;
+    //	//exit(1);
+    //}
+    ////printf("%s\n", start_of_path); 
 
-    //char *query = strchr(start_of_path, '?') + 1;
-    char *query = find_char(start_of_path, '?');
-    //if( query == NULL){
-    if( unlikely(!query  || *(query+1) == '\0')){
-    	log_error("query == NULL, erro em strchr");
-        returnResponse(txn);
-	return;
-	//exit(1);
-    }
-    //char temp_req[HTTP_MSG_LENGTH_MAX];
-    //strcpy(temp_req, txn->request);
-    //strncpy(temp_req, txn->request, sizeof(txn->request));
+    ////char *query = strchr(start_of_path, '?') + 1;
+    //char *query = find_char(start_of_path, '?');
+    ////if( query == NULL){
+    //if( unlikely(!query  || *(query+1) == '\0')){
+    //	log_error("query == NULL, erro em strchr");
+    //    returnResponse(txn);
+    //    return;
+    //    //exit(1);
+    //}
+    ////char temp_req[HTTP_MSG_LENGTH_MAX];
+    ////strcpy(temp_req, txn->request);
+    ////strncpy(temp_req, txn->request, sizeof(txn->request));
 
-    query +=1;
+    //query +=1;
  
 
     //log_info("DPS do hhttpQueryParser");
@@ -347,7 +347,7 @@ void insertCart(struct http_transaction *txn){
     
     //PrintPlaceOrderRequest(txn);
     
-    //char *query = httpQueryParser(txn->request);
+    char *query = httpQueryParser(txn->request);
     if ( unlikely(!txn || !txn->request)) {
         log_error("insertCart: invalid txn or request");
         //returnResponse(txn);
@@ -365,46 +365,46 @@ void insertCart(struct http_transaction *txn){
    //log_info("Query: %s", query);
 
     char *req = txn->request;
-    //char tmp[600]; 
-    char tmp[HTTP_MSG_LENGTH_MAX+1]; 
-    //strcpy(tmp, req);
-    strncpy(tmp, req, sizeof(tmp) -1);
-    tmp[sizeof(tmp) -1] = '\0';
-    
-    char *saveptr = NULL;
-    //char *start_of_path = strtok(tmp, " ");
-    char *start_of_path = strtok_r(tmp, " ", &saveptr);
-    if( unlikely( start_of_path == NULL)){
-	log_error("start_of_path == NULL, erro no strtok");
-        //returnResponse(txn);
-	return;
-    	//exit(1);
-    }
+    ////char tmp[600]; 
+    //char tmp[HTTP_MSG_LENGTH_MAX+1]; 
+    ////strcpy(tmp, req);
+    //strncpy(tmp, req, sizeof(tmp) -1);
+    //tmp[sizeof(tmp) -1] = '\0';
+    //
+    //char *saveptr = NULL;
+    ////char *start_of_path = strtok(tmp, " ");
+    //char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    //if( unlikely( start_of_path == NULL)){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //    //returnResponse(txn);
+    //    return;
+    //	//exit(1);
+    //}
 
-    //start_of_path = strtok(NULL, " ");
-    start_of_path = strtok_r(NULL, " ", &saveptr);
-    if( unlikely(start_of_path == NULL )){
-        log_error("start_of_path == NULL, erro no strtok");
-        //returnResponse(txn);
-	return;
-    	//exit(1);
-    }
-    //printf("%s\n", start_of_path); 
+    ////start_of_path = strtok(NULL, " ");
+    //start_of_path = strtok_r(NULL, " ", &saveptr);
+    //if( unlikely(start_of_path == NULL )){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //    //returnResponse(txn);
+    //    return;
+    //	//exit(1);
+    //}
+    ////printf("%s\n", start_of_path); 
 
-    //char *query = strchr(start_of_path, '?') + 1;
-    char *query = find_char(start_of_path, '?');
-    //if( query == NULL){
-    if( unlikely(!query  || *(query+1) == '\0')){
-    	log_error("query == NULL, erro em strchr");
-        //returnResponse(txn);
-	return;
-	//exit(1);
-    }
-    //char temp_req[HTTP_MSG_LENGTH_MAX];
-    //strcpy(temp_req, txn->request);
-    //strncpy(temp_req, txn->request, sizeof(txn->request));
+    ////char *query = strchr(start_of_path, '?') + 1;
+    //char *query = find_char(start_of_path, '?');
+    ////if( query == NULL){
+    //if( unlikely(!query  || *(query+1) == '\0')){
+    //	log_error("query == NULL, erro em strchr");
+    //    //returnResponse(txn);
+    //    return;
+    //    //exit(1);
+    //}
+    ////char temp_req[HTTP_MSG_LENGTH_MAX];
+    ////strcpy(temp_req, txn->request);
+    ////strncpy(temp_req, txn->request, sizeof(txn->request));
 
-    query +=1;
+    //query +=1;
     AddItemRequest *in = &txn->add_item_request;
 
     if (strstr(req, "/1/cart?") != NULL && strstr(req, "POST")){
@@ -412,8 +412,8 @@ void insertCart(struct http_transaction *txn){
         // log_debug("Query : %s", query);
         //log_info("Query : %s", query);
 	
-        //char *start_of_quantity = strchr(query, '&') + 1;
-        char *start_of_quantity = find_char(query, '&') + 1;
+        char *start_of_quantity = strchr(query, '&') + 1;
+        //char *start_of_quantity = find_char(query, '&') + 1;
 	if(unlikely(!start_of_quantity)){
 		log_error("start_of_quantity == NULL, erro com strchr");
         	//returnResponse(txn);

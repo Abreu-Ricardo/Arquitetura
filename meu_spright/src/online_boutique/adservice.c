@@ -260,15 +260,15 @@ static void *nf_worker(void *arg)
 	//printf("==ad(%d)== ANTES: next_fn:%d caller_fn:%d\n", getpid(), txn->next_fn, txn->caller_fn);
         
 	// Devolve para quem o chamou 
-        //txn->next_fn = txn->caller_fn;
-        //txn->caller_fn = AD_SVC;
+        txn->next_fn = txn->caller_fn;
+        txn->caller_fn = AD_SVC;
 
-	if (txn->caller_fn != AD_SVC){
-		//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
-		//txn->next_fn = txn->caller_fn;
-		txn->next_fn = FRONTEND;
-	}
-	txn->caller_fn = AD_SVC;
+	//if (txn->caller_fn != AD_SVC){
+	//	//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
+	//	//txn->next_fn = txn->caller_fn;
+	//	txn->next_fn = FRONTEND;
+	//}
+	//txn->caller_fn = AD_SVC;
 
 	//printf("==ad(%d)== DEPOIS: next_fn:%d caller_fn:%d\n\n", getpid(), txn->next_fn, txn->caller_fn);
 

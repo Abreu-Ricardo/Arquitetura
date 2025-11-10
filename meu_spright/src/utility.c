@@ -31,6 +31,12 @@
 } while (0)
 
 
+__always_inline char *find_char(const char *s, char c) {
+    if (!s) return NULL;
+    while (*s && *s != c)
+        s++;
+    return *s ? (char*)s : NULL;
+}
 
 
 void set_node(uint8_t fn_id, uint8_t node_idx)
@@ -305,7 +311,6 @@ void parsePlaceOrderRequest(struct http_transaction *txn){
     //log_info("REQUEST: %s", txn->request);
 
     char *saveptr = NULL;	
-
     char *query = httpQueryParser(txn->request);
     // log_debug("QUERY: %s", query);
 
@@ -378,14 +383,27 @@ char *httpQueryParser(const char *req){
 	char tmp[600]; 
 	strcpy(tmp, req);
 
-	char *start_of_path = strtok(tmp, " ");
-	start_of_path = strtok(NULL, " ");
+    	char *saveptr = NULL;	
+	//char *start_of_path = strtok(tmp, " ");
+	char *start_of_path = strtok_r(tmp, " ", &saveptr);
+	
+	//start_of_path = strtok(NULL, " ");
+	start_of_path = strtok_r(NULL, " ", &saveptr);
+	
 	// printf("%s\n", start_of_path); //printing the token
-	char *start_of_query = strchr(start_of_path, '?') + 1;
+	// char *start_of_query = strchr(start_of_path, '?') + 1;
 	// printf("%s\n", start_of_query); //product_id=66VCHSJNUP&quantity=1
-
+	
+	char *start_of_query = find_char(start_of_path, '?');
+	if( unlikely(!start_of_query || start_of_query == NULL) ){
+    		log_error("query == NULL, erro em strchr");
+		//returnResponse(txn);
+		return NULL;
+		//exit(1);
+    	}
+	start_of_query +=1;
+	
 	return start_of_query;
-
 }
 
 

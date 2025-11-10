@@ -39,6 +39,7 @@
 int mapa_fd;
 int matriz[11][2] = {0};
 sigset_t set;
+//int pid;
 
 #include "../cstl/inc/c_lib.h"
 #include "../include/http.h"
@@ -177,16 +178,9 @@ static void *nf_worker(void *arg){
             PrintConversionResult(txn);
         }
 
-	//txn->next_fn = txn->caller_fn;
-        //txn->caller_fn = CURRENCY_SVC;
+	txn->next_fn = txn->caller_fn;
+        txn->caller_fn = CURRENCY_SVC;
 	
-	//printf("==currency(%d)==\n bf: next_fn:%d caller_fn:%d\n"  , getpid(), txn->next_fn, txn->caller_fn);
-	if (txn->caller_fn != CURRENCY_SVC){
-		//printf("### next_fn:%d == caller_fn:%d ###\n", txn->next_fn, txn->caller_fn);
-		//txn->next_fn = txn->caller_fn;
-		txn->next_fn = FRONTEND;
-	}
-	txn->caller_fn = CURRENCY_SVC;
 	//printf("==currency(%d)== af: next_fn:%d caller_fn:%d| req:%d\n", getpid(), txn->next_fn, txn->caller_fn, req++);
 
         bytes_written = write(pipefd_tx[index][1], &txn, sizeof(struct http_transaction *));
@@ -213,7 +207,7 @@ static void *nf_rx(void *arg){
 	
         //addr = io_rx(txn, sigshared_ptr, &set);
         //txn = io_rx(txn, sigshared_ptr, &set);
-        io_rx((void **)&txn, sigshared_ptr, &set);
+        io_rx( (void **)&txn, sigshared_ptr, &set );
         
 	//if (unlikely(addr == -1)){
         //    log_error("io_rx() error | addr retornou -1");
@@ -483,6 +477,7 @@ int main(int argc, char **argv){
     sigaddset(&set, SIGRTMIN+1); 
     sigprocmask(SIG_BLOCK, &set, NULL);
 
+    //pid = getpid();
     //ret = rte_eal_init(argc, argv);
     //if (unlikely(ret == -1))
     //{

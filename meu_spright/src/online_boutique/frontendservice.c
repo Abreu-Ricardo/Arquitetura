@@ -39,6 +39,7 @@ int mapa_fd;
 int matriz[11][2] = {0};
 sigset_t set;
 
+int pid; 
 
 #include "../include/http.h"
 #include "../include/io.h"
@@ -66,46 +67,46 @@ static void setCurrencyHandler(struct http_transaction *txn){
     
     //char *aux = NULL;
     //char *query = httpQueryParser(txn->request, aux, HTTP_MSG_LENGTH_MAX);
-    //char *query = httpQueryParser(txn->request);
-    //if (!query) {
-    ////if (!aux) {
-    //        log_error("httpQueryParser retornou NULL");
-    //        exit(1);
-    //        //return;
+    char *query = httpQueryParser(txn->request);
+    if (!query) {
+    //if (!aux) {
+            log_error("httpQueryParser retornou NULL");
+            exit(1);
+            //return;
+    }
+
+    //char *req = txn->request;
+    ////char tmp[600]; 
+    //char tmp[HTTP_MSG_LENGTH_MAX + 1]; 
+    ////strcpy(tmp, req);
+    //strncpy(tmp, req, sizeof(tmp) -1);
+    //tmp[sizeof(tmp) -1] = '\0';
+    //
+    //char *saveptr = NULL;
+    ////char *start_of_path = strtok(tmp, " ");
+    //char *start_of_path = strtok_r(tmp, " ", &saveptr);
+    //if( unlikely(start_of_path == NULL) ){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //	exit(1);
     //}
 
-    char *req = txn->request;
-    //char tmp[600]; 
-    char tmp[HTTP_MSG_LENGTH_MAX + 1]; 
-    //strcpy(tmp, req);
-    strncpy(tmp, req, sizeof(tmp) -1);
-    tmp[sizeof(tmp) -1] = '\0';
-    
-    char *saveptr = NULL;
-    //char *start_of_path = strtok(tmp, " ");
-    char *start_of_path = strtok_r(tmp, " ", &saveptr);
-    if( unlikely(start_of_path == NULL) ){
-	log_error("start_of_path == NULL, erro no strtok");
-    	exit(1);
-    }
+    ////start_of_path = strtok(NULL, " ");
+    //start_of_path = strtok_r(NULL, " ", &saveptr);
+    //if( unlikely(start_of_path == NULL)){
+    //    log_error("start_of_path == NULL, erro no strtok");
+    //	exit(1);
+    //}
+    ////printf("%s\n", start_of_path); 
 
-    //start_of_path = strtok(NULL, " ");
-    start_of_path = strtok_r(NULL, " ", &saveptr);
-    if( unlikely(start_of_path == NULL)){
-	log_error("start_of_path == NULL, erro no strtok");
-    	exit(1);
-    }
-    //printf("%s\n", start_of_path); 
-
-    //char *query = strchr(start_of_path, '?') + 1;
-    char *query = find_char(start_of_path, '?') ;
-    if( unlikely(!query || query == NULL)){
-    	log_error("query == NULL, erro em strchr");
-	//returnResponse(txn);
-	return;
-	//exit(1);
-    }
-    query +=1;
+    ////char *query = strchr(start_of_path, '?') + 1;
+    //char *query = find_char(start_of_path, '?') ;
+    //if( unlikely(!query || query == NULL)){
+    //	log_error("query == NULL, erro em strchr");
+    //    //returnResponse(txn);
+    //    return;
+    //    //exit(1);
+    //}
+    //query +=1;
     // printf("%s\n", start_of_path); //printing the token
     
     //char *start_of_query = strchr(start_of_path, '?') + 1;
@@ -305,9 +306,9 @@ static void PlaceOrder(struct http_transaction *txn)
 
     strcpy(txn->rpc_handler, "PlaceOrder");
    
-    if(txn->caller_fn != FRONTEND) 
+    //if(txn->caller_fn != FRONTEND) 
     	txn->caller_fn = FRONTEND;
-    if(txn->next_fn != CHECKOUT_SVC)
+    //if(txn->next_fn != CHECKOUT_SVC)
     	txn->next_fn = CHECKOUT_SVC;
 
     //log_info("caller_fn:%d | next_fn:%d", txn->caller_nf, txn->next_fn);
@@ -497,15 +498,16 @@ static void *nf_rx(void *arg){
 
 	//log_info("%s", txn->request);	
 	//log_info("==front%d== txn->addr:%ld\n", pid, txn->addr);
-        //log_info("(ADDR RX:%ld), Route id: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->route_id, txn->next_fn, txn->caller_nf, txn->caller_fn);
+	//log_info("(ADDR RX:%ld), Route id: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->route_id, txn->next_fn, txn->caller_nf, txn->caller_fn);
+        //log_info("(ADDR RX:%ld), HOP: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->hop_count, txn->next_fn, txn->caller_nf, txn->caller_fn);
 
     }
 
     return NULL;
 }
 
-static void *nf_tx(void *arg)
-{
+static void *nf_tx(void *arg){
+
     struct epoll_event event[UINT8_MAX]; /* TODO: Use Macro */
     //struct http_transaction *txn = NULL;
     struct http_transaction *txn;
@@ -515,7 +517,6 @@ static void *nf_tx(void *arg)
     int epfd;
     int ret;
     int ret_io;
-    int pid = getpid();
 
     epfd = epoll_create1(0);
     if (unlikely(epfd == -1))
@@ -566,18 +567,19 @@ static void *nf_tx(void *arg)
             //ret = io_tx(txn->addr, txn->next_fn, &mapa_fd);
     	    //ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, matriz);
 
-	    if ( unlikely(pid == matriz[txn->next_fn][1])){
-		    //log_error("Enviando sinal para ele mesmo pid:%d next_fn:%d", pid, txn->next_fn);
-		    //exit(1);
-	    }
-	    else{
+	    //if ( unlikely(pid == matriz[txn->next_fn][1])){
+	    //        //log_error("Enviando sinal para ele mesmo pid:%d next_fn:%d", pid, txn->next_fn);
+	    //        //exit(1);
+	    //}
+	    //else{
 		    ret_io = io_tx_matriz(txn->addr, txn->next_fn, &mapa_fd, pid, matriz, matriz[txn->next_fn][1]);
 		    if (unlikely(ret_io == -1)){
 			log_error("io_tx() error");
 			return NULL;
 		    }
-	    }
+	    //}
             //log_info("(ADDR TX:%ld), Route id: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->route_id, txn->next_fn, txn->caller_nf, txn->caller_fn);
+            //log_info("(ADDR TX:%ld), HOP: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->hop_count, txn->next_fn, txn->caller_nf, txn->caller_fn);
         }
     }
 
@@ -596,7 +598,7 @@ static int nf(uint8_t nf_id){
     fn_id = nf_id;
 
 
-    int pid = getpid();
+    //int pid = getpid();
 
     matriz[nf_id][1] = pid;
     if(unlikely( sigshared_update_map("mapa_sinal", fn_id, pid, &mapa_fd) < 0 ) ){
@@ -795,6 +797,7 @@ int main(int argc, char **argv){
     sigaddset(&set, SIGRTMIN+1); 
     sigprocmask(SIG_BLOCK, &set, NULL);
 
+    pid = getpid();
 
     //argc -= ret;
     //argv += ret;
