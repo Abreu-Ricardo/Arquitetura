@@ -101,10 +101,11 @@ int main() {
     }
     /***** *****/
 
+    struct epoll_event events[UINT8_MAX];
+    
     /***** RECEBIMENTO DO SINAL COM EPOLL NO FD DO SINAL *****/
     while (1) {
-        struct epoll_event events[UINT8_MAX];
-        int n = epoll_wait(epfd, events, 8, -1);  // -1 = block indefinitely
+        int n = epoll_wait(epfd, events, UINT8_MAX, -1);  // -1 = block indefinitely
         
         if (n < 0) {
             if (errno == EINTR)

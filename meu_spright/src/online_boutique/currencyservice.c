@@ -456,6 +456,11 @@ int main(int argc, char **argv){
     log_set_level_from_env();
     log_set_level(LOG_ERROR);
 
+    char settar_cpuf[30];
+    printf("Atribuindo processo para a CPU 4...\n");
+    sprintf(settar_cpuf, "taskset -cp 4 %d", getpid());
+    system(settar_cpuf);
+
     uint8_t nf_id;
     int ret;
 

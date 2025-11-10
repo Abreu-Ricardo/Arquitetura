@@ -530,6 +530,12 @@ int main(int argc, char **argv){
     uint8_t nf_id;
     int ret;
 
+    char settar_cpuf[30];
+    
+    printf("Atribuindo processo para a CPU 8...\n");
+    sprintf(settar_cpuf, "taskset -cp 8 %d", getpid());
+    system(settar_cpuf);
+
 
 
     sigshared_ptr = sigshared_ptr_mem();

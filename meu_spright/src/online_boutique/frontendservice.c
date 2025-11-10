@@ -33,6 +33,7 @@
 //#include <rte_memzone.h>
 
 #include <execinfo.h>
+#include <sys/signalfd.h>
 #include "../sigshared.h"
 
 int mapa_fd;
@@ -466,8 +467,32 @@ static void *nf_rx(void *arg){
     //uint64_t addr;
     //int pid = getpid();
 
+    sigset_t block_set;
+
+    sigemptyset(&block_set);       
+    sigaddset(&block_set, SIGRTMIN+1); 
+    pthread_sigmask(SIG_BLOCK, &block_set, NULL);
+
     //txn = (struct http_transaction *) mmap(0, SIGSHARED_TAM, PROT_WRITE, MAP_SHARED, fd_sigshared_mem, 0);
 
+    struct epoll_event eventos[UINT8_MAX];
+    int n;
+    int sigfd = signalfd(-1, &block_set, SFD_NONBLOCK | SFD_CLOEXEC);
+
+    int epfd = epoll_create1(0);
+    if (unlikely(epfd == -1))
+    {
+        log_error("epoll_create1() error: %s", strerror(errno));
+        return NULL;
+    }
+
+    eventos[0].events = EPOLLIN; // The associated file is available for read(2) operations.
+    eventos[0].data.fd = sigfd;
+
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, sigfd, &eventos[0]) < 0) {
+        perror("epoll_ctl");
+        exit(1);
+    }
 
     for (i = 0;; i = (i + 1) % sigshared_cfg->nf[fn_id - 1].n_threads){
 
@@ -475,32 +500,54 @@ static void *nf_rx(void *arg){
         //ret = io_rx((void **)&txn);
         //addr = io_rx(txn, sigshared_ptr, &set);
         //txn = io_rx(txn, sigshared_ptr, &set);
-        io_rx((void **)&txn, sigshared_ptr, &set);
-        //if (unlikely(ret == -1))
+        
+	//io_rx((void **)&txn, sigshared_ptr, &set);
+        
+	//if (unlikely(ret == -1))
         //if (unlikely(addr == -1)){
         //    log_error("io_rx() error");
         //    return NULL;
         //}
 	
-	//txn = sigshared_mempool_access(txn, addr);
-	if(unlikely(txn == NULL)){
-		printf("==frontend== txn retornou NULL\n");
-		exit(1);
-	}
-
-	//printf("==frontend== dps sigshared_mempool_access() | txn->addr:%ld\n", txn->addr);
-
-        bytes_written = write(pipefd_rx[i][1], &txn, sizeof(struct http_transaction *));
-        if (unlikely(bytes_written == -1)){
-            log_error("write() error: %s", strerror(errno));
-            return NULL;
+	//printf("Esperando sinal com epoll_wait()...\n");
+	n = epoll_wait(epfd, eventos, UINT8_MAX, -1);  // -1 = block indefinitely
+        
+        if (n < 0) {
+            if (errno == EINTR)
+                continue;
+            perror("epoll_wait");
+            break;
         }
 
-	//log_info("%s", txn->request);	
-	//log_info("==front%d== txn->addr:%ld\n", pid, txn->addr);
-	//log_info("(ADDR RX:%ld), Route id: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->route_id, txn->next_fn, txn->caller_nf, txn->caller_fn);
-        //log_info("(ADDR RX:%ld), HOP: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->hop_count, txn->next_fn, txn->caller_nf, txn->caller_fn);
+        for (int j = 0; j < n; j++) {
+            if (eventos[j].data.fd == sigfd) {
+                
+		struct signalfd_siginfo si;
+                ssize_t res = read(sigfd, &si, sizeof(si));
+                if (res != sizeof(si)) {
+                    perror("read(signalfd)");
+                    continue;
+                }
 
+                //printf("Received signal %d from PID %d | data: %ld\n", si.ssi_signo, si.ssi_pid, (uint64_t)si.ssi_ptr);
+		txn = sigshared_mempool_access( (void**)&txn, (uint64_t)si.ssi_ptr );
+		if(unlikely(txn == NULL)){
+			printf("==frontend== txn retornou NULL\n");
+			exit(1);
+		}
+		
+		bytes_written = write(pipefd_rx[i][1], &txn, sizeof(struct http_transaction *));
+		if (unlikely(bytes_written == -1)){
+			log_error("write() error: %s", strerror(errno));
+			return NULL;
+		}
+	    }
+	}
+
+
+
+	//printf("==frontend== dps sigshared_mempool_access() | txn->addr:%ld\n", txn->addr);
+        //log_info("(ADDR RX:%ld), HOP: %u, Next Fn: %u, Caller Fn: %s (#%u) ", txn->addr, txn->hop_count, txn->next_fn, txn->caller_nf, txn->caller_fn);
     }
 
     return NULL;
@@ -767,6 +814,11 @@ int main(int argc, char **argv){
     uint8_t nf_id;
     int ret;
 
+    //for(int i =0; i< argc; i++){
+    //	printf("%s\n", argv[i]);
+    //}
+    //printf("argv");
+
     //ret = rte_eal_init(argc, argv);
     //if (unlikely(ret == -1))
     //{
@@ -790,7 +842,6 @@ int main(int argc, char **argv){
     //for (int i=0; i < 7; i++){
     //	log_info("%s", sigshared_cfg->route[i].name );
     //}
-
     //log_info("Config name: %s", sigshared_cfg->name);
     
     sigemptyset(&set);       
@@ -798,6 +849,16 @@ int main(int argc, char **argv){
     sigprocmask(SIG_BLOCK, &set, NULL);
 
     pid = getpid();
+
+    char settar_cpuf[30];
+
+    printf("Atribuindo processo para a CPU 3...\n");
+    sprintf(settar_cpuf, "taskset -cp 3 %d", getpid());
+    system(settar_cpuf);
+    //cpu_set_t cpu_aff;
+    //CPU_ZERO(&cpu_aff);
+    //CPU_SET(3, &cpu_aff);
+
 
     //argc -= ret;
     //argv += ret;

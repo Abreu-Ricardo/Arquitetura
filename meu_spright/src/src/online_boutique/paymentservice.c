@@ -513,6 +513,13 @@ int main(int argc, char **argv){
     uint8_t nf_id;
     int ret;
 
+    char settar_cpuf[30];
+    
+    printf("Atribuindo processo para a CPU 10...\n");
+    sprintf(settar_cpuf, "taskset -cp 10 %d", getpid());
+    system(settar_cpuf);
+
+
     sigshared_ptr = sigshared_ptr_mem();
     if(sigshared_ptr == NULL){
         log_error("ERRO NO sigshared_ptr");

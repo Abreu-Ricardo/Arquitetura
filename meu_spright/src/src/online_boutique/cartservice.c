@@ -576,6 +576,11 @@ int main(int argc, char **argv)
 
     log_set_level(LOG_INFO);
 
+    char settar_cpuf[30];
+    printf("Atribuindo processo para a CPU 6...\n");
+    sprintf(settar_cpuf, "taskset -cp 6 %d", getpid());
+    system(settar_cpuf);
+
     uint8_t nf_id;
     int ret;
 
