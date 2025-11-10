@@ -17,7 +17,7 @@ GERA_SKEL = bpftool gen skeleton
 LIBS = signal_monitor.skel.h sigsnoop.skel.h teste_tc.skel.h
 DIR = $(shell pwd)
 
-all: bpf skel receiver sender capta_sinal
+all: bpf skel receiver sender capta_sinal signalfd
 
 bpf: $(SOURCE_BPF)
 	$(CL) $(BPF_FLAGS) $^
@@ -36,7 +36,11 @@ receiver: receiver.c
 sender: sender.c
 	$(CC) $^ -o $@
 
+signalfd: send_signalfd_data.c recv_signalfd_data.c
+	$(CC) send_signalfd_data.c -o send_sigfd
+	$(CC) recv_signalfd_data.c -o recv_sigfd
+
 
 clean:
-	rm receiver sender
-	sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF)
+	sudo rm receiver sender
+	sudo rm $(OBJETOS_BPF) $(OBJETOS_C) $(OBJETOS_LIB_BPF) send_sigfd recv_sigfd
